@@ -1,0 +1,413 @@
+{
+  "seconds": 20.827614000008907,
+  "total_calls": 27862022,
+  "primitive_calls": 27613543,
+  "total_self_seconds": 20.720941000000014,
+  "functions": [
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\replay.py",
+      "line": 174,
+      "name": "run",
+      "primitive_calls": 1,
+      "calls": 1,
+      "self_seconds": 0.0247488,
+      "cumulative_seconds": 20.811342200000002
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\replay.py",
+      "line": 39,
+      "name": "dispatch",
+      "primitive_calls": 6786,
+      "calls": 6786,
+      "self_seconds": 0.0887323,
+      "cumulative_seconds": 20.7178837
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\features.py",
+      "line": 420,
+      "name": "snapshot",
+      "primitive_calls": 1502,
+      "calls": 1502,
+      "self_seconds": 0.7649599,
+      "cumulative_seconds": 19.5305822
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\features.py",
+      "line": 404,
+      "name": "_rvol_baseline",
+      "primitive_calls": 7060,
+      "calls": 7060,
+      "self_seconds": 10.939299400000001,
+      "cumulative_seconds": 13.273041300000001
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\engine.py",
+      "line": 177,
+      "name": "on_quote",
+      "primitive_calls": 1502,
+      "calls": 1502,
+      "self_seconds": 0.0105482,
+      "cumulative_seconds": 10.088694400000001
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\engine.py",
+      "line": 194,
+      "name": "on_trade",
+      "primitive_calls": 751,
+      "calls": 751,
+      "self_seconds": 0.008692400000000001,
+      "cumulative_seconds": 10.0499825
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\features.py",
+      "line": 380,
+      "name": "_return",
+      "primitive_calls": 25534,
+      "calls": 25534,
+      "self_seconds": 0.1599258,
+      "cumulative_seconds": 2.4690409
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "name": "<method 'date' of 'datetime.datetime' objects>",
+      "primitive_calls": 21452752,
+      "calls": 21452752,
+      "self_seconds": 2.3336662,
+      "cumulative_seconds": 2.3336662
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "name": "<built-in method builtins.next>",
+      "primitive_calls": 36944,
+      "calls": 36944,
+      "self_seconds": 0.0177795,
+      "cumulative_seconds": 1.9501428
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\market.py",
+      "line": 256,
+      "name": "validate_quote",
+      "primitive_calls": 51885,
+      "calls": 51885,
+      "self_seconds": 0.37920390000000004,
+      "cumulative_seconds": 1.2501954000000002
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\features.py",
+      "line": 521,
+      "name": "_realized_volatility",
+      "primitive_calls": 1502,
+      "calls": 1502,
+      "self_seconds": 0.46065710000000004,
+      "cumulative_seconds": 1.0444343
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\features.py",
+      "line": 387,
+      "name": "<genexpr>",
+      "primitive_calls": 25534,
+      "calls": 25534,
+      "self_seconds": 1.0160212,
+      "cumulative_seconds": 1.0160212
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\features.py",
+      "line": 396,
+      "name": "_trade_window",
+      "primitive_calls": 7510,
+      "calls": 7510,
+      "self_seconds": 0.9967468,
+      "cumulative_seconds": 0.9994385
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\features.py",
+      "line": 462,
+      "name": "<genexpr>",
+      "primitive_calls": 10507,
+      "calls": 10507,
+      "self_seconds": 0.8397411,
+      "cumulative_seconds": 0.8397411
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\market.py",
+      "line": 210,
+      "name": "is_legal",
+      "primitive_calls": 104528,
+      "calls": 104528,
+      "self_seconds": 0.06710630000000001,
+      "cumulative_seconds": 0.5334395000000001
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\market.py",
+      "line": 198,
+      "name": "tick_size",
+      "primitive_calls": 104540,
+      "calls": 104540,
+      "self_seconds": 0.2331281,
+      "cumulative_seconds": 0.4663911
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\engine.py",
+      "line": 386,
+      "name": "poll",
+      "primitive_calls": 6788,
+      "calls": 6788,
+      "self_seconds": 0.052468,
+      "cumulative_seconds": 0.38462060000000003
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\domain.py",
+      "line": 85,
+      "name": "mid",
+      "primitive_calls": 747992,
+      "calls": 747992,
+      "self_seconds": 0.30477930000000003,
+      "cumulative_seconds": 0.30477930000000003
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\engine.py",
+      "line": 557,
+      "name": "evaluate",
+      "primitive_calls": 1502,
+      "calls": 1502,
+      "self_seconds": 0.033720900000000005,
+      "cumulative_seconds": 0.269722
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "name": "<built-in method builtins.sum>",
+      "primitive_calls": 26491,
+      "calls": 26496,
+      "self_seconds": 0.11532250000000001,
+      "cumulative_seconds": 0.213866
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\market.py",
+      "line": 99,
+      "name": "session",
+      "primitive_calls": 75425,
+      "calls": 75425,
+      "self_seconds": 0.09810550000000001,
+      "cumulative_seconds": 0.19025550000000002
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\domain.py",
+      "line": 45,
+      "name": "aware",
+      "primitive_calls": 298381,
+      "calls": 298381,
+      "self_seconds": 0.09266,
+      "cumulative_seconds": 0.1883252
+    },
+    {
+      "file": "C:\\Python314\\Lib\\copy.py",
+      "line": 110,
+      "name": "deepcopy",
+      "primitive_calls": 13600,
+      "calls": 253408,
+      "self_seconds": 0.07054550000000001,
+      "cumulative_seconds": 0.17981670000000002
+    },
+    {
+      "file": "C:\\Python314\\Lib\\dataclasses.py",
+      "line": 1682,
+      "name": "replace",
+      "primitive_calls": 19720,
+      "calls": 19720,
+      "self_seconds": 0.023052800000000002,
+      "cumulative_seconds": 0.16862110000000002
+    },
+    {
+      "file": "C:\\Python314\\Lib\\copy.py",
+      "line": 198,
+      "name": "_deepcopy_dict",
+      "primitive_calls": 13572,
+      "calls": 21864,
+      "self_seconds": 0.0688325,
+      "cumulative_seconds": 0.14235640000000002
+    },
+    {
+      "file": "C:\\Python314\\Lib\\dataclasses.py",
+      "line": 1701,
+      "name": "_replace",
+      "primitive_calls": 19720,
+      "calls": 19720,
+      "self_seconds": 0.051786200000000004,
+      "cumulative_seconds": 0.131756
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "name": "<method 'astimezone' of 'datetime.datetime' objects>",
+      "primitive_calls": 215597,
+      "calls": 215597,
+      "self_seconds": 0.1210716,
+      "cumulative_seconds": 0.1210716
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\engine.py",
+      "line": 276,
+      "name": "_sync_risk",
+      "primitive_calls": 6793,
+      "calls": 6793,
+      "self_seconds": 0.0352851,
+      "cumulative_seconds": 0.1198714
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\domain.py",
+      "line": 51,
+      "name": "finite_decimal",
+      "primitive_calls": 115171,
+      "calls": 115171,
+      "self_seconds": 0.07403080000000001,
+      "cumulative_seconds": 0.09758610000000001
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "name": "<method 'utcoffset' of 'datetime.datetime' objects>",
+      "primitive_calls": 298381,
+      "calls": 298381,
+      "self_seconds": 0.0956652,
+      "cumulative_seconds": 0.0956652
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\features.py",
+      "line": 185,
+      "name": "on_quote",
+      "primitive_calls": 1502,
+      "calls": 1502,
+      "self_seconds": 0.009952200000000001,
+      "cumulative_seconds": 0.08634330000000001
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\engine.py",
+      "line": 240,
+      "name": "_valid_quote",
+      "primitive_calls": 2882,
+      "calls": 2882,
+      "self_seconds": 0.0055734,
+      "cumulative_seconds": 0.0852382
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\market.py",
+      "line": 271,
+      "name": "<genexpr>",
+      "primitive_calls": 155655,
+      "calls": 155655,
+      "self_seconds": 0.05412380000000001,
+      "cumulative_seconds": 0.07937040000000001
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\market.py",
+      "line": 129,
+      "name": "entry_gate",
+      "primitive_calls": 2782,
+      "calls": 2782,
+      "self_seconds": 0.0287342,
+      "cumulative_seconds": 0.0789582
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\features.py",
+      "line": 525,
+      "name": "<genexpr>",
+      "primitive_calls": 902,
+      "calls": 902,
+      "self_seconds": 0.0765992,
+      "cumulative_seconds": 0.0765992
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\features.py",
+      "line": 268,
+      "name": "on_trade",
+      "primitive_calls": 751,
+      "calls": 751,
+      "self_seconds": 0.010659,
+      "cumulative_seconds": 0.0689333
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "name": "<method 'total_seconds' of 'datetime.timedelta' objects>",
+      "primitive_calls": 258161,
+      "calls": 258161,
+      "self_seconds": 0.06798710000000001,
+      "cumulative_seconds": 0.06798710000000001
+    },
+    {
+      "file": "C:\\Python314\\Lib\\json\\__init__.py",
+      "line": 299,
+      "name": "loads",
+      "primitive_calls": 6786,
+      "calls": 6786,
+      "self_seconds": 0.008938100000000001,
+      "cumulative_seconds": 0.0649218
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "name": "<built-in method math.log>",
+      "primitive_calls": 381829,
+      "calls": 381829,
+      "self_seconds": 0.054516100000000005,
+      "cumulative_seconds": 0.054516100000000005
+    },
+    {
+      "file": "C:\\Python314\\Lib\\json\\decoder.py",
+      "line": 340,
+      "name": "decode",
+      "primitive_calls": 6786,
+      "calls": 6786,
+      "self_seconds": 0.013490400000000001,
+      "cumulative_seconds": 0.0539926
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\engine.py",
+      "line": 162,
+      "name": "set_market",
+      "primitive_calls": 751,
+      "calls": 751,
+      "self_seconds": 0.0017494000000000001,
+      "cumulative_seconds": 0.053279900000000005
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "name": "<built-in method builtins.isinstance>",
+      "primitive_calls": 469383,
+      "calls": 469383,
+      "self_seconds": 0.052705300000000004,
+      "cumulative_seconds": 0.052705300000000004
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\market.py",
+      "line": 251,
+      "name": "__post_init__",
+      "primitive_calls": 19714,
+      "calls": 19714,
+      "self_seconds": 0.020902800000000003,
+      "cumulative_seconds": 0.0449545
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\market.py",
+      "line": 121,
+      "name": "planned_exit_deadline",
+      "primitive_calls": 7170,
+      "calls": 7170,
+      "self_seconds": 0.0124732,
+      "cumulative_seconds": 0.0433167
+    },
+    {
+      "file": "F:\\ibkr-jp-microalpha\\ibkr_microalpha\\reporting.py",
+      "line": 137,
+      "name": "observe",
+      "primitive_calls": 6788,
+      "calls": 6788,
+      "self_seconds": 0.0068991,
+      "cumulative_seconds": 0.0430397
+    }
+  ]
+}

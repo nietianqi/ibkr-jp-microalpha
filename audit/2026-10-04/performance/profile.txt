@@ -1,0 +1,53 @@
+         27862022 function calls (27613543 primitive calls) in 20.721 seconds
+
+   Ordered by: cumulative time
+   List reduced from 291 to 45 due to restriction <45>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.025    0.025   20.811   20.811 F:\ibkr-jp-microalpha\ibkr_microalpha\replay.py:174(run)
+     6786    0.089    0.000   20.718    0.003 F:\ibkr-jp-microalpha\ibkr_microalpha\replay.py:39(dispatch)
+     1502    0.765    0.001   19.531    0.013 F:\ibkr-jp-microalpha\ibkr_microalpha\features.py:420(snapshot)
+     7060   10.939    0.002   13.273    0.002 F:\ibkr-jp-microalpha\ibkr_microalpha\features.py:404(_rvol_baseline)
+     1502    0.011    0.000   10.089    0.007 F:\ibkr-jp-microalpha\ibkr_microalpha\engine.py:177(on_quote)
+      751    0.009    0.000   10.050    0.013 F:\ibkr-jp-microalpha\ibkr_microalpha\engine.py:194(on_trade)
+    25534    0.160    0.000    2.469    0.000 F:\ibkr-jp-microalpha\ibkr_microalpha\features.py:380(_return)
+ 21452752    2.334    0.000    2.334    0.000 {method 'date' of 'datetime.datetime' objects}
+    36944    0.018    0.000    1.950    0.000 {built-in method builtins.next}
+    51885    0.379    0.000    1.250    0.000 F:\ibkr-jp-microalpha\ibkr_microalpha\market.py:256(validate_quote)
+     1502    0.461    0.000    1.044    0.001 F:\ibkr-jp-microalpha\ibkr_microalpha\features.py:521(_realized_volatility)
+    25534    1.016    0.000    1.016    0.000 F:\ibkr-jp-microalpha\ibkr_microalpha\features.py:387(<genexpr>)
+     7510    0.997    0.000    0.999    0.000 F:\ibkr-jp-microalpha\ibkr_microalpha\features.py:396(_trade_window)
+    10507    0.840    0.000    0.840    0.000 F:\ibkr-jp-microalpha\ibkr_microalpha\features.py:462(<genexpr>)
+   104528    0.067    0.000    0.533    0.000 F:\ibkr-jp-microalpha\ibkr_microalpha\market.py:210(is_legal)
+   104540    0.233    0.000    0.466    0.000 F:\ibkr-jp-microalpha\ibkr_microalpha\market.py:198(tick_size)
+     6788    0.052    0.000    0.385    0.000 F:\ibkr-jp-microalpha\ibkr_microalpha\engine.py:386(poll)
+   747992    0.305    0.000    0.305    0.000 F:\ibkr-jp-microalpha\ibkr_microalpha\domain.py:85(mid)
+     1502    0.034    0.000    0.270    0.000 F:\ibkr-jp-microalpha\ibkr_microalpha\engine.py:557(evaluate)
+26496/26491    0.115    0.000    0.214    0.000 {built-in method builtins.sum}
+    75425    0.098    0.000    0.190    0.000 F:\ibkr-jp-microalpha\ibkr_microalpha\market.py:99(session)
+   298381    0.093    0.000    0.188    0.000 F:\ibkr-jp-microalpha\ibkr_microalpha\domain.py:45(aware)
+253408/13600    0.071    0.000    0.180    0.000 C:\Python314\Lib\copy.py:110(deepcopy)
+    19720    0.023    0.000    0.169    0.000 C:\Python314\Lib\dataclasses.py:1682(replace)
+21864/13572    0.069    0.000    0.142    0.000 C:\Python314\Lib\copy.py:198(_deepcopy_dict)
+    19720    0.052    0.000    0.132    0.000 C:\Python314\Lib\dataclasses.py:1701(_replace)
+   215597    0.121    0.000    0.121    0.000 {method 'astimezone' of 'datetime.datetime' objects}
+     6793    0.035    0.000    0.120    0.000 F:\ibkr-jp-microalpha\ibkr_microalpha\engine.py:276(_sync_risk)
+   115171    0.074    0.000    0.098    0.000 F:\ibkr-jp-microalpha\ibkr_microalpha\domain.py:51(finite_decimal)
+   298381    0.096    0.000    0.096    0.000 {method 'utcoffset' of 'datetime.datetime' objects}
+     1502    0.010    0.000    0.086    0.000 F:\ibkr-jp-microalpha\ibkr_microalpha\features.py:185(on_quote)
+     2882    0.006    0.000    0.085    0.000 F:\ibkr-jp-microalpha\ibkr_microalpha\engine.py:240(_valid_quote)
+   155655    0.054    0.000    0.079    0.000 F:\ibkr-jp-microalpha\ibkr_microalpha\market.py:271(<genexpr>)
+     2782    0.029    0.000    0.079    0.000 F:\ibkr-jp-microalpha\ibkr_microalpha\market.py:129(entry_gate)
+      902    0.077    0.000    0.077    0.000 F:\ibkr-jp-microalpha\ibkr_microalpha\features.py:525(<genexpr>)
+      751    0.011    0.000    0.069    0.000 F:\ibkr-jp-microalpha\ibkr_microalpha\features.py:268(on_trade)
+   258161    0.068    0.000    0.068    0.000 {method 'total_seconds' of 'datetime.timedelta' objects}
+     6786    0.009    0.000    0.065    0.000 C:\Python314\Lib\json\__init__.py:299(loads)
+   381829    0.055    0.000    0.055    0.000 {built-in method math.log}
+     6786    0.013    0.000    0.054    0.000 C:\Python314\Lib\json\decoder.py:340(decode)
+      751    0.002    0.000    0.053    0.000 F:\ibkr-jp-microalpha\ibkr_microalpha\engine.py:162(set_market)
+   469383    0.053    0.000    0.053    0.000 {built-in method builtins.isinstance}
+    19714    0.021    0.000    0.045    0.000 F:\ibkr-jp-microalpha\ibkr_microalpha\market.py:251(__post_init__)
+     7170    0.012    0.000    0.043    0.000 F:\ibkr-jp-microalpha\ibkr_microalpha\market.py:121(planned_exit_deadline)
+     6788    0.007    0.000    0.043    0.000 F:\ibkr-jp-microalpha\ibkr_microalpha\reporting.py:137(observe)
+
+

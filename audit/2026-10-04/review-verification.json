@@ -1,0 +1,8 @@
+{
+  "reviewed_input_files_unchanged": 45,
+  "finding_count": 21,
+  "python_examples_syntax_checked": 21,
+  "report_lines": 689,
+  "errors": [],
+  "scope": "Structure/hash validation only; examples remain proposed implementation sketches."
+}

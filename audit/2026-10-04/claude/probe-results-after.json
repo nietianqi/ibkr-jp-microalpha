@@ -1,0 +1,195 @@
+{
+  "enhanced": {
+    "crashed_at_second": null,
+    "candidates": 1,
+    "subscribed": [
+      "STOCK_SYNTHETIC"
+    ]
+  },
+  "enhanced_probe_seconds": 0.01,
+  "gap": {
+    "held_before_gap": 100,
+    "same_prices_resumed": true,
+    "after": [
+      {
+        "seconds_after_last_quote": 2.5,
+        "snapshot_valid": false,
+        "snapshot_reason": "MISSING:rvol_30",
+        "risk_locks": [],
+        "soft_blocks": [],
+        "sell_orders": []
+      },
+      {
+        "seconds_after_last_quote": 32.5,
+        "snapshot_valid": false,
+        "snapshot_reason": "MISSING:rvol_30",
+        "risk_locks": [],
+        "soft_blocks": [],
+        "sell_orders": []
+      }
+    ]
+  },
+  "gap_probe_seconds": 0.63,
+  "market_lag": {
+    "market_state": "MARKET_UNKNOWN",
+    "locks": [],
+    "soft_blocks": [
+      "market_data_unavailable"
+    ],
+    "sells": []
+  },
+  "market_lag_probe_seconds": 0.0,
+  "touch": {
+    "limit": "3002",
+    "order_expires_at": "2026-10-02T01:00:14+00:00",
+    "quote_after_move": "3001/3002",
+    "states": {
+      "13": "WORKING",
+      "14": "CANCEL_PENDING",
+      "15": "CANCEL_PENDING",
+      "16": "CANCEL_PENDING",
+      "17": "CANCEL_PENDING",
+      "18": "CANCEL_PENDING",
+      "19": "CANCEL_PENDING",
+      "20": "CANCEL_PENDING"
+    }
+  },
+  "touch_probe_seconds": 0.0,
+  "veto": {
+    "intents_after_40s": 0,
+    "candidates": 1,
+    "veto": 0,
+    "transient_waits": 1
+  },
+  "veto_probe_seconds": 0.0,
+  "oversell": {
+    "held": 50,
+    "sell_state": "CANCEL_PENDING",
+    "sell_possible_remaining": 100,
+    "locks": [
+      "ledger: active sells exceed confirmed holding"
+    ],
+    "pending_commands": [
+      "CANCEL",
+      "QUERY"
+    ]
+  },
+  "oversell_probe_seconds": 0.0,
+  "reporting": {
+    "drift_5s_bps": 99.50330853168091,
+    "drift_5s_correct_bps": 99.5033,
+    "corrected_cost_reported": "150.0",
+    "corrected_cost_correct": "150.0"
+  },
+  "reporting_probe_seconds": 0.0,
+  "rvol": {
+    "rows": 21,
+    "valid_rows": 20,
+    "denominator": 1000.0
+  },
+  "rvol_probe_seconds": 0.0,
+  "scaling": [
+    {
+      "symbols": 1,
+      "snapshot_ms": 0.163,
+      "market_snapshot_ms": 0.127,
+      "cpu_ms_per_second_at_4hz_each": 1.2
+    },
+    {
+      "symbols": 10,
+      "snapshot_ms": 0.159,
+      "market_snapshot_ms": 0.308,
+      "cpu_ms_per_second_at_4hz_each": 7.6
+    },
+    {
+      "symbols": 40,
+      "snapshot_ms": 0.163,
+      "market_snapshot_ms": 0.987,
+      "cpu_ms_per_second_at_4hz_each": 30.1
+    }
+  ],
+  "scaling_probe_seconds": 0.94,
+  "memory": {
+    "legacy_bytes_per_row": 226,
+    "legacy_est_MiB_one_symbol": 388,
+    "legacy_est_GiB_50_symbols": 18.9,
+    "profile_rows_one_symbol": 330,
+    "profile_KiB_one_symbol": 121.7,
+    "profile_est_MiB_50_symbols": 5.94
+  },
+  "memory_probe_seconds": 0.94,
+  "timing": {
+    "events": 3797,
+    "wall_s_with_counters": 0.8,
+    "ms_by_type": {
+      "calendar": {
+        "n": 1,
+        "p50": 0.102,
+        "p99": 0.102
+      },
+      "reconcile": {
+        "n": 1,
+        "p50": 0.106,
+        "p99": 0.106
+      },
+      "calibration_table": {
+        "n": 1,
+        "p50": 0.111,
+        "p99": 0.111
+      },
+      "same_time_profile": {
+        "n": 4,
+        "p50": 0.062,
+        "p99": 0.071
+      },
+      "account_snapshot": {
+        "n": 26,
+        "p50": 0.07,
+        "p99": 0.118
+      },
+      "quote_stream_health": {
+        "n": 752,
+        "p50": 0.062,
+        "p99": 0.168
+      },
+      "quote": {
+        "n": 1502,
+        "p50": 0.1,
+        "p99": 0.26
+      },
+      "cumulative_volume": {
+        "n": 751,
+        "p50": 0.117,
+        "p99": 0.255
+      },
+      "requests": {
+        "n": 751,
+        "p50": 0.637,
+        "p99": 1.187
+      },
+      "status": {
+        "n": 4,
+        "p50": 0.168,
+        "p99": 0.17
+      },
+      "fill": {
+        "n": 2,
+        "p50": 0.257,
+        "p99": 0.257
+      },
+      "commission": {
+        "n": 2,
+        "p50": 0.285,
+        "p99": 0.285
+      }
+    },
+    "call_counts": {
+      "poll": 4548,
+      "market_snapshot": 751,
+      "_baseline_value": 1472,
+      "snapshot": 751,
+      "allocate": 3
+    }
+  },
+  "timing_probe_seconds": 0.81
+}

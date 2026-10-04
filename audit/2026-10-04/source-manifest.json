@@ -1,0 +1,286 @@
+{
+  "review_date_jst": "2026-10-04",
+  "workspace": "F:\\ibkr-jp-microalpha",
+  "version": "pyproject.toml 0.1.0 / source specification v1.2",
+  "git_history_available": false,
+  "python": "3.14.0",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "verification": {
+    "existing_tests": 142,
+    "existing_tests_passed": true,
+    "configuration_validation_passed": true,
+    "compileall_passed": true
+  },
+  "files": [
+    {
+      "path": "examples/research.json",
+      "bytes": 3328,
+      "modified_at_jst": "2026-10-03T08:55:38.403692+09:00",
+      "sha256": "f23fea70754eee2e23a02455011b6e86d4eb7f4e8846b6eb42f0a35b1248a3b4"
+    },
+    {
+      "path": "ibkr_microalpha/__init__.py",
+      "bytes": 90,
+      "modified_at_jst": "2026-10-03T08:14:15.216095+09:00",
+      "sha256": "81cf822f8b73b847852abad1fb2cc172fbccc02491f1cf3965c8738d0c773dec"
+    },
+    {
+      "path": "ibkr_microalpha/__main__.py",
+      "bytes": 30,
+      "modified_at_jst": "2026-10-03T08:23:29.203487+09:00",
+      "sha256": "6d8b7d7846a845059d7a3107143f11131f63c5511d669b44085b15ec5e3d2279"
+    },
+    {
+      "path": "ibkr_microalpha/cli.py",
+      "bytes": 1563,
+      "modified_at_jst": "2026-10-03T08:27:50.105067+09:00",
+      "sha256": "22a5fc04b8bcef771a8a60e3fdb5a27df9e9936dc0f4455a78dd6ae861162c69"
+    },
+    {
+      "path": "ibkr_microalpha/config.py",
+      "bytes": 7589,
+      "modified_at_jst": "2026-10-03T08:55:38.402692+09:00",
+      "sha256": "d15449a4c71b2ab19324b9cc453aed9682eb494e4e00e8bbdbaa105a451a9e96"
+    },
+    {
+      "path": "ibkr_microalpha/demo.py",
+      "bytes": 5375,
+      "modified_at_jst": "2026-10-03T08:27:50.104061+09:00",
+      "sha256": "ea2de7da2d8d061fe3d3d9e16975635ccd39efbc40893ec6473e5080a98b628a"
+    },
+    {
+      "path": "ibkr_microalpha/domain.py",
+      "bytes": 3305,
+      "modified_at_jst": "2026-10-03T08:35:39.495561+09:00",
+      "sha256": "367f04a348374298f53c67cd9c9c315ecc2c965ff7f9c198af67d751a10ff6d8"
+    },
+    {
+      "path": "ibkr_microalpha/economics.py",
+      "bytes": 20289,
+      "modified_at_jst": "2026-10-03T08:39:47.578894+09:00",
+      "sha256": "481c9a2d7f4e5fad763c75488831f8d7bb4d96e187d96cad17443c492b95cc07"
+    },
+    {
+      "path": "ibkr_microalpha/engine.py",
+      "bytes": 40071,
+      "modified_at_jst": "2026-10-03T08:57:13.858551+09:00",
+      "sha256": "7c17710c91a19fdfb56b77daebdefb891130e747c66acdfd7a4ebc02810cdd39"
+    },
+    {
+      "path": "ibkr_microalpha/execution.py",
+      "bytes": 50430,
+      "modified_at_jst": "2026-10-03T08:35:13.994448+09:00",
+      "sha256": "adf1d0fc3e99bcb4e46a2d70c7e743b2c952aa581bf8f7b76477f88c28a6e17b"
+    },
+    {
+      "path": "ibkr_microalpha/features.py",
+      "bytes": 25963,
+      "modified_at_jst": "2026-10-03T08:36:33.760505+09:00",
+      "sha256": "541e325bbc11682236ddcc910996897d4670fc1344a73ae656496b3971748acb"
+    },
+    {
+      "path": "ibkr_microalpha/market.py",
+      "bytes": 12755,
+      "modified_at_jst": "2026-10-03T08:40:58.986151+09:00",
+      "sha256": "a69e24f5ec6db09c26be84f431554b838f552b0226e21e0119696a6653d97622"
+    },
+    {
+      "path": "ibkr_microalpha/replay.py",
+      "bytes": 11318,
+      "modified_at_jst": "2026-10-03T08:55:45.464252+09:00",
+      "sha256": "5513ec1f3dd5424e7896761068e78adab2111044ae80f78e7c93b5fc346cd7cb"
+    },
+    {
+      "path": "ibkr_microalpha/reporting.py",
+      "bytes": 10250,
+      "modified_at_jst": "2026-10-03T08:55:38.236396+09:00",
+      "sha256": "4433e6aea108f046234be24b8e6d2e17de002faba0382aeb027cb48b0e4eebb3"
+    },
+    {
+      "path": "ibkr_microalpha/risk.py",
+      "bytes": 8237,
+      "modified_at_jst": "2026-10-03T08:40:58.985153+09:00",
+      "sha256": "69b0db160bcb782d16c2e71a591a27de7ead6d68e6998a114e6c479075c3c6ff"
+    },
+    {
+      "path": "ibkr_microalpha/signals.py",
+      "bytes": 30410,
+      "modified_at_jst": "2026-10-03T08:36:04.118267+09:00",
+      "sha256": "bf8c3c03c84cbfa281ee3baf861fa77abdabd9122bf247f6b05c120359078118"
+    },
+    {
+      "path": "ibkr_microalpha/subscriptions.py",
+      "bytes": 9856,
+      "modified_at_jst": "2026-10-03T08:29:52.961425+09:00",
+      "sha256": "069476e22cc842321e24d1b7570b11100c7ab0535c513588780f2eb608bb77ed"
+    },
+    {
+      "path": "IBKR日本股票多周期协同策略文档.md",
+      "bytes": 82191,
+      "modified_at_jst": "2026-10-03T08:09:05.470623+09:00",
+      "sha256": "9e2a7b72fcfc86e268153c70c642d6df078a231ab247fe1895b5d6c34b28ce94"
+    },
+    {
+      "path": "IMPLEMENTATION_STATUS.md",
+      "bytes": 7270,
+      "modified_at_jst": "2026-10-03T08:58:16.359405+09:00",
+      "sha256": "6db4599318fab001a2d56b062828e0542e33f1e3db844c01444dda31b5617ba0"
+    },
+    {
+      "path": "pyproject.toml",
+      "bytes": 409,
+      "modified_at_jst": "2026-10-03T08:14:15.217095+09:00",
+      "sha256": "8b97f50ed49dfd2385f1b98d607cbd75694b58847f6acb8df3be76f3bf5c9091"
+    },
+    {
+      "path": "README.md",
+      "bytes": 9872,
+      "modified_at_jst": "2026-10-03T08:58:16.357430+09:00",
+      "sha256": "96ed6516bd1e149c2d8882943f44b6db611b41f5c2f4c12d3073b85599679dee"
+    },
+    {
+      "path": "runs/demo/audit.jsonl",
+      "bytes": 170118,
+      "modified_at_jst": "2026-10-03T08:57:48.628911+09:00",
+      "sha256": "1a8e19b33ad71eb10b40df3d83f4a1b2de7b908f4d996a0024736c1f1ecc7fc6"
+    },
+    {
+      "path": "runs/demo/events.jsonl",
+      "bytes": 1864389,
+      "modified_at_jst": "2026-10-03T08:57:32.460717+09:00",
+      "sha256": "375e066d9d1c1ef7d1abb92c9ae7ae38a6be2b0f79de69017ed7f237c6ba0d00"
+    },
+    {
+      "path": "runs/demo/execution-journal.jsonl",
+      "bytes": 3258,
+      "modified_at_jst": "2026-10-03T08:57:48.629899+09:00",
+      "sha256": "f1888cede74ac1461d309face8026e0e5ebfd62855367059cbc5ef151f34c9f2"
+    },
+    {
+      "path": "runs/demo/execution.json",
+      "bytes": 7551,
+      "modified_at_jst": "2026-10-03T08:57:48.629899+09:00",
+      "sha256": "29ddff1ec07b2c712b16733c4824db77b67027109e279c944404d9fd77aabb77"
+    },
+    {
+      "path": "runs/demo/frozen-config.json",
+      "bytes": 3969,
+      "modified_at_jst": "2026-10-03T08:57:48.559965+09:00",
+      "sha256": "cf07d4ac206f0f702ab4104d29b806d1c8353e9870f17cefa96013a37f96afd0"
+    },
+    {
+      "path": "runs/demo/raw-input.jsonl",
+      "bytes": 1864389,
+      "modified_at_jst": "2026-10-03T08:57:48.621824+09:00",
+      "sha256": "375e066d9d1c1ef7d1abb92c9ae7ae38a6be2b0f79de69017ed7f237c6ba0d00"
+    },
+    {
+      "path": "runs/demo/report.json",
+      "bytes": 3588,
+      "modified_at_jst": "2026-10-03T08:57:48.622824+09:00",
+      "sha256": "c10c0864481582d58c7a11325c4898169e08f04e41079c104f181ca6ecc2293c"
+    },
+    {
+      "path": "runs/replayed/audit.jsonl",
+      "bytes": 170118,
+      "modified_at_jst": "2026-10-03T08:58:05.087466+09:00",
+      "sha256": "1a8e19b33ad71eb10b40df3d83f4a1b2de7b908f4d996a0024736c1f1ecc7fc6"
+    },
+    {
+      "path": "runs/replayed/execution-journal.jsonl",
+      "bytes": 3258,
+      "modified_at_jst": "2026-10-03T08:58:05.088468+09:00",
+      "sha256": "f1888cede74ac1461d309face8026e0e5ebfd62855367059cbc5ef151f34c9f2"
+    },
+    {
+      "path": "runs/replayed/execution.json",
+      "bytes": 7551,
+      "modified_at_jst": "2026-10-03T08:58:05.087466+09:00",
+      "sha256": "29ddff1ec07b2c712b16733c4824db77b67027109e279c944404d9fd77aabb77"
+    },
+    {
+      "path": "runs/replayed/frozen-config.json",
+      "bytes": 3969,
+      "modified_at_jst": "2026-10-03T08:58:05.022717+09:00",
+      "sha256": "cf07d4ac206f0f702ab4104d29b806d1c8353e9870f17cefa96013a37f96afd0"
+    },
+    {
+      "path": "runs/replayed/raw-input.jsonl",
+      "bytes": 1864389,
+      "modified_at_jst": "2026-10-03T08:58:05.078912+09:00",
+      "sha256": "375e066d9d1c1ef7d1abb92c9ae7ae38a6be2b0f79de69017ed7f237c6ba0d00"
+    },
+    {
+      "path": "runs/replayed/report.json",
+      "bytes": 3588,
+      "modified_at_jst": "2026-10-03T08:58:05.078912+09:00",
+      "sha256": "c10c0864481582d58c7a11325c4898169e08f04e41079c104f181ca6ecc2293c"
+    },
+    {
+      "path": "tests/__init__.py",
+      "bytes": 0,
+      "modified_at_jst": "2026-10-03T08:16:27.759697+09:00",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/test_coordinator_edges.py",
+      "bytes": 4025,
+      "modified_at_jst": "2026-10-03T08:43:55.524239+09:00",
+      "sha256": "6681f1d70c26d458d3d7bfe571f1af0de14ec677efe3308faaa4ec9bbbf3b8d9"
+    },
+    {
+      "path": "tests/test_economics.py",
+      "bytes": 9121,
+      "modified_at_jst": "2026-10-03T08:39:47.580046+09:00",
+      "sha256": "6859a1fe68816e1e26f8bb58e3b7d915ebdf82a96e4a21ba65366143e12ba7f0"
+    },
+    {
+      "path": "tests/test_engine.py",
+      "bytes": 13634,
+      "modified_at_jst": "2026-10-03T08:39:47.582046+09:00",
+      "sha256": "80c04a96888d42aea8f16d09b45fd4ab4698e93eccd4a9f2f1d54f59ea4f949b"
+    },
+    {
+      "path": "tests/test_execution.py",
+      "bytes": 24329,
+      "modified_at_jst": "2026-10-03T08:35:13.996448+09:00",
+      "sha256": "83c9342b00f99f14c920b8a454a3d5288ee4b18a6cd9af0a6395bb9baef26587"
+    },
+    {
+      "path": "tests/test_market.py",
+      "bytes": 16040,
+      "modified_at_jst": "2026-10-03T08:31:37.936935+09:00",
+      "sha256": "4c80e5b1170e307a83d0f2deeea97d5e86c0bc93dea9b9bf75e21c5c774d1adc"
+    },
+    {
+      "path": "tests/test_replay.py",
+      "bytes": 9935,
+      "modified_at_jst": "2026-10-03T08:38:03.333522+09:00",
+      "sha256": "c7bf09fb373ceaec2d69079f2bd25d422d863d7bd9f320523412c7460a159c16"
+    },
+    {
+      "path": "tests/test_reporting.py",
+      "bytes": 7088,
+      "modified_at_jst": "2026-10-03T08:57:07.520774+09:00",
+      "sha256": "91b6e31af00e8be2ed70899a89b4bf080c7cae5c0c383408a82e04ec810fa0cb"
+    },
+    {
+      "path": "tests/test_risk.py",
+      "bytes": 3301,
+      "modified_at_jst": "2026-10-03T08:16:27.760881+09:00",
+      "sha256": "f353be1627c331f881e0643d8981c7703a15ee7ef7e8ac69abe9aec521c380dd"
+    },
+    {
+      "path": "tests/test_signals.py",
+      "bytes": 13403,
+      "modified_at_jst": "2026-10-03T08:36:04.119265+09:00",
+      "sha256": "20e0ae9912d2be949fb01b9db240d2eb5ae7f6dea7e1b39635e7eb33a19b4f79"
+    },
+    {
+      "path": "tests/test_subscriptions.py",
+      "bytes": 7069,
+      "modified_at_jst": "2026-10-03T08:29:15.086085+09:00",
+      "sha256": "1a6c505beb66c35fd239fca6e5cb526be7d4ea82f8f885ed1fa4cc0d29075b18"
+    }
+  ]
+}

@@ -1,0 +1,627 @@
+可以，而且我反而更建议你**综合起来做**，不要把 1–5 秒、5–30 秒、30 秒–2 分钟、2–10 分钟当成四套完全独立的系统。
+
+对 **IBKR 日股**，我会这样分工：
+
+| 时间尺度 | 建议权重 | 作用 | 是否适合作为主策略 |
+|---|---:|---|---|
+| **1–5秒** | 10–15% | 微观择时、盘口确认、优化挂单价 | ⚠️ 不建议单独主打 |
+| **5–30秒** | 30–35% | 短周期盘口/成交量 alpha | ⭐⭐⭐⭐⭐ |
+| **30秒–2分钟** | 30–35% | 主交易信号 | ⭐⭐⭐⭐⭐ |
+| **2–10分钟** | 20–30% | 趋势/市场状态/方向过滤 | ⭐⭐⭐⭐⭐ |
+
+如果只能选一个，我更偏向 **30秒–2分钟**。
+
+如果做完整系统，最佳组合是：
+
+> **2–10分钟决定方向 → 30秒–2分钟寻找机会 → 5–30秒确认 → 1–5秒负责执行。**
+
+这比四个周期各自独立交易好很多。
+
+---
+
+## 为什么我不建议把 1–5 秒作为主战场
+
+你用 IBKR 日股最大的限制不是 C++ 算得不够快，而是：
+
+```text
+JPX行情
+ ↓
+你的服务器
+ ↓
+策略计算
+ ↓
+IB Gateway
+ ↓
+IBKR
+ ↓
+JPX
+```
+
+你前面实测 IBKR 链路已经是几十毫秒级，这意味着 1–5 秒虽然能做，但已经不能靠纯速度优势赚钱。
+
+例如这种策略：
+
+```text
+Best Bid突然出现大量订单
+↓
+马上抢 Bid
+↓
+300ms 后卖
+```
+
+不适合。
+
+因为等你的订单进去：
+
+```text
+盘口可能已经变了
+```
+
+但这种就可以：
+
+```text
+过去3秒：
+Bid成交持续增强
++
+Microprice持续高于Mid
++
+盘口失衡持续存在
++
+短期价格尚未完全上涨
+```
+
+预测：
+
+```text
+未来 5–20秒
+```
+
+这就适合 IBKR。
+
+所以 **1–5秒更应该作为 execution layer，而不是 alpha 主来源。**
+
+---
+
+# 我建议你做一个四层系统
+
+整体架构可以这样：
+
+```text
+              2–10分钟
+          Market Regime
+                ↓
+        判断总体方向/环境
+                ↓
+           30秒–2分钟
+          Alpha Signal
+                ↓
+            5–30秒
+         Entry Confirmation
+                ↓
+             1–5秒
+          Execution Engine
+                ↓
+             IBKR
+```
+
+具体来说。
+
+---
+
+# 第一层：2–10分钟
+
+### 做“方向过滤器”
+
+这一层不要疯狂买卖。
+
+主要判断：
+
+```text
+当前应该：
+Long
+Short
+Neutral
+```
+
+可以用：
+
+```text
+5分钟 momentum
+VWAP deviation
+EMA slope
+Volume acceleration
+Relative Strength
+TOPIX / Nikkei方向
+行业方向
+个股相对行业强弱
+```
+
+例如：
+
+```text
+5min return > 0
+VWAP slope > 0
+行业指数 > VWAP
+个股 Relative Strength > 0
+```
+
+得到：
+
+```text
+Regime = LONG
+```
+
+接下来短周期系统：
+
+```text
+优先找买点
+```
+
+而不是：
+
+```text
+Long / Short随便做
+```
+
+这样能明显减少逆势交易。
+
+---
+
+# 第二层：30秒–2分钟
+
+这是我认为你 IBKR 日股系统里**最重要的一层**。
+
+主要负责：
+
+> 有没有值得交易的机会？
+
+例如综合：
+
+```text
+30s Momentum
+60s Momentum
+120s Momentum
+
+Trade Imbalance
+Volume Burst
+
+VWAP deviation
+
+Short-term Mean Reversion
+
+Spread
+
+Volatility
+```
+
+例如：
+
+```text
+Momentum30s       +0.8
+TradeImbalance    +1.2
+VolumeBurst       +0.6
+VWAP               +0.3
+MeanReversion      -0.2
+```
+
+最终：
+
+```text
+Alpha Score = +2.7
+```
+
+超过：
+
+```text
++2.0
+```
+
+进入候选交易。
+
+这层我建议占整个系统大约：
+
+**35%–40%的决策权。**
+
+---
+
+# 第三层：5–30秒
+
+这一层做：
+
+> 现在是不是一个好入场点？
+
+这是微观结构真正发挥作用的位置。
+
+可以看：
+
+```text
+Order Book Imbalance
+Microprice
+Trade Flow
+Aggressive Buy/Sell
+Spread
+Bid/Ask replenishment
+短周期价格加速度
+```
+
+例如：
+
+```text
+30秒主策略：
+BUY
+```
+
+但是盘口：
+
+```text
+Ask很厚
+Bid不断撤单
+Sell market orders增加
+```
+
+那么：
+
+```text
+WAIT
+```
+
+过了 6 秒：
+
+```text
+Bid补单
+Ask被吃掉
+Microprice上移
+```
+
+再：
+
+```text
+BUY
+```
+
+这一层非常重要。
+
+它可以减少：
+
+```text
+追高
+假突破
+买在局部最高点
+```
+
+---
+
+# 第四层：1–5秒
+
+这一层不要负责：
+
+> 要不要买？
+
+而负责：
+
+> **怎么成交最好？**
+
+例如策略已经确定：
+
+```text
+BUY 100
+```
+
+1–5 秒引擎决定：
+
+```text
+Bid挂单？
+Mid挂单？
+直接Ask成交？
+等1秒？
+撤单？
+改价？
+```
+
+例如：
+
+```text
+Spread = 2 ticks
+
+Microprice偏Bid
+↓
+挂 Bid
+```
+
+如果：
+
+```text
+Microprice突然上移
+Ask开始被大量吃
+```
+
+那么：
+
+```text
+改单到 Ask
+```
+
+这叫：
+
+**Execution Alpha**
+
+而不是 Directional Alpha。
+
+---
+
+# 一个完整例子
+
+假设：
+
+```text
+7203 Toyota
+```
+
+### 2–10分钟
+
+检测：
+
+```text
+5min momentum        +0.35%
+VWAP slope           ↑
+行业                 ↑
+TOPIX                ↑
+```
+
+所以：
+
+```text
+LONG BIAS
+```
+
+---
+
+### 30秒–2分钟
+
+检测：
+
+```text
+60s return           +0.12%
+Volume               2.4x
+Trade imbalance      +0.62
+VWAP deviation       +0.07%
+```
+
+得到：
+
+```text
+Alpha Score = 2.4
+
+BUY candidate
+```
+
+---
+
+### 5–30秒
+
+观察：
+
+```text
+Bid size     ↑
+Ask size     ↓
+
+Microprice > Mid
+
+Aggressive Buy
+持续增加
+```
+
+得到：
+
+```text
+ENTRY CONFIRMED
+```
+
+---
+
+### 1–5秒
+
+当前盘口：
+
+```text
+Bid  3000.0
+Ask  3000.5
+```
+
+你的 fair price：
+
+```text
+3000.42
+```
+
+因此：
+
+```text
+先挂：
+3000.0 BUY
+```
+
+1秒后：
+
+```text
+Bid快速增加
+Ask被吃
+```
+
+改：
+
+```text
+3000.5 BUY
+```
+
+成交。
+
+---
+
+# 出场也应该多周期
+
+不要只做固定：
+
+```text
+盈利 +5 tick
+止损 -3 tick
+```
+
+更好的方法：
+
+```text
+2–10min trend
+        ↓
+30s–2min alpha decay
+        ↓
+5–30s orderflow reversal
+        ↓
+1–5s execution
+```
+
+例如持仓后：
+
+```text
+30s momentum
++0.8
+→ +0.4
+→ +0.1
+→ -0.2
+```
+
+同时：
+
+```text
+Trade Imbalance
++0.5
+→ +0.2
+→ -0.3
+```
+
+那就是：
+
+```text
+Alpha Decay
+```
+
+准备退出。
+
+最后由 1–5 秒 execution engine 决定：
+
+```text
+Maker退出
+还是
+Taker退出
+```
+
+---
+
+# 最值得做的结构
+
+你的策略不要写成：
+
+```text
+strategy_1_5s
+strategy_5_30s
+strategy_30_120s
+strategy_2_10m
+```
+
+然后四个策略分别买卖。
+
+我更建议：
+
+```text
+Market Regime Engine
+        │
+        ▼
+2–10m features
+        │
+        ▼
+Directional Bias
+        │
+        ▼
+30s–2m Alpha Engine
+        │
+        ▼
+Candidate Signal
+        │
+        ▼
+5–30s Microstructure Engine
+        │
+        ▼
+Entry / Exit Confirmation
+        │
+        ▼
+1–5s Execution Engine
+        │
+        ▼
+Risk Engine
+        │
+        ▼
+IBKR
+```
+
+这样不会出现：
+
+```text
+2分钟策略：BUY
+
+20秒策略：SELL
+
+3秒策略：BUY
+
+系统疯狂：
+买
+卖
+买
+卖
+```
+
+这种内部互相打架的问题。
+
+---
+
+## 我会给你的时间尺度分工定成
+
+**核心 Alpha：**
+
+```text
+30秒–2分钟     40%
+```
+
+**微观结构：**
+
+```text
+5–30秒         30%
+```
+
+**趋势 / Regime：**
+
+```text
+2–10分钟       20%
+```
+
+**Execution Alpha：**
+
+```text
+1–5秒          10%
+```
+
+不是说最终机器学习模型一定要严格用这些权重，而是开发资源和研究重点可以先按这个比例投入。
+
+### 最终真正要优化的是
+
+```text
+2–10m：
+方向对不对
+
+30s–2m：
+有没有 Alpha
+
+5–30s：
+是不是现在进
+
+1–5s：
+怎么成交最划算
+```

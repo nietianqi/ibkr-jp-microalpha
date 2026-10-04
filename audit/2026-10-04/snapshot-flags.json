@@ -1,0 +1,14 @@
+{
+  "boolean_false": {
+    "input_valid": false,
+    "accepted_by_constructor": true,
+    "buy_orders": 0,
+    "regime": "RISK_OFF"
+  },
+  "string_false": {
+    "input_valid": "false",
+    "accepted_by_constructor": true,
+    "buy_orders": 1,
+    "regime": "LONG"
+  }
+}

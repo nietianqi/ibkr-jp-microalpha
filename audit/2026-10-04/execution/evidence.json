@@ -1,0 +1,51 @@
+{
+  "correction_after_sell_transmission": {
+    "held_after_correction": 50,
+    "submitted_sell_remaining": 100,
+    "state": "WORKING",
+    "commands": [],
+    "locks": [],
+    "reconciled": true,
+    "held_after_sell_fills": -50
+  },
+  "correction_engine_exit_stalls": {
+    "holding": 50,
+    "sell_remaining": 100,
+    "sell_limit": "2999.0",
+    "current_bid": "3000",
+    "sell_state_after_exit_ttl": "WORKING",
+    "commands": [],
+    "risk_locks": []
+  },
+  "invalid_exit_limit": {
+    "bid": "0.5",
+    "exit_slippage": "1",
+    "exception": "price must be positive",
+    "sell_orders": 0,
+    "exit_blocked_audit": 0
+  },
+  "request_dispatch_precedes_staleness_gate": {
+    "quote_age_seconds": 3.0,
+    "allowed_max_quote_age_seconds": 2,
+    "returned_commands": [
+      {
+        "kind": "SUBMIT",
+        "order_id": 1
+      }
+    ],
+    "order_submitted_at": "2026-10-02T01:00:15+00:00",
+    "order_state_after_poll": "CANCEL_PENDING",
+    "next_pending_commands": [
+      "CANCEL"
+    ],
+    "market_state_after_poll": "MARKET_RISK_OFF"
+  },
+  "entry_metadata_not_in_journal": {
+    "submission_score": 2.7593889113719143,
+    "current_score": 2.8348981518953194,
+    "restored_snapshot_score": 2.8348981518953194,
+    "restored_journal_score": 2.7593889113719143,
+    "existing_demo_snapshot_order_score": 2.8675213682449385,
+    "existing_demo_journal_submit_score": 2.8446550849077727
+  }
+}

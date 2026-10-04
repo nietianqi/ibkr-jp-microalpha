@@ -1,0 +1,41 @@
+{
+  "method": "tracemalloc after engine construction; no-op unique timers at fixed causal time; 100000 events",
+  "measurements": [
+    {
+      "events": 10000,
+      "traced_current_bytes": 3586108,
+      "traced_peak_bytes": 3586990,
+      "seen_events": 10000,
+      "audit_count": 0,
+      "memory": {
+        "working_set_bytes": 37466112,
+        "peak_working_set_bytes": 37466112,
+        "private_commit_bytes": 27721728
+      }
+    },
+    {
+      "events": 50000,
+      "traced_current_bytes": 18824760,
+      "traced_peak_bytes": 18825592,
+      "seen_events": 50000,
+      "audit_count": 0,
+      "memory": {
+        "working_set_bytes": 72708096,
+        "peak_working_set_bytes": 72708096,
+        "private_commit_bytes": 64495616
+      }
+    },
+    {
+      "events": 100000,
+      "traced_current_bytes": 37648407,
+      "traced_peak_bytes": 37649289,
+      "seen_events": 100000,
+      "audit_count": 0,
+      "memory": {
+        "working_set_bytes": 116580352,
+        "peak_working_set_bytes": 116580352,
+        "private_commit_bytes": 109854720
+      }
+    }
+  ]
+}

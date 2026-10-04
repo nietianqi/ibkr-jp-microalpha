@@ -1,0 +1,575 @@
+判断 IBKR 日股适合哪种自动化策略，可以直接做成一个 **“策略适配漏斗”**。按你 Phase 1 的实测，其实已经能筛掉大半策略了。
+
+### 第一步：先决定“最短可交易时间尺度”
+
+看三个数字：
+
+-|  |  |
+|---|---|
+|  | 30 只股票的**有效盘口事件速率中位数**约 0.264 次/秒，倒数约 3.8 秒。这个统计能复现 |
+| 下单确认中位数 262 ms、p99 741 ms | 能复现，共 199 个样本；这是券商状态确认耗时 |
+| 撤单再挂至少 430 ms | 是把撤单和下单的中位数相加得到的粗估，**不能称为实测下限** |
+- 下单确认中位数 **262 ms，p99 741 ms**
+- 撤单再挂至少约 **430 ms**
+
+所以你不应该从“我想做 HFT”出发，而应该规定：
+
+> **策略持有周期至少要显著大于行情陈旧时间和执行延迟。**
+
+我会给你目前系统这样的分级：
+
+| 预测/持有周期 | 当前适合度 |
+|---|---|
+| 10–100ms | ❌ |
+| 100–500ms | ❌ |
+| 1–5秒 | ❌ |
+| 5–30秒 | ⚠️ 需要 Tick-by-Tick |
+| **30秒–2分钟** | ✅ 可研究 |
+| **2–10分钟** | **✅ 主战场** |
+| 10–60分钟 | ✅ |
+| 数小时～几天 | ✅ |
+
+IBKR API 本身支持 `Last / AllLast / BidAsk / MidPoint` 的 Tick-by-Tick 数据，但同时订阅数量受到 market-data-line 限制；官方目前规定 Tick-by-Tick 同时订阅上限约为账户 market-data lines 的 5%。:chatgpt-content-reference{index="0"}
+
+---
+
+## 第二步：用交易成本决定“策略必须赚多少”
+
+这是最重要的一步。
+
+你当前 Fixed：
+
+```text
+佣金买入       ≈ 8 bps
+佣金卖出       ≈ 8 bps
+中位点差       ≈ 7.6 bps
+----------------------
+基础往返成本   ≈ 23.6 bps
+```
+
+IBKR 官方目前日本股票：
+
+- Fixed：0.08%
+- Tiered 第一档：0.05%
+- 最低 ¥80/单 :chatgpt-content-reference{index="1"}
+
+Tiered 在 TSE Prime 还包括约：
+
+- Exchange：0.002%
+- Clearing：0.0007%
+- Access：¥2.70/order :chatgpt-content-reference{index="2"}
+
+因此你的策略不应该问：
+
+> “未来会上涨吗？”
+
+而应该问：
+
+> **“未来预期上涨幅度是否足以覆盖成本，并且还留下足够利润？”**
+
+我会给策略设置：
+
+```text
+Expected Alpha
+>
+Commission
++ Spread
++ Slippage
++ Adverse Selection
++ Safety Margin
+```
+
+例如 Fixed 环境综合成本约 25–30bps，那么我不会因为模型预测：
+
+```text
++18bps
++25bps
++30bps
+```
+
+就交易。
+
+比较合理的开仓门槛可能是：
+
+**预测 40–60bps 以上**
+
+再根据实际回测优化。
+
+---
+
+# 第三步：计算每种策略的 Alpha Half-Life
+
+这是判断策略类型非常有效的指标。
+
+假设出现一个信号：
+
+```text
+T0 = 信号发生
+
+未来：
+5s     +8bps
+10s    +13bps
+30s    +28bps
+60s    +42bps
+120s   +55bps
+300s   +61bps
+600s   +40bps
+```
+
+这种信号非常适合 IBKR。
+
+因为最佳收益发生在：
+
+**2～5分钟**
+
+而不是 100ms。
+
+相反，如果：
+
+```text
+100ms  +10bps
+500ms  +15bps
+1s     +18bps
+5s     +3bps
+30s    0bps
+```
+
+即使这是一个非常优秀的 HFT 信号：
+
+> **对你的 IBKR 系统也没有价值。**
+
+因为在你的订单到达之前，Alpha 已经消失。
+
+因此建议你以后每个策略都画：
+
+```text
+Expected Return
+     ↑
+     │
+60bp │             ●
+     │          ●     ●
+40bp │       ●
+     │
+20bp │    ●
+     │ ●
+ 0   └─────────────────→
+    5s 30s 1m 2m 5m 10m
+```
+
+找到策略自己的：
+
+**Alpha decay curve**。
+
+---
+
+# 第四步：看信号需要什么行情
+
+这直接决定策略是否适合 IBKR。
+
+### 只需要 L1 就能做
+
+这些比较适合：
+
+**① Residual Momentum**
+
+```text
+股票收益
+-
+β × TOPIX
+-
+β₂ × Sector
+```
+
+寻找异常强弱。
+
+★★★★★
+
+---
+
+**② Volume Breakout**
+
+```text
+30s / 60s Return
++
+Relative Volume
++
+Trade Count
++
+Spread
+```
+
+★★★★☆
+
+---
+
+**③ Intraday Breakout**
+
+例如：
+
+```text
+突破：
+昨日高点
+Opening Range
+VWAP
+20分钟高点
+```
+
+★★★★☆
+
+---
+
+**④ Extreme Mean Reversion**
+
+寻找：
+
+```text
+股票 -1.5%
+行业 -0.2%
+指数 -0.1%
+```
+
+这种异常偏离。
+
+★★★★☆
+
+---
+
+### 需要 Tick-by-Tick Last
+
+例如：
+
+**Trade Flow Momentum**
+
+```text
+Buy Volume
+Sell Volume
+Trade Count
+Large Trades
+Trade Velocity
+```
+
+这很适合你下一阶段研究。
+
+IBKR Tick-by-Tick Last 数据可以返回价格、成交量、时间、交易所等字段。:chatgpt-content-reference{index="3"}
+
+---
+
+### 需要 BidAsk Tick-by-Tick
+
+可以做：
+
+```text
+spread变化
+micro-price
+bid/ask persistence
+quote velocity
+short-term imbalance
+```
+
+但时间尺度建议仍然：
+
+**10秒～几分钟**
+
+而不是毫秒级。
+
+---
+
+### 需要 Level 2
+
+例如：
+
+```text
+Order Book Imbalance
+Depth Pressure
+Queue Dynamics
+Cancel/Replenishment
+```
+
+IBKR API 的确支持 Level II market depth，而且官方说明 depth 数据不是采样/过滤后的流，但也明确说明不能保证展示每一个报价，odd-lot 也不包含。:chatgpt-content-reference{index="4"}
+
+所以它可以作为：
+
+> **辅助 Feature**
+
+但我不会拿 IBKR Level II 做真正的超低延迟 order-book HFT。
+
+---
+
+# 第五步：测“股票是否适合这个策略”
+
+不要先固定股票池。
+
+每天给股票算一个：
+
+## Tradability Score
+
+例如：
+
+```text
+Tradability Score =
+
+20% Quote Update Frequency
+20% Trade Frequency
+15% Turnover
+15% Spread Score
+10% Tick / Price Ratio
+10% Slippage Score
+10% Fill Probability
+```
+
+重点寻找：
+
+```text
+报价更新快
+成交频繁
+Spread = 1 tick
+成交额大
+单笔金额足够大
+滑点小
+```
+
+而不是单纯：
+
+```text
+成交量大
+```
+
+---
+
+# 第六步：每个策略必须过这 7 个指标
+
+以后 Codex 每开发一个策略，我建议自动输出：
+
+| 指标 | 必须回答的问题 |
+|---|---|
+| Gross Alpha | 信号产生多少bps？ |
+| Net Alpha | 扣成本剩多少？ |
+| Hit Rate | 胜率多少？ |
+| MFE | 最大有利波动多少？ |
+| MAE | 最大不利波动多少？ |
+| Alpha Half-Life | Edge多久消失？ |
+| Capacity | 一天能做多少钱？ |
+
+此外还有两个对你尤其重要：
+
+### Turnover
+
+假设：
+
+```text
+单次净Edge = 12bps
+每天交易 = 50次
+```
+
+可能非常差。
+
+但是：
+
+```text
+单次净Edge = 70bps
+每天交易 = 3次
+```
+
+可能反而非常优秀。
+
+---
+
+### Fill Probability
+
+特别是你以后如果尝试 Maker：
+
+```text
+Signal = +50bps
+```
+
+并不意味着你能赚50bps。
+
+如果：
+
+```text
+挂Bid成交概率 20%
+```
+
+实际策略完全不同。
+
+所以需要记录：
+
+```text
+signal_price
+limit_price
+fill_price
+fill_delay
+fill_probability
+cancel_time
+post_fill_return
+```
+
+---
+
+# 第七步：做 Strategy × Infrastructure Matrix
+
+我建议你最终让程序自动生成这种东西：
+
+| 策略 | 数据需求 | 推荐周期 | 成本敏感度 | IBKR适合度 |
+|---|---|---:|---:|---:|
+| Market Making | L2 | ms–秒 | 极高 | ❌ |
+| Scalping | Tick/L2 | 1–10秒 | 极高 | ❌ |
+| Quote Imbalance | L2 | 5–30秒 | 高 | ⚠️ |
+| Trade Flow Momentum | Tick | 30s–5m | 中 | ✅ |
+| Residual Momentum | L1+Tick | 2–10m | 中 | **✅✅** |
+| Lead-Lag | L1/Tick | 30s–10m | 中 | **✅✅** |
+| Extreme Reversion | L1/Tick | 1–15m | 中 | **✅** |
+| Opening Breakout | L1/Tick | 5m–2h | 低 | **✅** |
+| Swing Momentum | 分钟K | 1–5天 | 很低 | ✅ |
+
+---
+
+# 按你现在 Phase 1 的数据，我会先测这 4 个
+
+顺序是：
+
+**① Residual Momentum 2–10分钟**
+
+```text
+Stock Return
+- Market Beta
+- Sector Beta
++
+Relative Volume
++
+Trade Flow
+```
+
+这是第一优先。
+
+**② Lead-Lag 30秒～5分钟**
+
+例如：
+
+```text
+Nikkei futures
+↓
+行业ETF / 龙头
+↓
+个股
+```
+
+研究落后股票什么时候补涨/补跌。
+
+**③ Extreme Mean Reversion 1～10分钟**
+
+只抓：
+
+**50–150bps 级别异常偏离**
+
+不要抓普通 10–20bps。
+
+**④ Opening Range / Volume Breakout 5～60分钟**
+
+低交易频率，但成本最容易覆盖。
+
+---
+
+# 最重要的：让系统自己判断策略应该在哪个周期交易
+
+你现在不应该再人工规定：
+
+> “这个策略是1分钟策略。”
+
+而应该同时计算：
+
+```text
+forward_return_5s
+forward_return_10s
+forward_return_30s
+forward_return_60s
+forward_return_120s
+forward_return_300s
+forward_return_600s
+forward_return_1800s
+```
+
+然后分别计算：
+
+```text
+Gross Alpha
+Net Alpha
+Sharpe
+Win Rate
+MFE
+MAE
+```
+
+最后让数据告诉你：
+
+```text
+Signal A
+5s      -3bps
+30s     +5bps
+1m      +18bps
+2m      +41bps
+5m      +67bps   ← 最佳
+10m     +55bps
+30m     +12bps
+```
+
+那么它自然就是：
+
+> **5分钟策略。**
+
+---
+
+## 你现在 Phase 2 最应该加的一个模块
+
+在你的 `market_tape + replay engine` 后面直接加入：
+
+```text
+Strategy Evaluator
+```
+
+流程：
+
+```text
+Raw Market Tape
+       ↓
+Feature Engine
+       ↓
+Generate Signal
+       ↓
+Forward Returns
+5s/10s/30s/1m/2m/5m/10m/30m
+       ↓
+Cost Model
+       ↓
+Net Expected Alpha
+       ↓
+Alpha Decay
+       ↓
+Strategy Suitability
+```
+
+最终自动输出：
+
+```text
+Strategy: Residual Momentum
+
+Best Horizon:       300 sec
+Gross Alpha:        +71 bps
+Commission:         -10.6 bps
+Spread:             -6.2 bps
+Slippage:           -4.1 bps
+Net Alpha:          +50.1 bps
+
+Win Rate:           61%
+MFE:                103 bps
+MAE:                -34 bps
+
+Trades/day:         4.7
+
+RESULT:
+Suitable for IBKR
+```
+
+这比让 Codex 不断“想新的高频策略”有价值很多。
+
+**你真正需要优化的不是策略数量，而是建立一台“策略淘汰机器”——把所有信号统一用真实 IBKR 成本、真实延迟、真实行情质量检验。**一旦这个框架建好，几十个候选策略可以自动告诉你：哪个适合 IBKR、哪个应该放弃、哪个更适合富途或其他券商。

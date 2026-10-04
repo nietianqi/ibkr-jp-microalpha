@@ -1,0 +1,38 @@
+{
+  "measure": "only StrategyEngine._fee_reserves; host CPU timer; no broker/network",
+  "samples_per_row": 12,
+  "rows": [
+    {
+      "roundtrips": 1,
+      "orders": 2,
+      "executions": 2,
+      "median_fee_reserve_ms": 0.0051,
+      "min_fee_reserve_ms": 0.0044,
+      "scope": "synthetic retained history; 1000 exceeds default 100 daily entries"
+    },
+    {
+      "roundtrips": 10,
+      "orders": 20,
+      "executions": 20,
+      "median_fee_reserve_ms": 0.05855,
+      "min_fee_reserve_ms": 0.0573,
+      "scope": "synthetic retained history; 1000 exceeds default 100 daily entries"
+    },
+    {
+      "roundtrips": 100,
+      "orders": 200,
+      "executions": 200,
+      "median_fee_reserve_ms": 2.51545,
+      "min_fee_reserve_ms": 2.4554,
+      "scope": "synthetic retained history; 1000 exceeds default 100 daily entries"
+    },
+    {
+      "roundtrips": 1000,
+      "orders": 2000,
+      "executions": 2000,
+      "median_fee_reserve_ms": 230.33499999999998,
+      "min_fee_reserve_ms": 225.5813,
+      "scope": "synthetic retained history; 1000 exceeds default 100 daily entries"
+    }
+  ]
+}

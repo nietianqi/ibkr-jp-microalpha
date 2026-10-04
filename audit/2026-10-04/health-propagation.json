@@ -1,0 +1,11 @@
+{
+  "original_fixture_events_before_injection": 6089,
+  "before": "WORKING",
+  "after": "WORKING",
+  "trade_stream_healthy": false,
+  "fresh_snapshot_valid": false,
+  "cached_snapshot_valid": true,
+  "pending_commands": [],
+  "risk_locks": [],
+  "book_locks": []
+}

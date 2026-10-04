@@ -1,0 +1,33 @@
+{
+  "enhanced_opportunity_crash": {
+    "second": 10,
+    "error": "SubscriptionScheduler.record_candidate() missing 2 required positional arguments: 'at' and 'requirements'",
+    "research_candidates": 1
+  },
+  "preallocation_dependency": {
+    "positive_r_300": 317.47018295965603,
+    "positive_rs_300": 317.47018295965603,
+    "missing_preallocation_inputs": [
+      "rvol_30",
+      "vwap_slope_60"
+    ],
+    "active_subscriptions": [],
+    "ready": false
+  },
+  "volatility_boundary": {
+    "snapshot_valid": true,
+    "r_60": 6928.972742735017,
+    "volatility_bps": 0.0,
+    "same_window_with_anchor_bps": 6928.972742735017
+  },
+  "baseline_valid_days": {
+    "total_rows": 21,
+    "valid_rows": 20,
+    "denominator": null
+  },
+  "dedup_retention": {
+    "quote_window_rows": 612,
+    "seen_before_reset": 3601,
+    "seen_after_daily_reset": 3601
+  }
+}

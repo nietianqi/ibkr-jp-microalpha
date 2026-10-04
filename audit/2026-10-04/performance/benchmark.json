@@ -1,0 +1,274 @@
+{
+  "python": "3.14.0 (tags/v3.14.0:ebf955d, Oct  7 2025, 10:15:03) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "method": "In-memory parsed JSONL, sequential dispatch; includes perf-counter instrumentation; no disk save, no network.",
+  "event_count": 6786,
+  "event_types": {
+    "calendar": 1,
+    "reconcile": 1,
+    "volume_baseline": 3020,
+    "market_snapshot": 751,
+    "quote": 1502,
+    "trade": 751,
+    "requests": 751,
+    "forecast": 1,
+    "status": 4,
+    "fill": 2,
+    "commission": 2
+  },
+  "start": "2026-10-02T08:55:00+09:00",
+  "end": "2026-10-02T09:12:30+09:00",
+  "event_timeline_span_seconds": 1050.0,
+  "quote_exchange_at_present": 0,
+  "trade_exchange_at_present": 0,
+  "duplicate_identities": 0,
+  "audit_count": 1490,
+  "audit_kinds": {
+    "NO_TRADE": 1484,
+    "RESEARCH_CANDIDATE": 1,
+    "ENTRY_REQUEST": 1,
+    "REQUEST_DISPATCHED": 2,
+    "EXIT_REQUEST": 1,
+    "COOLDOWN": 1
+  },
+  "journal_count": 14,
+  "journal_kinds": {
+    "RECONCILE": 1,
+    "RECONCILED": 1,
+    "SUBMIT": 2,
+    "COMMAND_SENT": 2,
+    "STATUS": 4,
+    "FILL": 2,
+    "COMMISSION": 2
+  },
+  "evidence_sha256": {
+    "raw-input.jsonl": {
+      "demo": "375e066d9d1c1ef7d1abb92c9ae7ae38a6be2b0f79de69017ed7f237c6ba0d00",
+      "replayed": "375e066d9d1c1ef7d1abb92c9ae7ae38a6be2b0f79de69017ed7f237c6ba0d00"
+    },
+    "frozen-config.json": {
+      "demo": "cf07d4ac206f0f702ab4104d29b806d1c8353e9870f17cefa96013a37f96afd0",
+      "replayed": "cf07d4ac206f0f702ab4104d29b806d1c8353e9870f17cefa96013a37f96afd0"
+    },
+    "report.json": {
+      "demo": "c10c0864481582d58c7a11325c4898169e08f04e41079c104f181ca6ecc2293c",
+      "replayed": "c10c0864481582d58c7a11325c4898169e08f04e41079c104f181ca6ecc2293c"
+    },
+    "audit.jsonl": {
+      "demo": "1a8e19b33ad71eb10b40df3d83f4a1b2de7b908f4d996a0024736c1f1ecc7fc6",
+      "replayed": "1a8e19b33ad71eb10b40df3d83f4a1b2de7b908f4d996a0024736c1f1ecc7fc6"
+    },
+    "execution-journal.jsonl": {
+      "demo": "f1888cede74ac1461d309face8026e0e5ebfd62855367059cbc5ef151f34c9f2",
+      "replayed": "f1888cede74ac1461d309face8026e0e5ebfd62855367059cbc5ef151f34c9f2"
+    },
+    "execution.json": {
+      "demo": "29ddff1ec07b2c712b16733c4824db77b67027109e279c944404d9fd77aabb77",
+      "replayed": "29ddff1ec07b2c712b16733c4824db77b67027109e279c944404d9fd77aabb77"
+    }
+  },
+  "repeats": [
+    {
+      "repeat": 1,
+      "dispatch_wall_seconds": 13.938665399997262,
+      "events_per_second": 486.84718409277065,
+      "report_matches_stored": true,
+      "memory": {
+        "working_set_bytes": 47382528,
+        "peak_working_set_bytes": 47382528,
+        "private_commit_bytes": 37556224
+      },
+      "event_timing_ms": {
+        "calendar": {
+          "count": 1,
+          "sum": 0.0864,
+          "p50": 0.0864,
+          "p95": 0.0864,
+          "p99": 0.0864,
+          "max": 0.0864
+        },
+        "reconcile": {
+          "count": 1,
+          "sum": 0.169,
+          "p50": 0.169,
+          "p95": 0.169,
+          "p99": 0.169,
+          "max": 0.169
+        },
+        "volume_baseline": {
+          "count": 3020,
+          "sum": 93.488,
+          "p50": 0.0299,
+          "p95": 0.0364,
+          "p99": 0.0526,
+          "max": 0.2325
+        },
+        "market_snapshot": {
+          "count": 751,
+          "sum": 41.6735,
+          "p50": 0.0463,
+          "p95": 0.0955,
+          "p99": 0.1293,
+          "max": 0.1978
+        },
+        "quote": {
+          "count": 1502,
+          "sum": 6899.1617,
+          "p50": 0.3559,
+          "p95": 11.1241,
+          "p99": 12.2727,
+          "max": 22.1931
+        },
+        "trade": {
+          "count": 751,
+          "sum": 6850.6463,
+          "p50": 9.8324,
+          "p95": 11.5643,
+          "p99": 12.7865,
+          "max": 23.2978
+        },
+        "requests": {
+          "count": 751,
+          "sum": 48.4821,
+          "p50": 0.0561,
+          "p95": 0.1165,
+          "p99": 0.1456,
+          "max": 0.3035
+        },
+        "forecast": {
+          "count": 1,
+          "sum": 0.0998,
+          "p50": 0.0998,
+          "p95": 0.0998,
+          "p99": 0.0998,
+          "max": 0.0998
+        },
+        "status": {
+          "count": 4,
+          "sum": 0.5149,
+          "p50": 0.1321,
+          "p95": 0.1455,
+          "p99": 0.1455,
+          "max": 0.1516
+        },
+        "fill": {
+          "count": 2,
+          "sum": 0.6076,
+          "p50": 0.3038,
+          "p95": 0.2419,
+          "p99": 0.2419,
+          "max": 0.3657
+        },
+        "commission": {
+          "count": 2,
+          "sum": 0.2783,
+          "p50": 0.13915,
+          "p95": 0.1083,
+          "p99": 0.1083,
+          "max": 0.17
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "dispatch_wall_seconds": 14.333763100003125,
+      "events_per_second": 473.4276653420148,
+      "report_matches_stored": true,
+      "memory": {
+        "working_set_bytes": 47792128,
+        "peak_working_set_bytes": 47792128,
+        "private_commit_bytes": 37765120
+      },
+      "event_timing_ms": {
+        "calendar": {
+          "count": 1,
+          "sum": 0.1546,
+          "p50": 0.1546,
+          "p95": 0.1546,
+          "p99": 0.1546,
+          "max": 0.1546
+        },
+        "reconcile": {
+          "count": 1,
+          "sum": 0.1243,
+          "p50": 0.1243,
+          "p95": 0.1243,
+          "p99": 0.1243,
+          "max": 0.1243
+        },
+        "volume_baseline": {
+          "count": 3020,
+          "sum": 94.4286,
+          "p50": 0.0291,
+          "p95": 0.0345,
+          "p99": 0.0498,
+          "max": 3.2836
+        },
+        "market_snapshot": {
+          "count": 751,
+          "sum": 42.4782,
+          "p50": 0.0467,
+          "p95": 0.0958,
+          "p99": 0.1429,
+          "max": 0.2808
+        },
+        "quote": {
+          "count": 1502,
+          "sum": 7094.3974,
+          "p50": 0.40275,
+          "p95": 11.7685,
+          "p99": 13.1443,
+          "max": 15.6007
+        },
+        "trade": {
+          "count": 751,
+          "sum": 7046.3956,
+          "p50": 9.9809,
+          "p95": 12.5335,
+          "p99": 13.8006,
+          "max": 14.6848
+        },
+        "requests": {
+          "count": 751,
+          "sum": 50.6895,
+          "p50": 0.0587,
+          "p95": 0.1203,
+          "p99": 0.1785,
+          "max": 0.3263
+        },
+        "forecast": {
+          "count": 1,
+          "sum": 0.0959,
+          "p50": 0.0959,
+          "p95": 0.0959,
+          "p99": 0.0959,
+          "max": 0.0959
+        },
+        "status": {
+          "count": 4,
+          "sum": 0.5660000000000001,
+          "p50": 0.12945,
+          "p95": 0.1468,
+          "p99": 0.1468,
+          "max": 0.2053
+        },
+        "fill": {
+          "count": 2,
+          "sum": 0.5467,
+          "p50": 0.27335,
+          "p95": 0.227,
+          "p99": 0.227,
+          "max": 0.3197
+        },
+        "commission": {
+          "count": 2,
+          "sum": 0.2753,
+          "p50": 0.13765,
+          "p95": 0.1042,
+          "p99": 0.1042,
+          "max": 0.1711
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,201 @@
+{
+  "enhanced": {
+    "crashed_at_second": 10,
+    "error": "SubscriptionScheduler.record_candidate() missing 2 required positional arguments: 'at' and 'requirements'"
+  },
+  "enhanced_probe_seconds": 0.01,
+  "gap": {
+    "held_before_gap": 100,
+    "same_prices_resumed": true,
+    "after": [
+      {
+        "seconds_after_last_quote": 2.5,
+        "snapshot_valid": false,
+        "snapshot_reason": "MISSING:r_600,r_300,rs_300,rs_30,rs_60,rvol_30,vwap_proxy_slope_60,vwap_proxy_slope_120,vo",
+        "risk_locks": [
+          "position_feature_invalid",
+          "unvalued_daily_pnl"
+        ],
+        "sell_orders": [
+          {
+            "order_id": 2,
+            "emergency": true,
+            "qty": 100
+          }
+        ]
+      },
+      {
+        "seconds_after_last_quote": 32.5,
+        "snapshot_valid": false,
+        "snapshot_reason": "MISSING:r_600,r_300,rs_300,rs_60,rvol_30,vwap_proxy_slope_60,vwap_proxy_slope_120,volatili",
+        "risk_locks": [
+          "position_feature_invalid",
+          "unvalued_daily_pnl"
+        ],
+        "sell_orders": [
+          {
+            "order_id": 2,
+            "emergency": true,
+            "qty": 100
+          }
+        ]
+      }
+    ]
+  },
+  "gap_probe_seconds": 11.23,
+  "market_lag": {
+    "market_state": "MARKET_RISK_OFF",
+    "locks": [],
+    "sells": [
+      {
+        "qty": 100,
+        "emergency": true,
+        "limit": "2999.0"
+      }
+    ]
+  },
+  "market_lag_probe_seconds": 0.0,
+  "touch": {
+    "limit": "3001",
+    "quote_after_move": "3001/3002",
+    "states": {
+      "13": "WORKING",
+      "14": "WORKING",
+      "15": "WORKING",
+      "16": "WORKING",
+      "17": "WORKING",
+      "18": "WORKING",
+      "19": "WORKING",
+      "20": "WORKING"
+    },
+    "candidate_expires_at": "2026-10-02T01:00:30+00:00"
+  },
+  "touch_probe_seconds": 0.0,
+  "veto": {
+    "intents_after_40s": 0,
+    "candidates": 1,
+    "veto": 1,
+    "alpha_cooldown_seconds": 30
+  },
+  "veto_probe_seconds": 0.0,
+  "oversell": {
+    "held": 50,
+    "sell_possible_remaining": 100,
+    "locks": [],
+    "pending_commands": []
+  },
+  "oversell_probe_seconds": 0.0,
+  "reporting": {
+    "drift_5s_reported": {
+      "samples": 1,
+      "mean_signed_bps": 0.0,
+      "unavailable": 0
+    },
+    "drift_5s_correct_bps": 99.5033,
+    "corrected_cost_reported": "300.0",
+    "corrected_cost_correct": "200"
+  },
+  "reporting_probe_seconds": 0.0,
+  "rvol": {
+    "rows": 21,
+    "valid_rows": 20,
+    "denominator": null
+  },
+  "rvol_probe_seconds": 0.0,
+  "scaling": [
+    {
+      "symbols": 1,
+      "snapshot_ms": 1.414,
+      "cpu_ms_per_second_at_4hz_each": 5.7
+    },
+    {
+      "symbols": 10,
+      "snapshot_ms": 1.78,
+      "cpu_ms_per_second_at_4hz_each": 71.2
+    },
+    {
+      "symbols": 40,
+      "snapshot_ms": 3.747,
+      "cpu_ms_per_second_at_4hz_each": 599.4
+    }
+  ],
+  "scaling_probe_seconds": 0.94,
+  "memory": {
+    "bytes_per_row": 216,
+    "rows_full_day_one_symbol": 1800000,
+    "est_MiB_one_symbol": 371,
+    "est_GiB_50_symbols": 18.1
+  },
+  "memory_probe_seconds": 0.94,
+  "timing": {
+    "events": 6786,
+    "wall_s_with_counters": 16.16,
+    "ms_by_type": {
+      "calendar": {
+        "n": 1,
+        "p50": 0.072,
+        "p99": 0.072
+      },
+      "reconcile": {
+        "n": 1,
+        "p50": 0.093,
+        "p99": 0.093
+      },
+      "volume_baseline": {
+        "n": 3020,
+        "p50": 0.032,
+        "p99": 0.086
+      },
+      "market_snapshot": {
+        "n": 751,
+        "p50": 0.051,
+        "p99": 0.156
+      },
+      "quote": {
+        "n": 1502,
+        "p50": 0.437,
+        "p99": 17.97
+      },
+      "trade": {
+        "n": 751,
+        "p50": 10.919,
+        "p99": 20.406
+      },
+      "requests": {
+        "n": 751,
+        "p50": 0.072,
+        "p99": 0.202
+      },
+      "forecast": {
+        "n": 1,
+        "p50": 0.104,
+        "p99": 0.104
+      },
+      "status": {
+        "n": 4,
+        "p50": 0.148,
+        "p99": 0.156
+      },
+      "fill": {
+        "n": 2,
+        "p50": 0.329,
+        "p99": 0.329
+      },
+      "commission": {
+        "n": 2,
+        "p50": 0.198,
+        "p99": 0.198
+      }
+    },
+    "call_counts": {
+      "poll": 6788,
+      "_sync_risk": 6793,
+      "snapshot": 1502,
+      "entry_gate": 2782,
+      "_rvol_baseline": 7060,
+      "allocate": 5,
+      "alpha.evaluate": 6
+    }
+  },
+  "timing_probe_seconds": 16.2
+}

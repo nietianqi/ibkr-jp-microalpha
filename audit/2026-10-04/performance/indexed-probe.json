@@ -1,0 +1,7 @@
+{
+  "method": "Audit-only monkeypatch; index on (symbol,source,window_seconds,end_second); exact original temporal and revision filters retained; no disk-save.",
+  "run_wall_seconds": 5.027769500011345,
+  "events_per_second": 1349.7038796199163,
+  "same_report_as_stored": true,
+  "baseline_key_count": 151
+}

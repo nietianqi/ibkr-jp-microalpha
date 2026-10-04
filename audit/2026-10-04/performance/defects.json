@@ -1,0 +1,30 @@
+{
+  "correction_cost_double_count": {
+    "reported": "300.0",
+    "correct": "200"
+  },
+  "bust_cost_not_removed": {
+    "reported": "100.0",
+    "correct": "0"
+  },
+  "drift_uses_prehorizon_quote_and_freezes": {
+    "reported": {
+      "samples": 1,
+      "mean_signed_bps": 0.0,
+      "unavailable": 0
+    },
+    "correct_5s_quote_bps": 99.50330853168091
+  },
+  "replay_invalid_event_pollutes_identity": {
+    "first_error": "calendar cannot be received before its known_at",
+    "second_same_invalid_event": "silently returned",
+    "events_processed": 0,
+    "seen_events": 1,
+    "calendar_rows": 0
+  },
+  "config_accepts_noninteger_history_count": {
+    "invalid_rvol_days": 20.5,
+    "build_engine": "ACCEPTED",
+    "first_baseline_lookup_error": "slice indices must be integers or None or have an __index__ method"
+  }
+}
