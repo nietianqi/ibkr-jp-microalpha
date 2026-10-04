@@ -1,0 +1,31 @@
+test_artificial_labels_are_demo_only (tests.test_round3_research.Round3ResearchTests.test_artificial_labels_are_demo_only) ... ok
+test_delayed_and_partial_exit_quotes_are_unestimable (tests.test_round3_research.Round3ResearchTests.test_delayed_and_partial_exit_quotes_are_unestimable) ... ok
+test_demo_factory_stays_artificial (tests.test_round3_research.Round3ResearchTests.test_demo_factory_stays_artificial) ... ok
+test_factory_rows_thin_buckets_and_artifact_roundtrip (tests.test_round3_research.Round3ResearchTests.test_factory_rows_thin_buckets_and_artifact_roundtrip) ... ok
+test_factory_verifies_raw_input_and_ignores_mutated_ledger (tests.test_round3_research.Round3ResearchTests.test_factory_verifies_raw_input_and_ignores_mutated_ledger) ... ok
+test_formal_provenance_and_frozen_day_gate (tests.test_round3_research.Round3ResearchTests.test_formal_provenance_and_frozen_day_gate) ... ok
+test_nondividing_and_larger_grid_include_endpoint (tests.test_round3_research.Round3ResearchTests.test_nondividing_and_larger_grid_include_endpoint) ... ok
+test_one_day_bootstrap_cannot_claim_independence (tests.test_round3_research.Round3ResearchTests.test_one_day_bootstrap_cannot_claim_independence) ... ok
+test_partial_quote_entry_cannot_be_silent_zero (tests.test_round3_research.Round3ResearchTests.test_partial_quote_entry_cannot_be_silent_zero) ... ok
+test_unfilled_requires_complete_entry_ttl_coverage (tests.test_round3_research.Round3ResearchTests.test_unfilled_requires_complete_entry_ttl_coverage) ... ok
+test_untyped_quote_baseline_cannot_be_deployed_as_calibration (tests.test_round3_research.Round3ResearchTests.test_untyped_quote_baseline_cannot_be_deployed_as_calibration) ... ok
+test_verified_factory_full_partial_unfilled_and_final_fees (tests.test_round3_research.Round3ResearchTests.test_verified_factory_full_partial_unfilled_and_final_fees) ... ok
+test_zero_days_with_samples_is_invalid (tests.test_round3_research.Round3ResearchTests.test_zero_days_with_samples_is_invalid) ... ok
+test_T21_time_budget_cannot_extend_original_ttl (tests.test_economics.EconomicsTests.test_T21_time_budget_cannot_extend_original_ttl) ... ok
+test_T22_seconds_scaling (tests.test_economics.EconomicsTests.test_T22_seconds_scaling) ... ok
+test_T28_cost_ratio_is_diagnostic_not_an_admission_gate (tests.test_economics.EconomicsTests.test_T28_cost_ratio_is_diagnostic_not_an_admission_gate) ... ok
+test_T29_late_alpha_does_not_recharge_waiting_drift (tests.test_economics.EconomicsTests.test_T29_late_alpha_does_not_recharge_waiting_drift) ... ok
+test_T29_none_partial_full_branches_are_not_dropped (tests.test_economics.EconomicsTests.test_T29_none_partial_full_branches_are_not_dropped) ... ok
+test_T29_partial_paths_include_all_fills_fees_and_residual_value (tests.test_economics.EconomicsTests.test_T29_partial_paths_include_all_fills_fees_and_residual_value) ... ok
+test_T29_unfilled_intents_keep_fees_and_positive_reference_notional (tests.test_economics.EconomicsTests.test_T29_unfilled_intents_keep_fees_and_positive_reference_notional) ... ok
+test_T30_common_effect_samples_are_intersection (tests.test_economics.EconomicsTests.test_T30_common_effect_samples_are_intersection) ... ok
+test_paired_switch_requires_mean_bound_and_verified_models (tests.test_economics.EconomicsTests.test_paired_switch_requires_mean_bound_and_verified_models) ... ok
+test_partial_exit_cost_allocation_remains_causal_with_late_buy (tests.test_economics.EconomicsTests.test_partial_exit_cost_allocation_remains_causal_with_late_buy) ... ok
+test_prediction_fails_closed_when_uncalibrated_or_context_changed (tests.test_economics.EconomicsTests.test_prediction_fails_closed_when_uncalibrated_or_context_changed) ... ok
+test_truthy_calibration_strings_are_rejected (tests.test_economics.EconomicsTests.test_truthy_calibration_strings_are_rejected) ... ok
+test_verified_commission_applies_minimum_per_child_order (tests.test_economics.EconomicsTests.test_verified_commission_applies_minimum_per_child_order) ... ok
+
+----------------------------------------------------------------------
+Ran 26 tests in 16.382s
+
+OK

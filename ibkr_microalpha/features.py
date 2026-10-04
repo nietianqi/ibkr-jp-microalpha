@@ -675,9 +675,9 @@ class FeatureEngine:
         previous = series.values[index]
         total, step, last = 0.0, 1, len(series.stamps) - 1
         while True:
-            point = start + step * grid
-            if point > end + 1e-9:
-                break
+            # The last partial grid interval still belongs to the window. A grid
+            # larger than the window must retain the anchor-to-end return too.
+            point = min(start + step * grid, end)
             while index < last and series.stamps[index + 1] <= point:
                 index += 1
             current = series.values[index]
@@ -685,6 +685,8 @@ class FeatureEngine:
                 change = 10000 * log(current / previous)
                 total += change * change
             previous = current
+            if point >= end:
+                break
             step += 1
         return sqrt(total)
 

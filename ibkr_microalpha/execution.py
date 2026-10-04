@@ -6,7 +6,7 @@ are evidence for reconciliation, never a second source of position increments.
 """
 from collections import Counter, defaultdict, deque
 from dataclasses import asdict, dataclass, replace
-from datetime import datetime
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from math import isfinite
 from threading import RLock
@@ -15,6 +15,8 @@ from typing import Iterable, Mapping
 from .domain import OrderState, Side, aware, finite_decimal
 
 ZERO = Decimal(0)
+_UNSET = object()
+_JST = timezone(timedelta(hours=9))
 TERMINAL = frozenset({OrderState.FILLED, OrderState.CANCELLED,
                       OrderState.REJECTED, OrderState.EXPIRED})
 
@@ -191,6 +193,98 @@ class ExecutionBook:
         self.routine_requests_sent = 0               # non-risk requests counted against the budget
         self._order_fees: dict[int, Decimal] = {}
         self._stops: dict[str, Decimal] = {}         # journaled tightened stops per open position
+        self.request_day: date | None = None
+        self.request_policy_verified = True
+        self._record("REQUEST_POLICY", version=1, daily_request_budget=daily_request_budget)
+
+    @staticmethod
+    def _request_history(events):
+        """Reconstruct message classes, including legacy events, without sending."""
+        counts, routine, day, complete = Counter(), 0, None, True
+        emergency = {}
+        if events and (events[0].get("sequence") != 1 or any(
+                b.get("sequence") != a.get("sequence", 0) + 1 for a, b in zip(events, events[1:]))):
+            complete = False
+        for event in events:
+            kind, payload = event.get("kind"), event.get("payload", {})
+            if kind == "SUBMIT":
+                order = payload["order"]
+                emergency[order["order_id"]] = order.get("emergency", False)
+            elif kind == "RISK_PRIORITY":
+                emergency[payload["order_id"]] = True
+            elif kind == "REQUEST_DAY":
+                recorded_day = date.fromisoformat(payload["day"])
+                if day is not None and day != recorded_day:
+                    complete = False
+                day = day or recorded_day
+            elif kind == "COMMAND_SENT":
+                request = payload["kind_sent"]
+                counts[request] += 1
+                risk = payload.get("risk", _UNSET)
+                if risk is _UNSET:
+                    if request in ("CANCEL", "QUERY"):
+                        risk = True
+                    elif request == "SUBMIT" and payload.get("order_id") in emergency:
+                        risk = emergency[payload["order_id"]]
+                    else:
+                        complete = False
+                        continue
+                if type(risk) is not bool:
+                    raise ExecutionError("recorded request risk must be a boolean")
+                routine += not risk
+                if event.get("at") is None:
+                    complete = False
+                else:
+                    sent_day = aware(datetime.fromisoformat(event["at"])).astimezone(_JST).date()
+                    if day is not None and day != sent_day:
+                        complete = False
+                    day = day or sent_day
+        return counts, routine, day, complete
+
+    def _restore_request_policy(self, *, policy, events, explicit_budget=_UNSET,
+                                journal_present=True):
+        counts, routine, day, complete = self._request_history(events)
+        history_counts, history_routine, history_day = counts.copy(), routine, day
+        if policy is not None:
+            if type(policy.get("version")) is not int or policy["version"] != 1:
+                raise ExecutionError("unsupported request policy version")
+            budget = policy["daily_request_budget"]
+            if explicit_budget is not _UNSET and explicit_budget != budget:
+                raise ExecutionError("restore budget differs from the frozen request policy")
+            if budget is not None and (type(budget) is not int or budget <= 0):
+                raise ExecutionError("invalid restored request budget")
+            if "sent_counts" in policy:
+                raw_counts = policy["sent_counts"]
+                if not isinstance(raw_counts, dict) or any(
+                        not isinstance(k, str) or type(v) is not int or v < 0
+                        for k, v in raw_counts.items()):
+                    raise ExecutionError("invalid restored request counts")
+                counts = Counter(raw_counts)
+                routine = policy["routine_requests_sent"]
+                if type(routine) is not int or not 0 <= routine <= sum(counts.values()):
+                    raise ExecutionError("invalid restored routine request count")
+                day = date.fromisoformat(policy["request_day"]) if policy.get("request_day") else None
+                if sum(counts.values()) and day is None:
+                    raise ExecutionError("recorded requests need a frozen trading day")
+                if type(policy.get("verified")) is not bool:
+                    raise ExecutionError("restored request verification must be boolean")
+                if complete and journal_present and (counts != history_counts or routine != history_routine
+                                                      or day != history_day):
+                    raise ExecutionError("request snapshot disagrees with its complete message history")
+                complete = policy["verified"]
+            self.daily_request_budget = budget
+            self.request_policy_verified = complete
+        else:
+            # A legacy stream cannot prove the frozen cap. Explicit configuration
+            # plus a complete message history may migrate it; risk remains usable.
+            if explicit_budget is not _UNSET:
+                if explicit_budget is not None and (type(explicit_budget) is not int or explicit_budget <= 0):
+                    raise ExecutionError("invalid explicit legacy request budget")
+                self.daily_request_budget = explicit_budget
+            self.request_policy_verified = (explicit_budget is not _UNSET and complete and journal_present)
+        self.sent_counts = counts
+        self.routine_requests_sent = routine
+        self.request_day = day
 
     @property
     def locked(self) -> bool:
@@ -705,6 +799,14 @@ class ExecutionBook:
         with self._mutex:
             if not self.connected:
                 return []
+            current_day = at.astimezone(_JST).date()
+            if self.request_day is None:
+                self.request_day = current_day
+                self._record("REQUEST_DAY", at, day=current_day.isoformat())
+            elif self.request_day != current_day:
+                # One ledger belongs to one frozen account day. A new date never
+                # silently replenishes a restored cap; risk requests still pass.
+                self.request_policy_verified = False
             result = []
             pending = sorted(self.commands, key=lambda command: not command.risk)
             self.commands.clear()
@@ -747,8 +849,9 @@ class ExecutionBook:
                     if (self.locked or self.reconciling) and not order.emergency:
                         self.commands.append(command)
                         continue
-                if (not command.risk and self.daily_request_budget is not None
-                        and self.routine_requests_sent >= self.daily_request_budget):
+                if (not command.risk and (not self.request_policy_verified or (
+                        self.daily_request_budget is not None
+                        and self.routine_requests_sent >= self.daily_request_budget))):
                     # Routine requests stop at the frozen daily budget; risk requests
                     # (exits, cancels, queries) are never blocked by it.
                     if command.kind == "SUBMIT":
@@ -756,7 +859,8 @@ class ExecutionBook:
                         order.state = OrderState.CANCELLED
                         order.reconciled = True
                         self._record("LOCAL_ABORT", at, order_id=order.order_id,
-                                     reason="routine request budget exhausted")
+                                     reason=("routine request budget exhausted" if self.request_policy_verified
+                                             else "routine request policy is unverified"))
                         continue
                     self.commands.append(command)
                     continue
@@ -774,7 +878,8 @@ class ExecutionBook:
                     elif command.kind == "CANCEL":
                         order.cancel_requested_at = at
                 self._record("COMMAND_SENT", at, kind_sent=command.kind,
-                             order_id=command.order_id)
+                             order_id=command.order_id, risk=command.risk,
+                             request_day=self.request_day.isoformat())
             return result
 
     def check_timeouts(self, at: datetime, *, submit_timeout_seconds=5.0,
@@ -925,7 +1030,7 @@ class ExecutionBook:
 
     def snapshot(self) -> dict:
         with self._mutex:
-            return _encode({"version": 1, "next_order_id": self.next_order_id,
+            return _encode({"version": 2, "next_order_id": self.next_order_id,
                             "connected": self.connected, "reconciling": self.reconciling,
                             "lock_reasons": sorted(self.lock_reasons),
                             "orders": [asdict(o) for o in self.orders.values()],
@@ -938,12 +1043,18 @@ class ExecutionBook:
                                          "entry_time": position.entry_time}
                                 for symbol, position in self.positions.items()},
                             "journal": self.journal,
+                            "request_policy": {"version": 1, "daily_request_budget": self.daily_request_budget,
+                                               "routine_requests_sent": self.routine_requests_sent,
+                                               "sent_counts": dict(self.sent_counts),
+                                               "request_day": (self.request_day.isoformat()
+                                                               if self.request_day is not None else None),
+                                               "verified": self.request_policy_verified},
                             "pacing": {"rate": self.pacing.rate, "capacity": self.pacing.capacity,
                                        "reserved_risk_tokens": self.pacing.reserve}})
 
     @classmethod
-    def from_snapshot(cls, snapshot: Mapping) -> "ExecutionBook":
-        if snapshot.get("version") != 1:
+    def from_snapshot(cls, snapshot: Mapping, *, daily_request_budget=_UNSET) -> "ExecutionBook":
+        if type(snapshot.get("version")) is not int or snapshot["version"] not in (1, 2):
             raise ExecutionError("unsupported execution snapshot version")
         book = cls(snapshot["next_order_id"], connected=False,
                    request_rate=snapshot["pacing"]["rate"],
@@ -980,7 +1091,13 @@ class ExecutionBook:
             book._fill_sequence = max(book._fill_sequence, fill.sequence)
         book.commissions = {key: Decimal(value) for key, value in snapshot["commissions"].items()}
         book.journal = [dict(event) for event in snapshot.get("journal", [])]
+        book._restore_request_policy(policy=(snapshot["request_policy"] if snapshot["version"] == 2 else None),
+                                     events=book.journal, explicit_budget=daily_request_budget,
+                                     journal_present="journal" in snapshot)
         book._sequence = max((event["sequence"] for event in book.journal), default=0)
+        if (snapshot["version"] == 1 and daily_request_budget is not _UNSET
+                and book.request_policy_verified):
+            book._record("REQUEST_POLICY", version=1, daily_request_budget=book.daily_request_budget)
         book.lock_reasons.update(snapshot.get("lock_reasons", []))
         book.broker_positions = dict(snapshot.get("broker_positions", {}))
         book.unmanaged_orders = list(snapshot.get("unmanaged_orders", []))
@@ -999,7 +1116,7 @@ class ExecutionBook:
         return book
 
     @classmethod
-    def from_journal(cls, journal: Iterable[Mapping]) -> "ExecutionBook":
+    def from_journal(cls, journal: Iterable[Mapping], *, daily_request_budget=_UNSET) -> "ExecutionBook":
         """Restore memory from a recorded event stream without sending requests."""
         book = cls()
         events = [dict(event) for event in journal]
@@ -1070,7 +1187,14 @@ class ExecutionBook:
                                ownership_confirmed=payload["ownership_confirmed"],
                                next_order_id=payload["next_order_id"])
         book.journal = events
+        policies = [event["payload"] for event in events if event["kind"] == "REQUEST_POLICY"]
+        if len(policies) > 1:
+            raise ExecutionError("journal contains conflicting request policies")
+        book._restore_request_policy(policy=policies[0] if policies else None,
+                                     events=events, explicit_budget=daily_request_budget)
         book._sequence = max((event["sequence"] for event in events), default=0)
+        if not policies and daily_request_budget is not _UNSET and book.request_policy_verified:
+            book._record("REQUEST_POLICY", version=1, daily_request_budget=book.daily_request_budget)
         book.connected = False
         book.reconciling = True
         book.commands.clear()

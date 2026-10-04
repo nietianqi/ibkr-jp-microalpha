@@ -12,14 +12,14 @@ from datetime import timedelta
 from decimal import Decimal
 
 from .domain import Confirmation, MarketRegime, Regime, Side
-from .economics import Prediction, adjust_prediction_for_price, prediction_gate
+from .economics import Prediction, adjust_prediction_for_price, policy_fingerprint, prediction_gate
 from .execution import ExecutionError
 
 BPS = Decimal(10000)
 # Plan failures raised by sizing/risk rather than by the economic gate.
 RISK_REASONS = frozenset({'risk_locked', 'entries_blocked', 'account_unverified', 'missing_ownership_or_sector',
                           'entry_intent_limit', 'existing_position_or_intent', 'position_limit',
-                          'less_than_one_legal_lot', 'stop_distance_unavailable'})
+                          'less_than_one_legal_lot', 'stop_distance_unavailable', 'exact_quantity_unavailable'})
 
 
 @dataclass(frozen=True)
@@ -38,6 +38,7 @@ class EntryPipeline:
     def __init__(self, engine):
         self.e = engine
         self._caps: dict[str, Decimal] = {}            # candidate_id -> immutable chase cap
+        self._quantity_caps: dict[tuple[str, int], Decimal] = {}
         self._known: set[str] = set()                  # candidates already counted
         self._rejected: set[str] = set()
 
@@ -50,9 +51,10 @@ class EntryPipeline:
         return state == MarketRegime.MARKET_OK or (
             state == MarketRegime.MARKET_CAUTION and self.caution_floor() is not None)
 
-    def stop_distance(self, snapshot, quote, at, instrument):
+    def stop_distance(self, snapshot, quote, at, instrument, *, price=None):
         """JPY/share = max(min ticks, stop_bps x price, k x known volatility x price)."""
-        c, price = self.e.config, quote.ask
+        c = self.e.config
+        price = quote.ask if price is None else price
         tick = self.e.ticks.tick_size(price, at, instrument.tick_category)
         distance = max(tick * c.min_stop_ticks, c.stop_bps * price / BPS)
         if c.stop_volatility_multiple > 0:
@@ -103,24 +105,29 @@ class EntryPipeline:
             return None, 'calibration_bucket_unavailable'
         return (row.prediction(), candidate.reference_ask, row.max_chase_ticks), ''
 
-    def _cap(self, candidate, cap_source, at, category):
-        cap = self._caps.get(candidate.candidate_id)
+    def _cap(self, candidate, cap_source, at, category, quantity):
+        key = (candidate.candidate_id, quantity)
+        cap = self._quantity_caps.get(key)
         if cap is None:
             if isinstance(cap_source, int):
                 cap = self.e.ticks.move_ticks(candidate.reference_ask, cap_source, at, category)
             else:
                 cap = self.e.ticks.round_price(cap_source, 'down', at, category)
-            self._caps[candidate.candidate_id] = cap
+            self._quantity_caps[key] = cap
         return cap
 
-    def _gate(self, prediction, reference, limit, quantity):
+    def _gate(self, prediction, reference, limit, quantity, at):
         c = self.e.config
         adjusted = adjust_prediction_for_price(prediction, reference_price=reference, limit_price=limit,
                                                commissions=self.e.commissions)
         margin = c.net_safety_margin_bps * limit * quantity / BPS
         gate = prediction_gate(adjusted, policy_id=c.policy_id, version=c.model_version, quantity=quantity,
                                min_samples=c.min_samples, safety_margin=margin,
-                               max_holding_seconds=c.holding_seconds)
+                               max_holding_seconds=c.holding_seconds,
+                               min_independent_days=c.min_independent_days,
+                               allow_artificial=self.e.frozen_config['profile'] == 'demo',
+                               policy_hash=policy_fingerprint(self.e.frozen_config),
+                               fee_version=self.e.commissions.version, as_of=at)
         return adjusted, gate
 
     # ------------------------------------------------------------- pipeline
@@ -161,40 +168,50 @@ class EntryPipeline:
         quantities, reason = self._calibrated_quantities(symbol, at)
         if reason:
             return None, reason
-        requested = max((q for q in quantities if q <= c.max_entry_quantity), default=None)
-        if requested is None:
+        quantities = sorted((q for q in quantities if q <= c.max_entry_quantity
+                             and q % e.risk.config.lot_size == 0), reverse=True)
+        if not quantities:
             return None, 'calibrated_quantity_unavailable'
-        found, reason = self._prediction(candidate, requested, at)
-        if found is None:
-            return None, reason
-        cap = self._cap(candidate, found[2], at, category)
-        if quote.ask > cap:
-            return None, 'economic_price_cap'
-        limit = min(cap, e.ticks.move_ticks(quote.ask, c.entry_limit_ticks, at, category))
-        stop = self.stop_distance(snapshot, quote, at, instrument)
-        if stop is None:
-            return None, 'stop_distance_unavailable'
         key = f'allocation:{symbol}'
-        allocation = e.risk.allocate(
-            key, symbol, instrument.sector, limit, stop, self.exit_slippage(quote, at, instrument),
-            quote.ask_size, requested,
-            lambda q, p: (e.commissions.commission(q * p), e.commissions.commission(q * p)),
-            gap_reserve=c.gap_reserve_bps * limit / BPS)
-        if not allocation.allowed:
-            return None, allocation.reason
-        quantity = allocation.reservation.quantity
-        if quantity != requested:
-            found, reason = self._prediction(candidate, quantity, at)
+        reason = 'calibration_bucket_unavailable'
+        # Every quantity is a separate frozen execution policy. A larger row
+        # must never allocate a smaller order using its different chase cap.
+        for quantity in quantities:
+            found, lookup_reason = self._prediction(candidate, quantity, at)
             if found is None:
+                reason = lookup_reason
+                continue
+            cap = self._cap(candidate, found[2], at, category, quantity)
+            if quote.ask > cap:
+                reason = 'economic_price_cap'
+                continue
+            limit = min(cap, e.ticks.move_ticks(quote.ask, c.entry_limit_ticks, at, category))
+            stop = self.stop_distance(snapshot, quote, at, instrument, price=limit)
+            if stop is None:
+                reason = 'stop_distance_unavailable'
+                continue
+            allocation = e.risk.allocate(
+                key, symbol, instrument.sector, limit, stop, self.exit_slippage(quote, at, instrument),
+                quote.ask_size, quantity,
+                lambda q,p:(e.commissions.commission(q*p), e.commissions.commission(q*p)),
+                gap_reserve=c.gap_reserve_bps * limit / BPS, exact_quantity=True)
+            if not allocation.allowed:
+                reason = allocation.reason
+                continue
+            prediction, reference, _ = found
+            try:
+                adjusted, gate = self._gate(prediction, reference, limit, quantity, at)
+            except Exception:
                 e.risk.release(key)
-                return None, reason
-        prediction, reference, _ = found
-        adjusted, gate = self._gate(prediction, reference, limit, quantity)
-        if not gate.allowed:
-            e.risk.release(key)
-            return None, gate.reason
-        return EntryPlan(candidate.candidate_id, quantity, cap, limit, stop, adjusted, key,
-                         allocation.reservation.stress_loss), ''
+                raise
+            if not gate.allowed:
+                e.risk.release(key)
+                reason = gate.reason
+                continue
+            self._caps[candidate.candidate_id] = cap
+            return EntryPlan(candidate.candidate_id, quantity, cap, limit, stop, adjusted, key,
+                             allocation.reservation.stress_loss), ''
+        return None, reason
 
     def recheck_economics(self, candidate, order, at):
         """Economics of a working entry at its own quantity and limit price."""
@@ -202,7 +219,7 @@ class EntryPipeline:
         if found is None:
             return reason
         prediction, reference, _ = found
-        _, gate = self._gate(prediction, reference, order.limit_price, order.quantity)
+        _, gate = self._gate(prediction, reference, order.limit_price, order.quantity, at)
         return None if gate.allowed else gate.reason
 
     def consider(self, snapshot, regime, at, enhanced_ready):
@@ -312,13 +329,15 @@ class EntryPipeline:
                                      submit_latency_seconds=e.config.submit_p99_seconds,
                                      exit_buffer_seconds=e.config.exit_buffer_seconds)
         quote = e._valid_quote(symbol, at)
+        has_buy = any(o.side == Side.BUY for o in e.book.active_orders(symbol))
         if (at >= candidate.expires_at or quote is None or not gate.allowed
-                or (cap is not None and quote.ask > cap)):
+                or (has_buy and cap is not None and quote.ask > cap)):
             e._invalidate(symbol, at, 'CANDIDATE_EXPIRED_OR_INVALID')
 
     def still_valid(self, order, at):
         """Pre-send re-check of a queued entry at the actual send time (EXE-02)."""
         e = self.e
+        e.valuation.sync(at)  # preceding local aborts can change reservations in this drain
         if e.risk.entries_blocked:
             return 'entries_blocked'
         if e.book.locked or not e.book.reconciled:
@@ -345,4 +364,14 @@ class EntryPipeline:
                                      market_status=quote.market_status)
         if not gate.allowed:
             return gate.reason
+        amount = order.limit_price * order.possible_remaining
+        entry_fee = max(Decimal(0), e.commissions.commission(order.filled_notional + amount)
+                        - max(e.commissions.commission(order.filled_notional), e.book.order_fees(order.order_id)))
+        distance = order.stop_distance if order.stop_distance is not None else order.limit_price
+        stress = (order.possible_remaining * (distance + e.valuation._reserve_per_share(order.symbol, order.limit_price, at))
+                  + entry_fee + e.commissions.commission(amount))
+        reason = e.risk.validate_existing_entry_budget(order.symbol, e.instruments[order.symbol].sector,
+                                                       order.quantity, stress)
+        if reason:
+            return reason
         return self.recheck_economics(candidate, order, at)

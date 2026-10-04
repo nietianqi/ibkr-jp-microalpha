@@ -132,7 +132,8 @@ class ExecutionRiskFixes(unittest.TestCase):
         test = fixture()
         engine = test.engine
         test.tick(0)
-        engine.set_account(AccountSnapshot("U1", "JPY", D("1000"), D("1000"), at(1), "broker"), at(1))
+        engine.set_account(AccountSnapshot("U1", "JPY", D("1000"), D("1000"), at(1), "broker",
+                                          ledger_sequence=engine.book.journal[-1]['sequence']), at(1))
         self.assertEqual(engine.risk.cash, D("1000"))
         self.assertEqual(engine.valuation.cash_source, "reconciled")
         document = base.fixture_document()
@@ -212,7 +213,8 @@ class StrategyFixes(unittest.TestCase):
         engine = test.engine
         c = engine.config
         row = CalibrationRow(c.policy_id, c.model_version, c.holding_seconds, 100, 0.5, None, 40, 100,
-                             D("2000"), D("1500"), 3)
+                             D("2000"), D("1500"), 3, label_source='ARTIFICIAL',
+                             provenance={'source':'ARTIFICIAL_FIXTURE'})
         engine.set_calibration(CalibrationTable([row], known_at=T - timedelta(hours=1), version="cal"), at(0))
         for second in (0, 5, 10, 11, 12):
             test.tick(second)
@@ -228,7 +230,8 @@ class StrategyFixes(unittest.TestCase):
         test = fixture(document)
         c = test.engine.config
         row = CalibrationRow(c.policy_id, c.model_version, c.holding_seconds, 100, 0.5, None, 40, 100,
-                             D("2000"), D("1500"), 3)
+                             D("2000"), D("1500"), 3, label_source='ARTIFICIAL',
+                             provenance={'source':'ARTIFICIAL_FIXTURE'})
         for second in (0, 5, 10):
             test.tick(second)
         self.assertGreater(test.engine.rejections["calibration_unavailable"], 0)
@@ -511,8 +514,9 @@ class ResearchPipeline(unittest.TestCase):
         fees = CommissionSchedule(D("0.0008"), D("80"), D("0"), "test")
         deadline = quotes[-1].at + timedelta(hours=1)
         net = label_intent(quotes, 0, 100, self.policy(), TickTable(), fees, deadline)
-        # Entry at 3001 (t=1), exit at the bid 3006 (t=6, holding 5 s): 500 gross - 240.08 - 240.48.
-        self.assertEqual(net, D("500") - D("240.08") - D("240.48"))
+        # Quote baseline: buy3001 at1s; bid3006 at6s with one-tick haircut to3005.
+        # This restricted full-fill result cannot be deployed as a policy label.
+        self.assertEqual(net, D("400") - D("240.08") - D("240.40"))
 
     def test_STR01_unfilled_intent_is_zero_and_unclosable_is_none(self):
         fees = CommissionSchedule(D("0.0008"), D("80"), D("0"), "test")
@@ -529,15 +533,12 @@ class ResearchPipeline(unittest.TestCase):
         self.assertEqual(first, day_block_lower_bound(samples, seed=3))
         self.assertLessEqual(first[1], first[0])
 
-    def test_STR01_calibration_rows_skip_thin_buckets_and_round_trip_to_replay(self):
+    def test_STR01_unverified_legacy_samples_cannot_become_deployment_rows(self):
         samples = [(date(2026, 9, d), 1.0 + (d % 3) * 0.1, D(100)) for d in range(1, 31)]
         samples += [(date(2026, 9, 1), 5.0, D(500))]
-        rows = build_calibration_rows(samples, [0.5, 2.0], policy_id="p", version="v", holding_seconds=120,
-                                      quantity=100, max_chase_ticks=2, min_days=20, min_samples=20)
-        self.assertEqual(len(rows), 1)
-        self.assertEqual((rows[0].score_low, rows[0].score_high), (0.5, 2.0))
-        event = calibration_table_event(rows, version="cal-1", known_at=T)
-        self.assertEqual(event["rows"][0]["mean_net_amount"], "100.00")
+        with self.assertRaisesRegex(ValueError, 'ReplayIntentLabel'):
+            build_calibration_rows(samples, [0.5, 2.0], policy_id="p", version="v", holding_seconds=120,
+                                   quantity=100, max_chase_ticks=2, min_days=20, min_samples=20)
 
     def test_STR01_scaler_fit_reports_clip_rates(self):
         scalers, clip = fit_scalers({"rs_60": [0, 1, 2, 3, 100]}, {"rs_60": .1})

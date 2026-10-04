@@ -14,7 +14,14 @@ NOW = datetime(2026, 10, 2, 1, tzinfo=timezone.utc)
 
 
 def prediction(policy="aggr", lower="40", *, calibrated=True, quantity=100, n=50):
-    return Prediction(policy, "cal-v1", quantity, n, D("100"), D(lower), True, calibrated, 120)
+    days = min(n, 40)
+    evidence = dict(policy_hash='a'*64, labels_hash='b'*64, input_hashes=['c'*64],
+                    code_hashes=['d'*64], fee_version='verified-test-fees',
+                    trained_until=(NOW-timedelta(days=1)).isoformat(),
+                    independent_days=[(NOW.date()-timedelta(days=i+2)).isoformat() for i in range(days)],
+                    complete_policy=True, includes_partial=True, fees_final=True)
+    return Prediction(policy, "cal-v1", quantity, n, D("100"), D(lower), True, calibrated, 120,
+                      days, 'VERIFIED_REPLAY', evidence)
 
 
 def path(*, fills=(), fees="0", residual=0, bid=None, exit_cost="0", policy="pass"):

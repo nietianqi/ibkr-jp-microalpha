@@ -1,0 +1,244 @@
+{
+  "events_processed": 3797,
+  "mode": "offline_replay",
+  "profile": "demo",
+  "funnel": {
+    "candidates": 1,
+    "confirmed": 1,
+    "intents": 1
+  },
+  "rejections": {
+    "entries_blocked": 301,
+    "SESSION_WARMUP": 299,
+    "waiting for duration and distinct updates": 2,
+    "cooldown": 130
+  },
+  "layer_funnel": {
+    "environment_long_time_share": 0.5853333333333334,
+    "candidates": 1,
+    "economics_rejected_candidates": 0,
+    "risk_rejected_candidates": 0,
+    "confirmed": 1,
+    "intents": 1,
+    "intents_with_fills": 1,
+    "net_profitable_intents": 0,
+    "rejection_reasons": {
+      "entries_blocked": 301,
+      "SESSION_WARMUP": 299,
+      "waiting for duration and distinct updates": 2,
+      "cooldown": 130
+    },
+    "rejection_seconds": {
+      "entries_blocked": 301,
+      "SESSION_WARMUP": 299,
+      "waiting for duration and distinct updates": 2,
+      "cooldown": 130
+    }
+  },
+  "intents": [
+    {
+      "intent_id": "STOCK_SYNTHETIC:l1-proxy-v1:2026-10-02T09:10:00+09:00",
+      "symbol": "STOCK_SYNTHETIC",
+      "created_at": "2026-10-02T09:10:02+09:00",
+      "target_quantity": 100,
+      "status": "CLOSED",
+      "bought": 100,
+      "sold": 100,
+      "buy_amount": "96030.0",
+      "sell_amount": "95000",
+      "actual_fees": "160.0",
+      "unreported_fee_reserve": "0",
+      "net_amount": "-1190.0",
+      "valuation": "realized",
+      "valuation_reason": "valued at common cutoff",
+      "stress_budget": "410.08500",
+      "stress_exceeded": true,
+      "child_orders": 2
+    }
+  ],
+  "execution_quality": {
+    "fills": [
+      {
+        "root": "simulation-fill:1",
+        "exec_id": "simulation-fill:1",
+        "order_id": 1,
+        "symbol": "STOCK_SYNTHETIC",
+        "side": "BUY",
+        "qty": 100,
+        "price": "960.3",
+        "arrival_mid": "960.25",
+        "price_cost": "5.00",
+        "emergency": false,
+        "corrected": false
+      },
+      {
+        "root": "simulation-fill:2",
+        "exec_id": "simulation-fill:2",
+        "order_id": 2,
+        "symbol": "STOCK_SYNTHETIC",
+        "side": "SELL",
+        "qty": 100,
+        "price": "950",
+        "arrival_mid": "950.05",
+        "price_cost": "5.00",
+        "emergency": true,
+        "corrected": false
+      }
+    ],
+    "total_price_cost_vs_arrival": "10.00",
+    "post_fill_drift": {
+      "BUY": {
+        "5s": {
+          "samples": 1,
+          "mean_signed_bps": 5.205622189390558,
+          "unavailable": 0
+        },
+        "30s": {
+          "samples": 1,
+          "mean_signed_bps": -106.79052437473224,
+          "unavailable": 0
+        },
+        "120s": {
+          "samples": 1,
+          "mean_signed_bps": -106.79052437473224,
+          "unavailable": 0
+        }
+      },
+      "SELL": {
+        "5s": {
+          "samples": 1,
+          "mean_signed_bps": 0.0,
+          "unavailable": 0
+        },
+        "30s": {
+          "samples": 1,
+          "mean_signed_bps": 0.0,
+          "unavailable": 0
+        },
+        "120s": {
+          "samples": 1,
+          "mean_signed_bps": 0.0,
+          "unavailable": 0
+        }
+      }
+    },
+    "drift_sign": "positive is favourable to the filled side",
+    "missed_opportunity_rate": "NOT_COMPUTED: requires frozen realized-signal labels"
+  },
+  "alarms": [],
+  "disabled_symbols": {},
+  "enhanced_ready_candidate_ratio": null,
+  "positions": {
+    "STOCK_SYNTHETIC": {
+      "quantity": 0,
+      "average_price": "0",
+      "realized_price_pnl": "-1030.0",
+      "actual_fees": "160.0"
+    }
+  },
+  "active_orders": 0,
+  "daily_net_pnl_estimate": "-1190.0",
+  "unreported_fee_reserve": "0",
+  "cash_source": "reconciled",
+  "risk_locks": [],
+  "soft_blocks": [],
+  "requests_sent": {
+    "SUBMIT": 2
+  },
+  "routine_requests_sent": 1,
+  "entry_intents_today": 1,
+  "broker_reconciled": true,
+  "live_readiness": "NOT_VERIFIED",
+  "manifest": {
+    "code_sha256": "219722e1597e1787da8a1149afc474fef76ed22779274511ea1cfb6e998c8e95",
+    "config_sha256": "a4092100875e5eeaa55219f75627fc7eceb52e1d9ca79d373cee83fb5dacabda",
+    "input_sha256": "a7c110df5475ac09137667bfe131af8821ce5efe2d97817891eb4442e148e5ef",
+    "events": 3797
+  },
+  "metrics": {
+    "processing_seconds": 0.9733,
+    "events_per_second": 3901.0,
+    "by_event_type": {
+      "account_snapshot": {
+        "events": 26,
+        "p50_ms": 0.0737,
+        "p99_ms": 0.1815,
+        "max_ms": 0.1815
+      },
+      "calendar": {
+        "events": 1,
+        "p50_ms": 0.1561,
+        "p99_ms": 0.1561,
+        "max_ms": 0.1561
+      },
+      "calibration_table": {
+        "events": 1,
+        "p50_ms": 0.152,
+        "p99_ms": 0.152,
+        "max_ms": 0.152
+      },
+      "commission": {
+        "events": 2,
+        "p50_ms": 0.288,
+        "p99_ms": 0.288,
+        "max_ms": 0.288
+      },
+      "cumulative_volume": {
+        "events": 751,
+        "p50_ms": 0.1246,
+        "p99_ms": 0.383,
+        "max_ms": 0.5912
+      },
+      "fill": {
+        "events": 2,
+        "p50_ms": 0.3026,
+        "p99_ms": 0.3026,
+        "max_ms": 0.3026
+      },
+      "quote": {
+        "events": 1502,
+        "p50_ms": 0.1088,
+        "p99_ms": 0.3178,
+        "max_ms": 0.469
+      },
+      "quote_stream_health": {
+        "events": 752,
+        "p50_ms": 0.0667,
+        "p99_ms": 0.2209,
+        "max_ms": 0.2865
+      },
+      "reconcile": {
+        "events": 1,
+        "p50_ms": 0.1401,
+        "p99_ms": 0.1401,
+        "max_ms": 0.1401
+      },
+      "requests": {
+        "events": 751,
+        "p50_ms": 0.6815,
+        "p99_ms": 1.9181,
+        "max_ms": 2.5847
+      },
+      "same_time_profile": {
+        "events": 4,
+        "p50_ms": 0.0782,
+        "p99_ms": 0.0882,
+        "max_ms": 0.0882
+      },
+      "status": {
+        "events": 4,
+        "p50_ms": 0.173,
+        "p99_ms": 0.8937,
+        "max_ms": 0.8937
+      }
+    },
+    "retained": {
+      "event_digests": 3797,
+      "audit_records_in_memory": 0,
+      "journal_records": 16
+    },
+    "queue_lag": "NOT_APPLICABLE: offline replay has no live receive clock",
+    "note": "Local CPU timing of the replay core; not broker or exchange latency."
+  },
+  "interpretation": "Replay safety evidence only; no profitability or broker execution claim."
+}

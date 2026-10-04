@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "next_order_id": 1,
+  "connected": true,
+  "reconciling": true,
+  "lock_reasons": [],
+  "orders": [],
+  "executions": [],
+  "commissions": {},
+  "broker_positions": {},
+  "unmanaged_orders": [],
+  "position_metadata": {},
+  "journal": [],
+  "pacing": {
+    "rate": 50.0,
+    "capacity": 50,
+    "reserved_risk_tokens": 5
+  }
+}

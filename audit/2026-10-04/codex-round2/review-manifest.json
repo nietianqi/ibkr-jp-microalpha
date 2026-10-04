@@ -1,0 +1,233 @@
+{
+  "captured_at_utc": "2026-10-04T13:23:55.179241+00:00",
+  "git_commit": "e592e3477c99ab7b9379df14d2926438b5310115",
+  "python": "3.14.0",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "baseline_note": "Single initial-import commit includes Claude fixes; this is a current-source re-review, not a historical git diff.",
+  "files": [
+    {
+      "path": "examples/research.json",
+      "bytes": 4195,
+      "sha256": "446812b1ca15179ebf1058b27fae6b19ceff08b57063c3f648e6c8176e949b34"
+    },
+    {
+      "path": "ibkr_microalpha/__init__.py",
+      "bytes": 90,
+      "sha256": "81cf822f8b73b847852abad1fb2cc172fbccc02491f1cf3965c8738d0c773dec"
+    },
+    {
+      "path": "ibkr_microalpha/__main__.py",
+      "bytes": 30,
+      "sha256": "6d8b7d7846a845059d7a3107143f11131f63c5511d669b44085b15ec5e3d2279"
+    },
+    {
+      "path": "ibkr_microalpha/cli.py",
+      "bytes": 3722,
+      "sha256": "0acf14e12f45b82b0fd27aa5ca4ad6927defe30256aa89c42cf9a3912f159184"
+    },
+    {
+      "path": "ibkr_microalpha/config.py",
+      "bytes": 12006,
+      "sha256": "39f9a3ec370a06e503507899ddd1917fa78f56c3f1f28e79fbae896453d04b53"
+    },
+    {
+      "path": "ibkr_microalpha/demo.py",
+      "bytes": 6298,
+      "sha256": "00b821c0859b3261d39b65e84065989ea3bd67fa841baaa4d672afead37cd286"
+    },
+    {
+      "path": "ibkr_microalpha/domain.py",
+      "bytes": 4284,
+      "sha256": "a6d98e30f0e82a29ca20e4c6e68e62b9524652c7ac467bec043cf7a6d4686c91"
+    },
+    {
+      "path": "ibkr_microalpha/economics.py",
+      "bytes": 25224,
+      "sha256": "d4970237ea95bbf163d369a9e700469c771702d18d05c716f1d2773848b3d48f"
+    },
+    {
+      "path": "ibkr_microalpha/engine.py",
+      "bytes": 23464,
+      "sha256": "3b8d7d64fc0b6a724b179ac2dad4fabfed4debd2c96ff857ad395cbf78183433"
+    },
+    {
+      "path": "ibkr_microalpha/entry.py",
+      "bytes": 17998,
+      "sha256": "be8f41d74b4769130996a7fd30d2b2bd23f6b6d915fdfa3e3cfc4a48b7226620"
+    },
+    {
+      "path": "ibkr_microalpha/execution.py",
+      "bytes": 58059,
+      "sha256": "ed4154ad323600e1850136cde9e6aa3b09aadd2a6bffe458f620925388579780"
+    },
+    {
+      "path": "ibkr_microalpha/features.py",
+      "bytes": 40355,
+      "sha256": "a82eea26ca4fed9f4d4d50bbda2ee0e644cb48ca00468cb49b397685e071f4e3"
+    },
+    {
+      "path": "ibkr_microalpha/market.py",
+      "bytes": 18563,
+      "sha256": "039ea5a484d03ccafcc683cd22a74674283084499649e323b6c214d88f60b27c"
+    },
+    {
+      "path": "ibkr_microalpha/positions.py",
+      "bytes": 11516,
+      "sha256": "adbc410a4dae6001c329e926c147ed8c8a646d706ead001312452fc9e7d44519"
+    },
+    {
+      "path": "ibkr_microalpha/replay.py",
+      "bytes": 20843,
+      "sha256": "c0a2ac06c160283c39e3a976e2965e09466e554f85a1215d5c82849e89e2913b"
+    },
+    {
+      "path": "ibkr_microalpha/reporting.py",
+      "bytes": 14188,
+      "sha256": "103e4e96ba6597f3a342d212774421750dd1a6aca803c9649df1643f71095c23"
+    },
+    {
+      "path": "ibkr_microalpha/research/__init__.py",
+      "bytes": 757,
+      "sha256": "c02ead68363e5f3dc427784a133db3e1986de4145de330d317213ef93d65207f"
+    },
+    {
+      "path": "ibkr_microalpha/research/calibration.py",
+      "bytes": 4622,
+      "sha256": "7b8b50b84edebb042e448b9e82baef9b035dc35cf273e6cf8d6066ae96673c00"
+    },
+    {
+      "path": "ibkr_microalpha/research/labels.py",
+      "bytes": 3698,
+      "sha256": "5c62433424edc211fd3acceff8058a2419b6b6487f2702f1b3d18cbe30e56c40"
+    },
+    {
+      "path": "ibkr_microalpha/research/splits.py",
+      "bytes": 1763,
+      "sha256": "8db37564668e2e0578601264e0a26f90fd11b9bc749d2e61fe583d5e57606728"
+    },
+    {
+      "path": "ibkr_microalpha/risk.py",
+      "bytes": 13427,
+      "sha256": "1114b31dc4c56e4395f25b2097c26df4f82ea1b54df87eca1bd558209cb2bff7"
+    },
+    {
+      "path": "ibkr_microalpha/signals.py",
+      "bytes": 30977,
+      "sha256": "5d58ec3903d43579bd09d97404c5f18d92d677a63bb9da3d3d11ff1dbfa24231"
+    },
+    {
+      "path": "ibkr_microalpha/subscriptions.py",
+      "bytes": 13579,
+      "sha256": "36fc1c695cbcd0d9f23c0fe9ac98c10c10228398e4bf7d9ac0abdac8b2dca6c3"
+    },
+    {
+      "path": "ibkr_microalpha/valuation.py",
+      "bytes": 6058,
+      "sha256": "1e5e32044b8cbfacc641818425b3b067b4b5fc000f0e33c3978207ecc52cb62d"
+    },
+    {
+      "path": "IMPLEMENTATION_STATUS.md",
+      "bytes": 8180,
+      "sha256": "b9bd3d3cd5ed9e6e0145009bd02052ca0e368da0e263066a9a684bb19da0460b"
+    },
+    {
+      "path": "pyproject.toml",
+      "bytes": 409,
+      "sha256": "8b97f50ed49dfd2385f1b98d607cbd75694b58847f6acb8df3be76f3bf5c9091"
+    },
+    {
+      "path": "README.md",
+      "bytes": 11400,
+      "sha256": "a71b9ae0664b15c230106f4d97cb4640002fd623578997bcceea7fb06459650e"
+    },
+    {
+      "path": "tests/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/test_coordinator_edges.py",
+      "bytes": 4292,
+      "sha256": "e9f5793f702db713818d810e6f0cc73472b824d43d5755ae715ca75ed08d4648"
+    },
+    {
+      "path": "tests/test_economics.py",
+      "bytes": 9121,
+      "sha256": "6859a1fe68816e1e26f8bb58e3b7d915ebdf82a96e4a21ba65366143e12ba7f0"
+    },
+    {
+      "path": "tests/test_engine.py",
+      "bytes": 15326,
+      "sha256": "7d679a75bb6fdd2860b7a52a1a9e04c27a11a4cec0b191286061d41baba2d335"
+    },
+    {
+      "path": "tests/test_execution.py",
+      "bytes": 24786,
+      "sha256": "befd1210425238fc7f30e19bc9ce6c5e3c996c1bf9500fec28764c64470cfb0a"
+    },
+    {
+      "path": "tests/test_market.py",
+      "bytes": 16448,
+      "sha256": "585e25ddf859741c062e23f1a4ebc704a652f004fb3668cff194195bd0e70f09"
+    },
+    {
+      "path": "tests/test_replay.py",
+      "bytes": 10713,
+      "sha256": "2681e06ed5d678fc17d9629f89e1d09095743f1f6c2f4c671ad37ccfc43195e9"
+    },
+    {
+      "path": "tests/test_reporting.py",
+      "bytes": 10343,
+      "sha256": "b1c72a1005bd661c96583b6fb1847cdd287d61be22ce164dd71c570362f11d63"
+    },
+    {
+      "path": "tests/test_review_fixes.py",
+      "bytes": 32515,
+      "sha256": "3c3fa625fab0d03c8e438d0e351ce2497fa16e69e53a073dd20ce8e4ccdaa391"
+    },
+    {
+      "path": "tests/test_risk.py",
+      "bytes": 5627,
+      "sha256": "537da6bdcf4730aaee11b3515235e6af1f94de31d361f63692106cc2c2b55dd4"
+    },
+    {
+      "path": "tests/test_signals.py",
+      "bytes": 15426,
+      "sha256": "adc0ecbb21a48a1fba27bd4ccd8a378b811f571d8c85a0556c3ee77292b14c48"
+    },
+    {
+      "path": "tests/test_subscriptions.py",
+      "bytes": 7069,
+      "sha256": "1a6c505beb66c35fd239fca6e5cb526be7d4ea82f8f885ed1fa4cc0d29075b18"
+    }
+  ],
+  "demo_manifest": {
+    "code_sha256": "219722e1597e1787da8a1149afc474fef76ed22779274511ea1cfb6e998c8e95",
+    "config_sha256": "a4092100875e5eeaa55219f75627fc7eceb52e1d9ca79d373cee83fb5dacabda",
+    "input_sha256": "a7c110df5475ac09137667bfe131af8821ce5efe2d97817891eb4442e148e5ef",
+    "events": 3797
+  },
+  "evidence_assertions": {
+    "EXE-09": true,
+    "EXE-10": true,
+    "EXE-11": true,
+    "EXE-12": true,
+    "RPL-03": true,
+    "RPL-04": true,
+    "RPT-06": true,
+    "FLOW-05": true,
+    "FLOW-06": true,
+    "STR-09": true,
+    "STR-10": true,
+    "DATA-09": true,
+    "demo_business_equal": true,
+    "demo_input_hash_equal": true
+  },
+  "tests_observed": {
+    "command": "python -m unittest discover -s tests",
+    "count": 195,
+    "exit_code": 0,
+    "reported_seconds": 0.476,
+    "source": "Independent root tool run in this review; source was unchanged afterwards."
+  }
+}

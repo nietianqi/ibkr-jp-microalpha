@@ -1,6 +1,6 @@
 # Claude × Codex 协作文档：IBKR 日本股票多周期策略
 
-第 1 轮评审：2026-10-04（JST）· 维护方：Claude、Codex · 当前状态：第 1 轮修复已由 Claude 实施（应用户要求），待 Codex 复核（见第 11 节）
+第 1 轮评审 / 第 2 轮修复复核 / 第 3 轮实施：2026-10-04（JST）· 维护方：Claude、Codex · 当前状态：第 12 节的 12 项问题已由 Codex 实施修复，状态为“已实施·待 Claude 独立复核”，详见第 13 节。第 2–12 节保留当时事实，最新实施与验证状态以第 13 节为准。
 
 本文档是两方协作的唯一问题台账。每个问题都有编号、位置、原因、影响、优先级、处置（删除/合并/重构/修复/新增/保留）、修改方案、验收标准、建议负责方和状态。修复时只需更新对应条目的状态，并在文末“变更记录”中追加一行。
 
@@ -1605,6 +1605,333 @@ python audit/2026-10-04/performance/benchmark.py benchmark
 
 ---
 
+## 12 Codex 对 Claude 修复版的独立复核（2026-10-04）
+
+### 12.1 结论、范围和复核基线
+
+**有问题，但 Claude 的主要重构与多项修复确实有效。当前应继续离线研发；资金门控与异常仓位处理仍未闭环，不能据 195 项测试通过就批准交易接入。** 最先修复 EXE-11（风险循环异常）、EXE-09（重复使用账户余额）和 EXE-10（发送前漏检动态预算），随后修复回放证据与研究政策一致性。
+
+- 当前工作区生产代码与 Git `e592e34` 一致。该仓库只有一个 initial-import 提交，提交内容已经包含 Claude 修复；没有可用的修复前 Git 差异。本节评估当前代码，不将所有现存问题都断言为 Claude 新引入。
+- 当前源码、测试和示例配置共 39 个文件的哈希见 [review-manifest.json](audit/2026-10-04/codex-round2/review-manifest.json)。生产包聚合 SHA-256：`219722e1597e1787da8a1149afc474fef76ed22779274511ea1cfb6e998c8e95`。
+- Codex 独立执行 `python -m unittest discover -s tests`：**195 项通过，0.476 秒**；`compileall` 通过；Claude 的 11 个当前接口探针全部跑完，见 [claude-probes-rerun.txt](audit/2026-10-04/codex-round2/claude-probes-rerun.txt)。没有把旧接口脚本报错记成生产缺陷。
+- 独立生成 3,797 事件 demo 并用新引擎重放：业务报告及输入摘要一致。产物隔离在 [codex-round2/demo](audit/2026-10-04/codex-round2/demo/report.json)，没有覆盖原 `runs/`。该人工样例只产生一个入场意图，不能覆盖多股票资金变化、撤单晚到成交或研究政策差异。
+- 新 demo 的 dispatch 墙钟累计时间 0.7883 秒，quote p50/p99 约 0.1007/0.2204 ms，requests p99 1.136 ms。这不是进程 CPU 占用或完整读入/finish/save 耗时；流式回放时 dispatch 还包含 sink 写入。报告已正确将实盘队列滞后标为不适用，但 metrics 文案中的 Local CPU timing 应改为本地 dispatch 墙钟耗时。新旧事件数量和输入不同，不能由此声称实盘延迟或端到端性能提升若干倍。
+- 本轮仅修改审查文档与新增隔离证据，未修改策略、配置或现有测试。以下复现不是实盘事故日志。
+
+策略标签继续为：日本股票日内多周期趋势 / 相对强弱 / RVOL / VWAP，L1 或增强逐笔确认，带追价上限的主动限价，秒级零售券商接口研究。五层复核：信号层已有明确职责但研究标签未对齐；决策层顺序改善但数量对应政策与发送预算有缺口；执行层更正保护改善但恢复计数不完整；风险层 SOFT/HARD 划分合理但负仓位会中断循环；组合层已计名义金额与压力却未可靠锚定账户资金。交易适配器、真实成交/撤单延迟和样本外优势仍未验证。本轮是修复复核，不重新计算全量评分；第一轮分数仅描述旧版本。
+
+### 12.2 已修内容与仍不能关闭的范围
+
+| 原编号 / 范围 | 独立复核结果 | 最新状态 |
+| --- | --- | --- |
+| EXE-01：更正后卖量保护 | 已发送卖单正确进入 CANCEL_PENDING 并锁定/查询，未发送卖单本地取消；可能剩余量在撤单回报后仍保留，直到完整对账确认 | 保护分支通过；撤单竞态后异常仓位仍需 EXE-11，不整体关闭 |
+| EXE-02：报价/预测发送前复核 | requests 先 flush/poll，再调用 validator；过期报价和预测没有 SUBMIT | 数据与经济分支通过；动态预算仍需 EXE-10 |
+| EXE-03：退出价格异常隔离 | 价格转换错误已捕获、记录与锁定 | 异常逃逸已修；最低合法 bid 再下移一档到零时仍没有退出单，保留边界限制 |
+| EXE-04 | 首成交 ENTRY_SNAPSHOT 和 STOP_TIGHTENED 写入日志；snapshot/journal 恢复一致 | 已关闭（原元数据缺失范围） |
+| EXE-05、EXE-08 | AccountSnapshot 和明确的入场/例行请求计数已加入 | 部分通过；EXE-09/10/12 待修复 |
+| STR-02 | 无变化且心跳健康不会立即清仓；缺市场数据为 UNKNOWN/SOFT；有受控风险时才超时升级 | 原 SOFT/HARD 缺失与瞬时锁死问题通过，不需推翻当前分级 |
+| FLOW-03、FLOW-04 | entry/positions/valuation 拆分，退出状态归并 | 结构改善确认；不能据模块拆分推断所有状态转换已正确 |
+| RPT-01、RPT-02 | 到期前报价不再冻结漂移；更正取最新 revision，bust 去掉旧执行损耗 | 已关闭（漂移时点和重复成本范围）；整意图归属另见 RPT-06 |
+| DATA-05 | 先选有效历史日再取最近 20 日；21 行、20 有效日样例 denominator=1000 | 已关闭 |
+| CFG-01、CFG-02 | 字符串布尔值和非整数 rvol_days 被拒绝 | 已关闭（已验证的输入类型范围）；网格语义另见 DATA-09 |
+| DATA-04 | 默认 1 秒网格的窗口前锚点已补 | 部分通过；非默认网格见 DATA-09 |
+| DATA-01 / 增强版 | record_candidate 签名及 L1 预排序的循环依赖解除 | 原崩溃/预分配路径通过；双特征轨道及中途订阅 VWAP 种子仍是部分实施 |
+| PERF-01、PERF-04 | 同时段历史基准替代全表扫描，order_fees 为缓存查询 | 原瓶颈改善确认；不继续套用旧 O(orders×executions) 费用结论 |
+| RPL-01 | 解析失败不占身份，业务应用异常使实例中止 | 部分通过；持久化失败仍需 RPL-04 |
+| RPL-02、RPT-05、STR-01、TST-01 | 原始输入/审计流式写、报告指标和研究工具增加 | 仍部分实施；内存、真实研究、研究政策契约和以下反例测试未完成 |
+
+第 2 节原状态列是 Claude 实施时记录。本表是 Codex 复核后的覆盖范围；只关闭明确验证的原缺陷，不把相关模块的所有问题一起关闭。
+
+### 12.3 新确认问题总表
+
+P1 为当时离线代码的重要正确性缺陷；其中资金门控、风险循环与错误研究准入是交易接入的阻断项。P2 为具体配置/恢复/流程边界，仍有明确验收要求。下表保留第 2 轮评审时的 **待修复** 状态及建议负责方；本轮实施结果见第 13 节。
+
+| 编号 | 问题 | 当前位置 | 优先级 | 处置 / 建议负责 |
+| --- | --- | --- | --- | --- |
+| EXE-09 | 新账户快照有效期内同一余额被重复使用 | valuation.py:106–114 `sync` | P1 | 修复账户资金锚点 / Claude |
+| EXE-10 | 账户资金下降后排队买单仍发出 | entry.py:319–348 `still_valid` | P1 | 补原订单动态预算复核 / Claude |
+| EXE-11 | 更正撤单竞态产生负仓位，估值抛异常 | valuation.py:68–89、43 | P1 | 增加异常仓位分支 / Claude |
+| EXE-12 | 执行恢复丢失日请求预算与计数 | execution.py:926–951、1002–1040 | P2 | 版本化恢复状态 / Claude |
+| RPL-03 | 输入与输出同文件时原始输入被截断 | cli.py:10–21 `_replay_file` | P1 | 校验路径并原子发布 / Claude |
+| RPL-04 | 原始输入/审计写失败不使实例中止 | replay.py:298–319、332–336 | P1 | 扩大中止边界 / Claude |
+| RPT-06 | 已平仓成交被 bust 后，新退出丢失原意图归属 | reporting.py:50–67；engine.py:346–376 | P1 | 保留订单到意图索引并重新打开 / Claude |
+| FLOW-05 | 临时越过 cap 的候选下一次 poll 就失效 | entry.py:235–238 对比 303–317 | P2 | 区分未下单候选与活动买单 / Claude |
+| FLOW-06 | 缩量后仍用较大量的追价上限 | entry.py:162–191 `plan` | P1 | 原子规划数量对应政策 / Claude |
+| STR-09 | quote-only 标签被当成完整部署政策 | research/labels.py:45–79 | P1 | 限定 baseline，正式标签走完整账本 / Claude |
+| STR-10 | 独立交易日数量没有进入校准准入 | economics.py:164–183、114–118 | P1 | 冻结独立日门槛与 provenance / Claude |
+| DATA-09 | 合法配置的网格遗漏末段波动 | features.py:169–172、662–689 | P2 | 必含窗口终点 / Claude |
+
+### 12.4 执行与风控：复现、修法和验收
+
+**EXE-09：重复使用券商余额。** `RiskValuation.sync` 把 `min(modeled_cash, snapshot.available_funds)` 标为 reconciled，没有记录快照覆盖了哪些成交与资金占用。350,000 JPY 快照之后买入 300,100 并预留费用 240.08，已知应剩 49,659.92；当前 `risk.cash` 仍为 350,000，第二只股票可再分配 300,340.08。报价正常、账户快照未过期也不能使旧余额成为新的支付能力。会造成跨股票过量下单或券商拒单，必须修复而不是仅缩短快照有效期。
+
+具体方案：账户快照与订单/执行对账 barrier 对齐，保存覆盖账本序列、现金流基线和已覆盖预留集合；扣除 barrier 后尚未体现在快照中的成交、费用和本地订单占用。不能把券商已净预留的订单重复扣除，覆盖不明时阻断入场。示意接口需要配套实现：
+
+```python
+anchor = e.account_funds_anchor
+delta = e.book.cash_flow - anchor.covered_cash_flow
+new_commitments = commitments_not_covered_by(anchor, e.book)
+broker_budget = anchor.available_funds + delta - new_commitments
+cash = min(modeled_cash, broker_budget)
+```
+
+验收：350k 快照下第一笔100股之后第二笔必须拒绝；分别测试未发送/已发送/部分成交、费用晚到、撤单释放、新快照覆盖旧预留、不同账户与不明 barrier。不要靠 received_at 猜测券商值是否包含某次成交。
+
+**EXE-10：排队期间预算变化未重新校验。** `still_valid` 已正确复核锁、市场、报价、TTL 和经济预测，但没有核验原订单现金、行业/组合名义金额与压力占用。100股、限价3002的未发送买单生成后，新账户快照降至1,000；当前 `risk.cash=1000`、validator 返回 None，12.5秒 requests 仍发出 SUBMIT。EXE-09修复并不能自动补上这个发送边界。
+
+具体方案：发送前增加无缩量的 `validate_existing_entry_budget`，区分本单与其他已预留订单，验证当前资金及所有风险约束；原数量不能通过就 LOCAL_ABORT，不在发送时偷偷改变冻结校准对应的数量。一个 drain 中逐单核验并记占用：
+
+```python
+reason = e.risk.validate_existing_entry_budget(order, at, other_commitments)
+if reason is not None:
+    return reason  # drain_commands 对未发送订单执行 LOCAL_ABORT
+return self.recheck_economics(candidate, order, at)
+```
+
+验收：新余额1k时300.2k单不得出队；其他持仓跳价导致组合压力超限、多个待发送订单争用资金、旧订单部分成交、快照过期都需覆盖；风险卖出和撤单仍可发送。
+
+**EXE-11：负仓位中断风险循环。** 买100、发送卖100、买成交更正为50后，EXE-01保护正确发出撤单。撤单确认前卖100仍可能成交；账本保留真实 `quantity=-50` 并产生 ledger 锁。随后 `sync` 将所有非零数量视为长仓，传负名义金额给 `commission`，抛 `filled_notional must be nonnegative`。经 Replay 会使实例 failed；这不能代替持续检查其他股票、报警和对账。
+
+具体方案：负仓位保留事实，在长仓估值之前进入异常仓位分支，HARD锁、一次性报警/QUERY、未知日PnL设None、账户一致性设False，继续处理其他股票。不得改成0，也不得对 `abs(quantity)` 执行当前长仓SELL退出。异常空头须经完整券商对账及明确的异常仓位处置流程：
+
+```python
+if position.quantity < 0:
+    valued = False
+    account_consistent = False
+    e.risk.lock('uncontrolled_short')
+    record_short_alarm_and_query_once(symbol, position.quantity, at)
+    continue
+```
+
+验收：全部/部分晚到卖成交、买bust到0后卖回报、负仓位恢复及无报价情形；事实不丢失、poll不抛佣金参数异常、不继续卖出扩大空头、其他持仓风险检查仍完成。
+
+**EXE-12：恢复后日预算失效。** `snapshot` 没有保存 `daily_request_budget/routine_requests_sent/sent_counts`；两种恢复构造默认预算None，journal COMMAND_SENT也没有完整计数/risk字段。budget=1已用完一单，snapshot或journal恢复并完整对账后仍可发送普通新单。虽完整引擎目前推荐回放全部输入，执行恢复公共接口仍不能恢复成无限日预算。
+
+具体方案：版本化快照保存JST交易日、预算和分类计数；发送事件记录risk分类并对QUERY等无order_id请求也恢复计数。旧快照从冻结配置与发送日志明确迁移，无法重建时阻断例行请求；重建不能再次消费限速或重发：
+
+```python
+book = cls(daily_request_budget=state['daily_request_budget'])
+book.routine_requests_sent = state['routine_requests_sent']
+book.sent_counts.update(state['sent_counts'])
+```
+
+验收：同日重启且已耗尽budget仍不发普通买单，风险请求仍通；两种恢复的SUBMIT/CANCEL/QUERY计数一致；旧版本迁移与跨日新运行分别测试。
+
+证据：[execution/evidence.json](audit/2026-10-04/codex-round2/execution/evidence.json)，脚本 [execution/reproduce.py](audit/2026-10-04/codex-round2/execution/reproduce.py)，详细专项记录 [execution/findings.md](audit/2026-10-04/codex-round2/execution/findings.md)。
+
+### 12.5 回放与报告：复现、修法和验收
+
+**RPL-03：输入被自己截断。** `_replay_file` 先用 `w` 打开 output/raw-input.jsonl，再打开 events读取。输入恰是同目录raw-input，或者解析后指向同一个文件，就先丢失源内容。隔离复现109字节输入变0字节，随后生成0事件成功报告，无failure。属于真实数据破坏路径；不能仅要求用户换目录。
+
+具体方案：写入前校验全部输入与输出目标的resolve路径及现存文件samefile关系（覆盖hardlink/symlink）；拒绝冲突时不得更改任何原文件。创建独立暂存输出，成功后发布，失败保留失败证据；不要在校验配置前删除旧报告。最低防护示例：
+
+```python
+source = Path(events).resolve()
+target = output / 'raw-input.jsonl'
+if source == target.resolve() or (target.exists() and source.samefile(target)):
+    raise ValueError('input and output must be different files')
+```
+
+验收：直接同路径、别名/hardlink、输入为audit目标、配置无效、输入读取失败、输出写失败；失败后原始输入哈希与旧报告不变，不能发布零事件成功报告。
+
+**RPL-04：写入失败没有使实例中止。** `dispatch` 的try只覆盖flush/apply/poll；身份、计数、输入摘要与sink写入在try外。模拟磁盘写失败后引擎已推进、身份已提交、events=1，但failed=False；同事件重试静默返回，后续事件继续接受，而该条证据流缺失。原源文件仍可重建，丢失的是本次输出的原始输入/审计证据，不应继续生成可信报告。finish的审计flush有同样边界问题。
+
+具体方案：将应用、成功身份提交、raw/audit写入及finish置于统一失败中止边界。任何应用后I/O失败都设置failed并禁止原实例继续dispatch/finish/save，重建并从保留的源输入重放。不要声称异常中止实现了事务回滚；若需要持久性承诺，应先写持久日志再发布状态：
+
+```python
+try:
+    apply_and_record_event()
+    self._drain_audit()
+except Exception:
+    self.failed = True
+    raise
+```
+
+验收：raw写、audit写、finish写、flush/close失败各自注入；原实例拒绝后续事件和成功报告，失败产物可诊断，新实例可从源输入得到一致结果。
+
+**RPT-06：bust重新打开仓位，但意图索引没恢复。** close移除 `_current[symbol]`；旧退出成交被bust后账本恢复100股，却没有根据被更正订单重新打开原intent。新的退出单由link_exit创建unattributed意图。最终真实持仓0、日净PnL=-580.08，报告却显示原意图OPEN/bought100/sold0和新意图OPEN/bought0/sold100/quantity mismatch。费用与价格损耗采用最新revision的修复仍有效；失效的是全意图归属，会污染胜率、持有样本和校准标签。
+
+具体方案：维护稳定的order_id→intent_id索引，不随暂时flat删除；更正/bust/reconcile改变净数量时重新计算意图状态，重新打开原意图并将修复退出归回该意图。多轮同股交易必须按订单身份定位，不能只选该symbol最近一次意图：
+
+```python
+intent_id = self.order_to_intent[corrected_order_id]
+self.recompute_intent_state(intent_id, book, at)
+self.link_exit_to_intent(intent_id, new_exit_order_id)
+```
+
+验收：SELL bust、BUY向上/向下更正、同股已有后续意图、恢复后再次退出；所有子单只归属一个正确意图，平仓后该意图CLOSED，整意图PnL和账户PnL可核对，不出现虚构残余。
+
+证据：[source-collision.json](audit/2026-10-04/codex-round2/performance/source-collision.json)、[persistence-failure.json](audit/2026-10-04/codex-round2/performance/persistence-failure.json)、[reopened-intent.json](audit/2026-10-04/codex-round2/performance/reopened-intent.json)。脚本及详细方案：[performance/findings.md](audit/2026-10-04/codex-round2/performance/findings.md)。
+
+### 12.6 入场与研究：复现、修法和验收
+
+**FLOW-05：临时越价特例被timer覆盖。** consider对economic_price_cap特意不invalidate；但check_candidate在cap存在且ask>cap时无条件invalidate，并触发30秒alpha cooldown。复现：10秒候选本应30秒过期，经济cap=3000、ask=3001；consider后候选仍在，同时间一次poll就消失，11秒ask回3000也不能恢复。与第11.2节“TTL内可能回落”承诺不符，漏掉可恢复机会、改变候选漏斗。
+
+具体方案：无活动买单的候选越cap只WAIT，继续TTL、数据和环境约束；已发送/排队买单越cap仍取消。clear cap状态不能延长原TTL：
+
+```python
+has_buy = any(o.side == Side.BUY for o in e.book.active_orders(symbol))
+over_cap = cap is not None and quote is not None and quote.ask > cap
+if over_cap and has_buy:
+    e._invalidate(symbol, at, 'economic_price_cap')
+```
+
+验收：未下单候选越价→原TTL内回落可继续确认，TTL到期仍失效；活动买单越价必须撤；无效报价/环境不许可仍失效，不出现重复候选。
+
+**FLOW-06：缩量不换数量对应的追价政策。** plan先选择最大校准quantity、冻结其cap，然后risk.allocate可缩到较小quantity。此时重新读取小quantity的预测，却不使用其max_chase_ticks，也不重新算limit/止损/压力。校准200股追10tick，100股追0tick，risk.max_quantity=100：最终100股的正确cap=3001，当前plan却cap=3011、limit=3002。默认单一100股demo不暴露此路径；多数量校准实际执行已超出选中政策，价格预测扣漂移也不能补回不同追价政策的样本一致性。
+
+具体方案：按合法、当前score有校准的数量降序枚举，每个数量读取自身row并固定其cap、limit、stop和费用，原子reserve_exact_quantity；失败释放后才试下一数量。不要先用200股政策分配100股：
+
+```python
+for quantity in calibrated_legal_quantities_descending(candidate):
+    row = lookup_row(candidate, quantity)
+    cap = immutable_cap(candidate, quantity, row)
+    plan = reserve_exact_quantity_and_gate(candidate, row, quantity, cap, at)
+    if plan is not None:
+        return plan, ''
+```
+
+验收：200/100政策cap相同与不同、流动性/现金/压力导致缩量、最大quantity在当前score无row而较小量有row；实际限价不得超过实际数量政策cap，reserve使用最终limit，失败无泄漏且仍幂等。
+
+根代理独立证据：[entry-evidence.json](audit/2026-10-04/codex-round2/entry-evidence.json)，可执行脚本 [entry_checks.py](audit/2026-10-04/codex-round2/entry_checks.py)。
+
+**STR-09：标签不是完整部署政策。** labels文档称与协调器相同的完整政策，CalibrationRow也要求包括全部子单/部分成交；实现却要求单条未来ask_size≥quantity才能入场，部分成交分支直接0。100股目标、可买40股时，合法部分路径亏2,230.432被记0。退出一旦触发便在每条未来bid成交，不遵守先前卖限价或撤改确认；100股100.1买、90卖40、80卖60，被记-1770，但最初退出限价89.9不可能直接在80成交，如重挂为两个退出子单则还至少多80最低佣金（对应路径为-1850）。全部delayed quotes也能产出正标签2417.52。普通信号退出、波动止损、提交延迟等也不在LabelPolicy契约内。
+
+具体方案：保留该函数作为有明确假设和独立policy_id的quote-only baseline；不要将其产物写成部署策略的完整校准。正式部署标签应通过相同冻结配置、质量门控、订单状态机和模拟/真实执行事件得到整意图值；质量不明或无法闭合则标not_estimable并保留计数，不能默认为0或悄悄丢弃。核心替代方向：
+
+```python
+runner = replay_complete_policy(frozen_config, verified_events)
+labels = closed_intent_values(runner.engine.intents, runner.engine.book)
+assert label_policy_id == frozen_config['engine']['policy_id']
+```
+
+验收：全未成交、40/100部分买入、跨TTL、止损/普通退出、下跌中撤改、多个子单最低费用、delayed/非法报价；研究标签必须与同轨迹协调器整意图账本一致。模拟撮合假设与真实策略标识分别版本化。
+
+**STR-10：独立日信息丢失后仍自动可靠。** CalibrationRow允许sample_days=0、sample_count=100；prediction()只带总样本数并自动reliable/calibrated=True，prediction_gate只检查min_samples。0日100样本正均值/下界可直接通过。研究生成器在min_days=1下单日重复100样本bootstrap产生mean=lower=100，这不是多日不确定性证据；未将冻结的独立日门槛带到部署准入。
+
+具体方案：校准产物保存独立交易日数、训练/验证区间、完整政策哈希和拟合方法版本；配置冻结最小独立日/区块数。构造时拒绝0日却有样本、days>count等矛盾；研究和准入同时执行同一门槛。不足时unreliable，不因sample_count大就自动可靠；具体天数由研究设计确定，不能在实现里随意拍一个数：
+
+```python
+if row.sample_days < frozen_min_independent_days:
+    return None, 'insufficient_independent_days'
+prediction = row.prediction()  # 仅通过 provenance 和样本门槛之后
+```
+
+验收：0日、有矛盾计数、1日高密度样本、足够多日、版本/政策/训练截止不匹配；不足独立日不得进入可靠校准表或经济门控。
+
+**DATA-09：网格未包含窗口终点。** FeatureConfig允许正整数7或120秒等grid，而60秒_realized_volatility只采start+n×grid≤end。grid7最后采56秒，59秒跳价被遗漏；grid120没有任何采样，直接sqrt(0)。复现60秒中间价约100→200，r_60=6928.97 bps，snapshot valid、volatility_bps=0。若使用波动过滤或波动止损，会在剧烈行情中低估风险；默认grid1修复正常并不覆盖该合法配置。
+
+具体方案：采样点必须包含窗口前锚点和end，保证最后变化计入；也可冻结仅允许整除所有相关窗口且≤最小窗口的网格，但要验证所有窗口。优先终点方案：
+
+```python
+points = fixed_grid_points(start, end, grid)
+if not points or points[-1] < end:
+    points.append(end)
+```
+
+验收：1/7/60/120秒grid、末尾跳价、无变化、稀疏报价、窗口边界；非零区间收益不能因末段未取样直接给零已实现波动。
+
+证据与专项说明：[strategy/results.json](audit/2026-10-04/codex-round2/strategy/results.json)、[strategy/probes.py](audit/2026-10-04/codex-round2/strategy/probes.py)、[strategy/findings.md](audit/2026-10-04/codex-round2/strategy/findings.md)。
+
+### 12.7 性能残余、实施顺序和验收命令
+
+RPL-02不能整体关闭：流式raw/audit已减小内存，但 `seen_digests` 与 `_durations[kind]` 各保存一份每事件数据。NullSink、50,000个同时间timer的tracemalloc为11.68MB，digests和duration各50,000；10k约2.14MB、25k约5.84MB，明确线性增长。该样例只用于说明增长形态，不能当作实盘RSS或线性外推保证。建议时延统计改在线直方图/有界采样；需全天去重的身份索引落盘并按交易日管理，禁止以丢弃去重安全换内存。见 [memory-retention.json](audit/2026-10-04/codex-round2/performance/memory-retention.json)。
+
+接收时间batch确实合并了同时间事件；真实逐笔若接收时间各不相同，market_snapshot仍可能每事件全股票计算。需要用保留真实间隔的多股票日志验证，而不是把同秒对齐样例容量当实盘容量。真实接口请求数、撤单p99、内存RSS、队列滞后与断线恢复仍无现场日志证据。
+
+建议按四组实施：
+
+1. EXE-11、EXE-09、EXE-10：先写反例回归，再修异常事实与资金/发送约束；保留风险请求优先权。
+2. RPL-03、RPL-04、RPT-06、EXE-12：修源文件保护、证据失败中止、整意图归属和恢复状态。
+3. FLOW-06、FLOW-05、DATA-09：让数量与政策一致，统一候选/活动订单规则，补网格终点。
+4. STR-09、STR-10：明确baseline与部署标签契约，再运行真实数据的B0/M0/H及样本外检验。保持profile=demo的人工数据标记，不将其作为研究通过。
+
+以下当前反例脚本在有缺陷版本上成功输出证据；修复后对应assert应失败/输出应翻转，再把修复后的预期加入正式回归测试。不要仅让脚本仍以旧预期PASS便宣布修好。
+
+```powershell
+python -m unittest discover -s tests
+python -m compileall -q ibkr_microalpha tests
+python audit/2026-10-04/codex-round2/execution/reproduce.py
+python audit/2026-10-04/codex-round2/entry_checks.py
+python audit/2026-10-04/codex-round2/strategy/probes.py
+python audit/2026-10-04/codex-round2/performance/reproduce.py source_clobber
+python audit/2026-10-04/codex-round2/performance/reproduce.py persistence_failure
+python audit/2026-10-04/codex-round2/performance/reproduce.py reopened_intent
+python -m ibkr_microalpha demo --events audit/2026-10-04/codex-round2/demo/events.jsonl --output audit/2026-10-04/codex-round2/demo --verify-replay
+```
+
+旧195项回归继续保持；重点新增多股共用账户、待发送期间资金/压力变化、更正后撤单晚到成交、写盘失败、关闭意图重新暴露、多数量政策、部分成交标签、独立日门槛和非整除网格测试。修改后另建round3证据目录，保留本轮反例与哈希，供另一方复核。
+
+---
+
+## 13 Codex 按用户要求实施修复（2026-10-04）
+
+### 13.1 范围与结论
+
+用户要求“修复以上问题”后，Codex 在当前工作区修复第 12 节全部 12 项确定性缺陷，并补充针对原反例的回归。资金、入场、执行恢复、意图归属、重放持久化、研究标签、独立日门控及波动网格均有实现变化。另将每事件耗时列表换成固定大小直方图，减少非核心统计存储。未连接券商、未运行真实交易、未改原策略规格、未提交 Git。
+
+统一状态：**已实施·待 Claude 独立复核**。本地测试通过及子任务交叉核验不代替第 1 节要求的另一维护方复核，因此不直接标记“已关闭”。原 `codex-round2` 的缺陷证据、源码哈希及旧运行产物保持不变；新证据独立存放于 [codex-round3](audit/2026-10-04/codex-round3/)。
+
+### 13.2 逐项实施台账
+
+| 编号 / 优先级 | 最终位置与处理方式 | 修复后的约束 / 原影响的消除 | 对应新增回归与证据 |
+| --- | --- | --- | --- |
+| EXE-09 / P1 | `risk.py:AccountSnapshot`、`valuation.py:accept_account/sync`，重构资金锚点 | 资金快照绑定账户、完整对账后的 journal 序号与已覆盖活动 BUY；快照后新增买入和费用扣除，未覆盖排队本金预留。覆盖中的 BUY 本金不双扣；卖出、撤单及 bust 不凭空增加券商资金。350,000 买入 300,100 后现金为 49,659.92，第二笔不能重用 350,000。缺屏障/错账户/过期阻止开仓 | `test_round3_entry_risk.py:test_EXE09_*`；覆盖中部分成交、费用、更正、撤单释放与序号失配 |
+| EXE-10 / P1 | `entry.py:still_valid`、`risk.py:validate_existing_entry_budget`，保留原订单并复核 | 发送前先同步估值，再检查全部待买占用后的现金、单股/总额/行业金额、单笔/组合压力和持仓数；不再次 allocate 同一订单、不再累计 intent、不临时缩量。资金降至 1,000 或其他持仓压力增加时，本地终止未发送 BUY | `test_EXE10_new_balance_aborts_the_original_unsent_buy`、`test_EXE10_send_rechecks_portfolio_stress_without_changing_quantity` |
+| EXE-11 / P1 | `valuation.py:sync`，异常仓位独立分支 | 保留晚到成交与负仓位事实，HARD 锁、一次性 `UNCONTROLLED_SHORT` 报警及对账查询；未知盈亏为 None。负数量不进入长仓佣金函数，继续检查其他股票风险，不再向该空头加 SELL | `test_EXE11_late_sell_after_cover_cancel_keeps_risk_loop_alive`、`test_EXE11_unquoted_short_does_not_skip_another_positions_exit` |
+| EXE-12 / P2 | `execution.py:snapshot/from_snapshot/from_journal`，版本化恢复 | v2 保存冻结例行预算、JST 请求日、例行与全部发送计数，并与 journal 交叉核验；风险/QUERY 元数据可重建。恢复断连、清空旧命令、要求完整对账。缺政策的旧文件拒绝例行发送，不能恢复成无限额度 | `test_round3_execution.py:RequestRecoveryTests`；[execution/evidence.json](audit/2026-10-04/codex-round3/execution/evidence.json) |
+| RPL-03 / P1 | `cli.py:_protect_sources/_replay_file/main`、`replay.py:publish_run`，隔离写入 | 写前及发布前检查全部源文件与产物的解析路径、同文件身份、hardlink；demo 生成输入也先检查。暂存关闭完成后以 report 为最后成功标记，失败还原旧完整运行；回滚失败保留备份且不留下成功标记 | `test_round3_replay.py` 的同路径、hardlink、配置冲突、demo、发布/回滚注入测试；[replay/validation.md](audit/2026-10-04/codex-round3/replay/validation.md) |
+| RPL-04 / P1 | `replay.py:dispatch/finish/run/save`、CLI stream close，统一失败边界 | 应用或证据 write/短写/flush/close/save/发布错误令 runner failed，后续 dispatch/finish/save 拒绝；只有证据写成功才提交 identity/events_processed，并单独保留 events_applied。必须由原输入重建，不能重试半应用对象 | 同测试文件的 raw/audit/短写/finish/两 sink flush/close 注入测试；失败产物记录 applied 与 validated 计数 |
+| RPT-06 / P1 | `reporting.py:IntentLedger`、`positions.py:manage`、`engine.py:poll`，保留归属索引 | 订单→原意图索引跨 CLOSED 保留；每次轮询按当前 execution revision 重建残余并重新打开旧意图。按每个意图实际残余扣除已卖与活动 SELL，退出子单分别归属且总量≤sellable。bust 修复后恢复一个 CLOSED 100/100 意图，net=-580.08 与日盈亏相同 | `test_round3_execution.py` 的 reopen、同股后续新意图、部分退出、恢复、多归属子单及净账户零但意图有残余测试；execution/evidence.json |
+| FLOW-05 / P2 | `entry.py:check_candidate/consider`，合并候选与活动订单语义 | 尚未下单且临时越过上限的候选在原 TTL 内等待恢复；计时不重启。已经有活动 BUY 的越界仍撤余量，报价失效、时段禁止和到期仍失效 | `test_FLOW05_unsubmitted_candidate_can_recover_inside_original_ttl` |
+| FLOW-06 / P2 | `entry.py:plan/_cap`、`risk.py:allocate(exact_quantity=True)`，逐数量计划 | 从大到小逐个合法校准数量，用该数量自己的 row、cap、实际 limit、止损和费用精确分配；大数量失败后重新规划小数量。不可变 cap 以 candidate×quantity 缓存；200 的 10 tick cap 不再带入 100 的 0 tick 政策 | `test_FLOW06_selected_quantity_uses_its_own_price_policy`；`test_reporting.py` 实际限价止损期望同步 |
+| STR-09 / P1 | `research/labels.py`、`research/calibration.py`、`economics.py`，拆分报价基线和正式标签 | `label_intent` 仅为 QUOTE_BASELINE_V1 兼容接口，部分成交/覆盖不足返回 None。正式标签工厂从原输入及 frozen config 重建完整协调器，核验 manifest、候选评分、终态、零残余、对账和逐执行最终费用。正式 build 拒绝原 tuple/报价基线，追价 cap 与原回放一致；外部篡改 runner 账本不能制作标签 | `test_round3_research.py` 的 full/partial/unfilled/final-fees、输入/manifest 与 mutated ledger、cap 一致性、artifact roundtrip |
+| STR-10 / P1 | `engine.py:EngineConfig/set_calibration`、`economics.py:calibration_evidence_error/prediction_gate`、研究 build，共同准入契约 | 显式冻结 min_independent_days≥2；矛盾 day/count、单日高频、来源缺失、政策/费用不符及未来训练截止拒绝。VERIFIED_REPLAY 提供独立日身份与政策/代码/输入/标签哈希；ARTIFICIAL 仅 profile=demo。样本不足桶省略，预测门控执行同一契约 | 独立日、来源、profile、fingerprint、training cutoff、thin buckets 与序列化测试；示例门槛为 20，仍不代表统计验证充分 |
+| DATA-09 / P2 | `features.py:_realized_volatility`，保留网格并补终点 | 非整除和超过窗口的合法 grid 仍包含窗口终点，尾段跳价计入，不能因末段漏采样输出零波动 | `test_nondividing_and_larger_grid_include_endpoint`（1/7/120 秒网格，60 秒窗口） |
+
+实现后资金约束的主要计算（覆盖中的 BUY 本金已由券商扣除，未覆盖待买才另扣）：
+
+```python
+broker_gross = snapshot.available_funds - post_anchor_debits - missing_fees
+cash = min(modeled_gross - all_pending_cash,
+           broker_gross - uncovered_pending_cash)
+# 旧锚点不确认卖出、撤单、更正的新增可用资金；等待新完整屏障。
+```
+
+本地未发送承诺超过非负资金时设 SOFT `entry_cash_overcommitted`，并本地终止相应订单；不把未发送承诺误报成真实券商负余额。异常真实负资金、空头或账本不一致仍按 HARD 处理。
+
+### 13.3 接口和旧产物迁移
+
+1. **账户资金**：`account_snapshot.data` 增加 `ledger_sequence` 和 `covered_order_ids`（JSON 数组）。适配器必须在完整订单/成交/持仓对账后，把资金读数和该账本屏障对应；不能给旧余额随意贴当前序号。所有活动且已发送 BUY 必须列入覆盖集合。旧事件可读但不再获得资金准入，需补采真实屏障，不建议自动猜测。
+2. **执行恢复**：新 `execution.json.version=2` 包含 `request_policy`，新 journal 从 `REQUEST_POLICY` 和带 risk/request_day 的 `COMMAND_SENT` 重建。v2 冲突预算或计数拒绝；旧历史缺预算关闭例行发送，显式 `daily_request_budget=...` 及完整发送历史才可迁移。单独 execution 快照不恢复全策略；协调器继续要求原输入和 frozen config 重建。
+3. **校准准入**：配置明确提供 `engine.min_independent_days`；表/预测提供 `label_source`、独立日数和 provenance。非 demo 只接受 `VERIFIED_REPLAY`，必须匹配完整配置政策哈希及费用版本，训练截止早于表可用时刻。旧仅有 calibrated/reliable=True 或 sample_count 的数据不再放行，不自动补造哈希或独立交易日。
+4. **研究标签**：报价序列改用 `quote_baseline_label`；兼容 `label_intent` 的数字仍仅为报价基线。正式 `build_calibration_rows` 改接 `replay_intent_labels(...)` 的工厂对象；raw sink 模式传原事件，最终费用未齐、活动订单或残余未清时拒绝整个标签产物。demo 工厂标签保持 ARTIFICIAL，不能转换成 VERIFIED_REPLAY。
+5. **回放输出**：旧成功产物保留；失败归档在 `.failed/<id>/`。报告存在是提交标记，不证明断电/fsync 持久性或并发读者快照隔离。历史 round2 文件与配置保持原样，不能用新准入规则重新覆盖历史证据。
+
+### 13.4 集成验证及证据
+
+最终在 Python 3.14.0 上运行 **256 项测试，0 failures、0 errors、0 skipped，19.302 秒**。其中既有 195 项继续通过，新增 61 项：资金/入场 14、执行恢复/归属 14、重放 20、研究 13；部分既有测试按新契约更新人工来源、资金屏障、实际限价止损与旧 tuple 输入拒绝预期，未将旧反例继续按缺陷预期 PASS。编译与示例配置校验均通过。
+
+验证结果由 [regression-results.json](audit/2026-10-04/codex-round3/regression-results.json) 和 [test-results.txt](audit/2026-10-04/codex-round3/test-results.txt) 记录；[source-manifest.json](audit/2026-10-04/codex-round3/source-manifest.json) 冻结本轮源代码、示例配置与测试哈希。执行恢复与 bust 修复有专项探针；[两笔排队 BUY 探针](audit/2026-10-04/codex-round3/execution/cross_probe.json) 已纳入正式回归：350,000 余额仅发送一笔，650,000 发送两笔，现金分别 49,559.84 与 49,119.68。重放 I/O 用故障注入验证，保留原输入字节并要求失败对象不可复用。研究完整闭环见 [closed-loop-results.json](audit/2026-10-04/codex-round3/research/closed-loop-results.json) 与 [迁移说明](audit/2026-10-04/codex-round3/research/migration.md)。
+
+```powershell
+python audit/2026-10-04/codex-round3/validate.py
+python -m compileall -q ibkr_microalpha tests
+python -m ibkr_microalpha validate-config examples/research.json
+python -m ibkr_microalpha demo --events audit/2026-10-04/codex-round3/demo/events.jsonl --output audit/2026-10-04/codex-round3/demo --verify-replay
+```
+
+最终人工示例 3,797 events，1 个候选/确认/意图，终态 CLOSED、买卖各 100、持仓 0、活动订单 0。最终费用 160 JPY、净亏损 1,190 JPY，与旧示例业务结果一致；按实际限价计算后的压力预算 410.10 JPY，跳价亏损仍超过预算并报警。新引擎重放业务报告一致（比较排除 manifest/metrics），这是闭环与跳价风险证据，不能作为盈利证据。性能子任务独立 demo 当时 0 intents 的中间证据仍保留并标明阶段；最终集成以 `codex-round3/demo/` 为准。
+
+### 13.5 保留限制与后续复核
+
+- 耗时统计已为固定 192 桶/事件类型，不再保留每事件 duration。全天唯一 digest、execution journal、未启用 sink 的 raw/audit 仍随事件量增长；RPL-02 整体仍部分修复，未以丢弃去重换内存。最终性能计量仅为离线 dispatch 墙钟；真实 RSS、队列积压、接口往返/撤单 p99 和断线恢复仍无现场证据。
+- 当前完整政策标签能核验离线回放来源与终态，但不能自行证明数据真实、参数无过拟合或净优势成立。多日真实数据、样本外和政策对照研究仍需实际产物；不再让不足标签隐式成为可靠部署参数。
+- 未扩展异常空头自动回补或其他实盘适配能力；空头保持报警与人工/对账流程。最低合法退出 tick 的边界保留已有 HARD/noSELL 验收行为，未在本轮悄然更换交易政策。
+- Claude 下一步应对照本轮 manifest 独立运行全部回归及专项探针，重点复核账户屏障覆盖、资金不重复预留、恢复预算不补充、bust 后原归属及研究 cap/来源一致性；确认后才将本节条目移至“已关闭”。
+
+---
+
 ## 附录 A 建议的目标流程
 
 ```mermaid
@@ -1633,3 +1960,5 @@ flowchart TD
 | --- | --- | --- |
 | 2026-10-04 | Claude | 创建本文档：汇总 Codex 证据并逐项复核；新增策略、结构、数据健康、可扩展性等方面的问题；给出问题总表、修改方案、分工与验收基线；新增 `audit/2026-10-04/claude/probes.py` 与 `probe-results.json`；对 EXE-01、RPT-01、DATA-05、PERF-04 的方案做了预验证。本轮未修改任何生产代码 |
 | 2026-10-04 | Claude | 应用户要求实施第 1 轮修复（第 11 节）：195 项测试通过，探针全部翻转（`probe-results-after.json`），更新 README、IMPLEMENTATION_STATUS、示例配置与 demo；第 2 节状态改为“已实施/部分实施·待复核”，等待 Codex 复核 |
+| 2026-10-04 | Codex | 独立复核 Git e592e34 的 Claude 修复版，195 项回归通过、11 个原探针跑通、3797事件demo新引擎重放一致；第12节新增12项可复现问题、修法示例与验收，区分已关闭范围和部分修复，证据隔离于 `audit/2026-10-04/codex-round2/`。未改生产代码、现有配置或测试 |
+| 2026-10-04 | Codex | 按用户“修复以上问题”实施第12节12项修复，并改为有界耗时统计；新增第13节实施/迁移/验收记录，更新README与IMPLEMENTATION_STATUS，证据隔离于codex-round3。状态为已实施·待Claude独立复核；未连接券商或提交Git |

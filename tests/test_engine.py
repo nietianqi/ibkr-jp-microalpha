@@ -43,7 +43,8 @@ class EngineIntegrationTests(unittest.TestCase):
         at = T + timedelta(seconds=second)
         c = self.engine.config
         prediction = Prediction(c.policy_id, c.model_version, quantity, 100, D("2000"),
-                                D(lower), True, calibrated, c.holding_seconds)
+                                D(lower), True, calibrated, c.holding_seconds, sample_days=40,
+                                label_source='ARTIFICIAL', provenance={'source':'ARTIFICIAL_FIXTURE'})
         self.engine.set_forecast(SYMBOL, Forecast(
             prediction, at, T - timedelta(days=1), at + timedelta(seconds=120),
             D("3001"), D("3008")), at)

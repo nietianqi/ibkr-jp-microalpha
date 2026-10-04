@@ -1,0 +1,25 @@
+{
+  "temporary_price_cap": {
+    "candidate_after_economic_rejection": "STOCK_SYNTHETIC:l1-proxy-v1:2026-10-02T01:00:10+00:00",
+    "expires_at": "2026-10-02T01:00:30+00:00",
+    "price_cap": "3000",
+    "candidate_after_same_time_poll": null,
+    "candidate_after_price_recovers_in_ttl": null,
+    "invalidations": [
+      {
+        "at": "2026-10-02T01:00:10+00:00",
+        "kind": "CANDIDATE_INVALIDATED",
+        "symbol": "STOCK_SYNTHETIC",
+        "reason": "CANDIDATE_EXPIRED_OR_INVALID"
+      }
+    ]
+  },
+  "quantity_specific_cap": {
+    "requested_quantity": 200,
+    "allocated_quantity": 100,
+    "selected_row_max_chase_ticks": 0,
+    "selected_row_cap": "3001",
+    "actual_plan_cap": "3011",
+    "actual_limit": "3002"
+  }
+}

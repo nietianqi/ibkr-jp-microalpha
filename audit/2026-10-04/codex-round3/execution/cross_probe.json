@@ -1,0 +1,38 @@
+{
+  "two_untransmitted_buy_funds": [
+    {
+      "balance": "350000",
+      "before": {
+        "cash": "0",
+        "blocks": [
+          "entry_cash_overcommitted"
+        ]
+      },
+      "sent_buy_ids": [
+        2
+      ],
+      "states": {
+        "STOCK_SYNTHETIC": "CANCELLED",
+        "SECOND": "SUBMIT_PENDING"
+      },
+      "cash_after": "49559.8400"
+    },
+    {
+      "balance": "650000",
+      "before": {
+        "cash": "49119.6800",
+        "blocks": []
+      },
+      "sent_buy_ids": [
+        1,
+        2
+      ],
+      "states": {
+        "STOCK_SYNTHETIC": "SUBMIT_PENDING",
+        "SECOND": "SUBMIT_PENDING"
+      },
+      "cash_after": "49119.6800"
+    }
+  ],
+  "lowest_tick_exit": "Existing price-rule failure is caught; no minimum-tick clamp was added."
+}

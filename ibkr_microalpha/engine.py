@@ -18,7 +18,7 @@ from decimal import Decimal
 from math import isfinite
 
 from .domain import FeatureSnapshot, MarketRegime, Quote, Side, aware
-from .economics import CalibrationTable, CommissionSchedule, Prediction
+from .economics import CalibrationTable, CommissionSchedule, Prediction, policy_fingerprint
 from .entry import EntryPipeline
 from .market import QuoteQuality, TickTable, validate_quote
 from .positions import PositionManager
@@ -75,6 +75,7 @@ class EngineConfig:
     gap_reserve_bps: Decimal
     max_soft_block_seconds: float
     budget_buffer_seconds: float
+    min_independent_days: int = 2
 
     def __post_init__(self):
         if not all((self.policy_id, self.model_version, self.score_version)):
@@ -94,6 +95,8 @@ class EngineConfig:
         for field in ('min_samples', 'max_entry_quantity', 'max_consecutive_stops', 'min_stop_ticks'):
             if type(getattr(self, field)) is not int or getattr(self, field) <= 0:
                 raise ValueError(f'{field} must be a positive integer')
+        if type(self.min_independent_days) is not int or self.min_independent_days < 2:
+            raise ValueError('min_independent_days must be an integer >= 2')
         for field in ('entry_limit_ticks', 'exit_slippage_ticks'):
             if type(getattr(self, field)) is not int or getattr(self, field) < 0:
                 raise ValueError(f'{field} must be a nonnegative integer')
@@ -276,6 +279,9 @@ class StrategyEngine:
         self._clock(at)
         if table.known_at > at:
             raise ValueError('calibration cannot be received before it is known')
+        table.validate_for_profile(self.frozen_config['profile'], min_independent_days=self.config.min_independent_days,
+                                   policy_hash=policy_fingerprint(self.frozen_config),
+                                   fee_version=self.commissions.version, as_of=table.known_at)
         self.calibration = table
         self._record(at, 'CALIBRATION', version=table.version, rows=len(table.rows))
 
@@ -284,6 +290,7 @@ class StrategyEngine:
         if snapshot.received_at != at:
             raise ValueError('account snapshot receive time must match replay time')
         self.account_snapshot = snapshot
+        self.valuation.accept_account(snapshot, at)
         self.poll(at)
 
     def set_exchange_status(self, normal: bool, at, reason=''):
@@ -456,6 +463,7 @@ class StrategyEngine:
                 self._record(at, 'RISK_ESCALATED', reason=reason)
         self.execution_quality.observe(at, lambda symbol: self.valuation_quote(symbol, at),
                                        self.quality.max_age_seconds)
+        self.intents.reconcile(self.book, at)
         self.positions.manage(at, self.book.active_by_symbol())
 
     # ------------------------------------------------------------- decisions

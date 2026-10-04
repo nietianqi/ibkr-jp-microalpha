@@ -1,0 +1,126 @@
+{
+  "events": 3797,
+  "business_report_equal": true,
+  "input_manifest_equal": true,
+  "observed_wall_seconds_including_build_run_save": 0.8849298999994062,
+  "positions": {
+    "STOCK_SYNTHETIC": {
+      "quantity": 0,
+      "average_price": "0",
+      "realized_price_pnl": "-1030.0",
+      "actual_fees": "160.0"
+    }
+  },
+  "intents": [
+    {
+      "intent_id": "STOCK_SYNTHETIC:l1-proxy-v1:2026-10-02T09:10:00+09:00",
+      "symbol": "STOCK_SYNTHETIC",
+      "created_at": "2026-10-02T09:10:02+09:00",
+      "target_quantity": 100,
+      "status": "CLOSED",
+      "bought": 100,
+      "sold": 100,
+      "buy_amount": "96030.0",
+      "sell_amount": "95000",
+      "actual_fees": "160.0",
+      "unreported_fee_reserve": "0",
+      "net_amount": "-1190.0",
+      "valuation": "realized",
+      "valuation_reason": "valued at common cutoff",
+      "stress_budget": "410.08500",
+      "stress_exceeded": true,
+      "child_orders": 2
+    }
+  ],
+  "metrics": {
+    "processing_seconds": 0.8169,
+    "events_per_second": 4647.9,
+    "by_event_type": {
+      "account_snapshot": {
+        "events": 26,
+        "p50_ms": 0.0718,
+        "p99_ms": 0.1598,
+        "max_ms": 0.1598
+      },
+      "calendar": {
+        "events": 1,
+        "p50_ms": 0.1555,
+        "p99_ms": 0.1555,
+        "max_ms": 0.1555
+      },
+      "calibration_table": {
+        "events": 1,
+        "p50_ms": 0.2034,
+        "p99_ms": 0.2034,
+        "max_ms": 0.2034
+      },
+      "commission": {
+        "events": 2,
+        "p50_ms": 0.1728,
+        "p99_ms": 0.1728,
+        "max_ms": 0.1728
+      },
+      "cumulative_volume": {
+        "events": 751,
+        "p50_ms": 0.1155,
+        "p99_ms": 0.3362,
+        "max_ms": 0.4313
+      },
+      "fill": {
+        "events": 2,
+        "p50_ms": 0.2628,
+        "p99_ms": 0.2628,
+        "max_ms": 0.2628
+      },
+      "quote": {
+        "events": 1502,
+        "p50_ms": 0.0987,
+        "p99_ms": 0.3029,
+        "max_ms": 0.4051
+      },
+      "quote_stream_health": {
+        "events": 752,
+        "p50_ms": 0.0586,
+        "p99_ms": 0.2091,
+        "max_ms": 0.263
+      },
+      "reconcile": {
+        "events": 1,
+        "p50_ms": 0.16,
+        "p99_ms": 0.16,
+        "max_ms": 0.16
+      },
+      "requests": {
+        "events": 751,
+        "p50_ms": 0.6459,
+        "p99_ms": 1.7186,
+        "max_ms": 1.8868
+      },
+      "same_time_profile": {
+        "events": 4,
+        "p50_ms": 0.0939,
+        "p99_ms": 0.1106,
+        "max_ms": 0.1106
+      },
+      "status": {
+        "events": 4,
+        "p50_ms": 0.1763,
+        "p99_ms": 0.5574,
+        "max_ms": 0.5574
+      }
+    },
+    "retained": {
+      "event_digests": 3797,
+      "audit_records_in_memory": 0,
+      "journal_records": 16
+    },
+    "queue_lag": "NOT_APPLICABLE: offline replay has no live receive clock",
+    "note": "Local CPU timing of the replay core; not broker or exchange latency."
+  },
+  "manifest": {
+    "code_sha256": "219722e1597e1787da8a1149afc474fef76ed22779274511ea1cfb6e998c8e95",
+    "config_sha256": "a4092100875e5eeaa55219f75627fc7eceb52e1d9ca79d373cee83fb5dacabda",
+    "input_sha256": "a7c110df5475ac09137667bfe131af8821ce5efe2d97817891eb4442e148e5ef",
+    "events": 3797
+  }
+}

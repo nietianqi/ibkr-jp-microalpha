@@ -1,0 +1,112 @@
+{
+  "parse_failure": {
+    "errors": [
+      "calendar cannot be received before its known_at",
+      "calendar cannot be received before its known_at"
+    ],
+    "failed": false,
+    "digests": 0,
+    "events": 0
+  },
+  "rvol_days_rejected": "FeatureConfig.rvol_days must be an integer",
+  "snapshot_false_rejected": "snapshot valid flag must be a boolean",
+  "correction": {
+    "fills": [
+      {
+        "root": "buy-exec",
+        "exec_id": "r2-corrected",
+        "order_id": 1,
+        "symbol": "STOCK_SYNTHETIC",
+        "side": "BUY",
+        "qty": 100,
+        "price": "3002",
+        "arrival_mid": "3000.5",
+        "price_cost": "150.0",
+        "emergency": false,
+        "corrected": true
+      }
+    ],
+    "total_price_cost_vs_arrival": "150.0",
+    "post_fill_drift": {
+      "BUY": {
+        "5s": {
+          "samples": 0,
+          "mean_signed_bps": null,
+          "unavailable": 0
+        },
+        "30s": {
+          "samples": 0,
+          "mean_signed_bps": null,
+          "unavailable": 0
+        },
+        "120s": {
+          "samples": 0,
+          "mean_signed_bps": null,
+          "unavailable": 0
+        }
+      },
+      "SELL": {
+        "5s": {
+          "samples": 0,
+          "mean_signed_bps": null,
+          "unavailable": 0
+        },
+        "30s": {
+          "samples": 0,
+          "mean_signed_bps": null,
+          "unavailable": 0
+        },
+        "120s": {
+          "samples": 0,
+          "mean_signed_bps": null,
+          "unavailable": 0
+        }
+      }
+    },
+    "drift_sign": "positive is favourable to the filled side",
+    "missed_opportunity_rate": "NOT_COMPUTED: requires frozen realized-signal labels"
+  },
+  "bust": {
+    "fills": [],
+    "total_price_cost_vs_arrival": "0",
+    "post_fill_drift": {
+      "BUY": {
+        "5s": {
+          "samples": 0,
+          "mean_signed_bps": null,
+          "unavailable": 0
+        },
+        "30s": {
+          "samples": 0,
+          "mean_signed_bps": null,
+          "unavailable": 0
+        },
+        "120s": {
+          "samples": 0,
+          "mean_signed_bps": null,
+          "unavailable": 0
+        }
+      },
+      "SELL": {
+        "5s": {
+          "samples": 0,
+          "mean_signed_bps": null,
+          "unavailable": 0
+        },
+        "30s": {
+          "samples": 0,
+          "mean_signed_bps": null,
+          "unavailable": 0
+        },
+        "120s": {
+          "samples": 0,
+          "mean_signed_bps": null,
+          "unavailable": 0
+        }
+      }
+    },
+    "drift_sign": "positive is favourable to the filled side",
+    "missed_opportunity_rate": "NOT_COMPUTED: requires frozen realized-signal labels"
+  },
+  "bust_drift_count": 0
+}

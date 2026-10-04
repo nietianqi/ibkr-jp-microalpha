@@ -34,11 +34,22 @@ class IntentLedger:
     def __init__(self):
         self.intents: dict[str, Intent] = {}
         self._current: dict[str, str] = {}
+        # Stable ownership survives a temporary flat/closed state and later busts.
+        self.order_to_intent: dict[int, str] = {}
+
+    def _bind(self, order_id, intent):
+        owner = self.order_to_intent.get(order_id)
+        if owner is not None and owner != intent.intent_id:
+            raise ValueError("order already belongs to another intent")
+        self.order_to_intent[order_id] = intent.intent_id
 
     def open(self, intent_id, symbol, order_id, at, quantity, *, stress_budget=None):
         intent = self.intents.get(intent_id)
         if intent is None:
             intent = self.intents[intent_id] = Intent(intent_id, symbol, at, quantity, stress_budget)
+        elif intent.symbol != symbol:
+            raise ValueError("intent identity reused for another symbol")
+        self._bind(order_id, intent)
         if order_id not in intent.entry_orders:
             intent.entry_orders.append(order_id)
         self._current[symbol] = intent_id
@@ -47,15 +58,76 @@ class IntentLedger:
         identity = self._current.get(symbol)
         return self.intents.get(identity) if identity else None
 
-    def link_exit(self, symbol, order_id):
-        intent = self.current(symbol)
+    def link_exit(self, symbol, order_id, *, intent_id=None):
+        owner = self.order_to_intent.get(order_id)
+        if owner is not None:
+            if intent_id is not None and owner != intent_id:
+                raise ValueError("exit order already belongs to another intent")
+            intent = self.intents[owner]
+        else:
+            intent = self.intents.get(intent_id) if intent_id is not None else self.current(symbol)
         if intent is None:
             # Reconciled positions without a local intent stay visible as their own record.
-            intent = Intent(f'unattributed:{symbol}:{order_id}', symbol, None, 0)
+            if intent_id is not None and intent_id != f'unattributed:{symbol}':
+                raise ValueError("unknown exit intent")
+            intent = Intent(intent_id or f'unattributed:{symbol}:{order_id}', symbol, None, 0)
             self.intents[intent.intent_id] = intent
             self._current[symbol] = intent.intent_id
+        if intent.symbol != symbol:
+            raise ValueError("exit symbol differs from its intent")
+        self._bind(order_id, intent)
         if order_id not in intent.exit_orders:
             intent.exit_orders.append(order_id)
+
+    @staticmethod
+    def _residual(intent, book):
+        return (sum(book.orders[o].filled_quantity for o in intent.entry_orders if o in book.orders)
+                - sum(book.orders[o].filled_quantity for o in intent.exit_orders if o in book.orders))
+
+    def reconcile(self, book, at):
+        """Refresh intent state after fills, corrections or an account barrier.
+
+        Ownership comes from order identities, never the most recent same-symbol
+        candidate. Reopening an older intent does not displace a later live one.
+        Full strategy restoration reconstructs this index from the raw inputs.
+        """
+        live = {}
+        for intent in self.intents.values():
+            for order_id in intent.entry_orders + intent.exit_orders:
+                self._bind(order_id, intent)
+            active = any(book.orders[o].active for o in intent.entry_orders + intent.exit_orders
+                         if o in book.orders)
+            if self._residual(intent, book) or active:
+                intent.closed_at = None
+                live.setdefault(intent.symbol, []).append(intent)
+            elif intent.closed_at is None:
+                intent.closed_at = at
+        for symbol, intents in live.items():
+            identities = {i.intent_id for i in intents}
+            if self._current.get(symbol) not in identities:
+                chosen = max(intents, key=lambda i: (i.created_at or _EPOCH, i.intent_id))
+                self._current[symbol] = chosen.intent_id
+
+    def exit_allocations(self, symbol, available, book):
+        """Partition confirmed sellable shares into separately owned child orders."""
+        if type(available) is not int or available < 0:
+            raise ValueError("exit allocation needs nonnegative integral shares")
+        remaining, result = min(available, book.sellable_quantity(symbol)), []
+        intents = sorted((i for i in self.intents.values() if i.symbol == symbol),
+                         key=lambda i: (i.created_at or _EPOCH, i.intent_id))
+        for intent in intents:
+            reserved = sum(book.orders[o].possible_remaining for o in intent.exit_orders
+                           if o in book.orders and book.orders[o].active)
+            quantity = min(remaining, max(0, self._residual(intent, book) - reserved))
+            if quantity:
+                result.append((intent.intent_id, quantity))
+                remaining -= quantity
+            if not remaining:
+                break
+        if remaining:
+            # Never invent buys or attribute unknown inventory to the last trade.
+            result.append((f'unattributed:{symbol}', remaining))
+        return result
 
     def had_fill(self, symbol, book) -> bool:
         intent = self.current(symbol)
@@ -64,6 +136,17 @@ class IntentLedger:
 
     def close(self, symbol, at, book=None, commissions=None):
         intent = self.current(symbol)
+        if book is not None:
+            for owned in self.intents.values():
+                if owned.symbol == symbol and not self._residual(owned, book) and not any(
+                        book.orders[o].active for o in owned.entry_orders + owned.exit_orders if o in book.orders):
+                    owned.closed_at = owned.closed_at or at
+            # Net account flatness can conceal opposing residuals after a late
+            # correction. It never proves each complete intent was flattened.
+            if intent is not None and (self._residual(intent, book) or any(
+                    book.orders[o].active for o in intent.entry_orders + intent.exit_orders if o in book.orders)):
+                intent.closed_at = None
+                return self._row(intent, book, commissions, None, at) if commissions is not None else None
         self._current.pop(symbol, None)
         if intent is None:
             return None

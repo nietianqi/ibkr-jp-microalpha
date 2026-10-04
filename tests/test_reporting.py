@@ -157,8 +157,8 @@ class ReportingTests(unittest.TestCase):
         self.engine.config = replace(self.engine.config, stop_volatility_multiple=D("10"))
         self.fill_entry()
         buy = next(iter(self.engine.book.orders.values()))
-        # 10 x 8 bps x 3001 JPY = 24.008 JPY/share; stop is then rounded to a legal tick.
-        self.assertEqual(buy.stop_distance, D("24.008"))
+        # Reserve at the executable 3002 limit: 10 x 8 bps x 3002 = 24.016 JPY/share.
+        self.assertEqual(buy.stop_distance, D("24.016"))
         self.assertEqual(self.engine.book.positions[SYMBOL].stop_price, D("2977"))
 
     def test_stop_uses_ticks_bps_and_volatility_not_fixed_jpy(self):

@@ -1,0 +1,57 @@
+{
+  "snapshot_funds_reused": {
+    "snapshot_funds": "350000",
+    "cash_flow_since_snapshot": "-300340.0800",
+    "cash_if_rebased": "49659.9200",
+    "reported_risk_cash": "350000",
+    "second_allocation_allowed": true,
+    "second_allocation_cash": "300340.0800"
+  },
+  "queued_entry_ignores_new_funds": {
+    "verified_risk_cash": "1000",
+    "entry_order_notional": "300200",
+    "entry_validation_reason": null,
+    "commands": [
+      {
+        "kind": "SUBMIT",
+        "order_id": 1
+      }
+    ],
+    "submitted_at": "2026-10-02T01:00:12.500000+00:00"
+  },
+  "request_budget_lost_on_restore": {
+    "original": {
+      "budget": 1,
+      "routine_requests_sent": 1,
+      "sent_counts": {
+        "SUBMIT": 1
+      }
+    },
+    "restored": {
+      "snapshot": {
+        "budget": null,
+        "routine_requests_sent_before_new": 0,
+        "new_submit_sent": true
+      },
+      "journal": {
+        "budget": null,
+        "routine_requests_sent_before_new": 0,
+        "new_submit_sent": true
+      }
+    }
+  },
+  "late_sell_after_cover_cancel_crashes_valuation": {
+    "sell_was_cancel_pending": true,
+    "position_after_late_fill": -50,
+    "execution_recorded": true,
+    "exception": "filled_notional must be nonnegative",
+    "locks": [
+      "ledger: active sells exceed confirmed holding",
+      "ledger: execution produces an uncontrolled short position"
+    ]
+  },
+  "confirmed_old_fixes": {
+    "old_fix_regressions_executed": 7,
+    "result": "PASS"
+  }
+}

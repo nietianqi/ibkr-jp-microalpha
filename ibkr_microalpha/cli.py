@@ -1,35 +1,72 @@
 import argparse
 import json
+import os
+import shutil
+import tempfile
 import traceback
+import uuid
 from pathlib import Path
 
 from .config import build_engine, load_config
-from .replay import Replay, encode
+from .replay import RUN_FILES, Replay, encode, publish_run
+
+
+def _protect_sources(sources, output, extra_targets=()):
+    """Check resolved paths and filesystem identities before any output write."""
+    output = Path(output).resolve()
+    targets = [output/name for name in (*RUN_FILES, 'failure.json')]
+    targets.extend(Path(target).resolve() for target in extra_targets)
+    for raw_source in sources:
+        source = Path(raw_source).resolve()
+        for target in targets:
+            if source == target.resolve() or (source.exists() and target.exists() and source.samefile(target)):
+                raise ValueError(f'input/output path conflict: {source} and {target}')
+    return output
+
+
+def _record_failure(staging, output, runner, events, error):
+    """Keep an older successful run intact; archive a failed attempt separately."""
+    output.mkdir(parents=True, exist_ok=True)
+    destination = output if not any(output.iterdir()) else output/'.failed'/uuid.uuid4().hex
+    destination.mkdir(parents=True, exist_ok=True)
+    (staging/'report.json').unlink(missing_ok=True)
+    for name in RUN_FILES:
+        if name != 'report.json' and (staging/name).is_file():
+            shutil.copy2(staging/name, destination/name)
+    failure = {'status': 'FAILED', 'source': str(events), 'error': str(error),
+               'error_type': type(error).__name__, 'validated_events': runner.events_processed,
+               'applied_events': runner.events_applied, 'runner_poisoned': runner.failed,
+               'manifest': runner.manifest(), 'traceback': traceback.format_exc(limit=5)}
+    temporary = destination/'.failure.tmp'
+    temporary.write_text(json.dumps(failure, indent=2, ensure_ascii=False), encoding='utf-8')
+    os.replace(temporary, destination/'failure.json')
 
 
 def _replay_file(config_path, events, output):
-    """Stream raw input and audit into the output directory; write report only on success."""
-    output = Path(output).resolve()
-    output.mkdir(parents=True, exist_ok=True)
-    for stale in ('report.json', 'failure.json'):
-        (output / stale).unlink(missing_ok=True)
+    """Stage closed evidence, then publish success with rollback of any older run."""
+    output = _protect_sources((config_path, events), output)
     engine = build_engine(load_config(config_path))
-    with (output / 'raw-input.jsonl').open('w', encoding='utf-8') as raw, \
-            (output / 'audit.jsonl').open('w', encoding='utf-8') as audit:
-        runner = Replay(engine, raw_sink=raw, audit_sink=audit)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=f'.{output.name}-replay-', dir=output.parent) as directory:
+        staging = Path(directory)
+        runner = Replay(engine)
         try:
-            report = runner.run(events)
+            with (staging/'raw-input.jsonl').open('w', encoding='utf-8') as raw, \
+                    (staging/'audit.jsonl').open('w', encoding='utf-8') as audit:
+                runner.raw_sink, runner.audit_sink = raw, audit
+                report = runner.run(events)
+            # Context exits above must succeed before any report is written.
+            runner.save(staging, report=report)
+            # Check again at commit in case a destination acquired a source link.
+            _protect_sources((config_path, events), output)
+            result = publish_run(staging, output)
         except Exception as error:
-            failure = {'status': 'FAILED', 'source': str(events), 'error': str(error),
-                       'error_type': type(error).__name__,
-                       'validated_events': runner.events_processed,
-                       'runner_poisoned': runner.failed,
-                       'manifest': runner.manifest(),
-                       'traceback': traceback.format_exc(limit=5)}
-            (output / 'failure.json').write_text(json.dumps(failure, indent=2, ensure_ascii=False),
-                                                 encoding='utf-8')
+            runner.mark_failed()
+            try:
+                _record_failure(staging, output, runner, events, error)
+            except OSError as evidence_error:
+                error.add_note(f'failure artifact could not be recorded: {evidence_error}')
             raise
-        result = runner.save(output, report=report)
     return report, result
 
 
@@ -56,9 +93,25 @@ def main(argv=None):
             return 0
         if args.command == 'demo':
             from .demo import create_demo
+            _protect_sources((args.config,), args.output, (args.events,))
+            _protect_sources((args.events,), args.output)
             events, runner = create_demo(args.config, args.events)
             report = runner.report()
-            result = runner.save(args.output, report=report)
+            output = _protect_sources((args.config, events), args.output)
+            output.parent.mkdir(parents=True, exist_ok=True)
+            with tempfile.TemporaryDirectory(prefix=f'.{output.name}-demo-', dir=output.parent) as directory:
+                staging = Path(directory)
+                try:
+                    runner.save(staging, report=report)
+                    _protect_sources((args.config, events), output)
+                    result = publish_run(staging, output)
+                except Exception as error:
+                    runner.mark_failed()
+                    try:
+                        _record_failure(staging, output, runner, events, error)
+                    except OSError as evidence_error:
+                        error.add_note(f'failure artifact could not be recorded: {evidence_error}')
+                    raise
             if args.verify_replay:
                 replayed, _ = _replay_file(args.config, events, Path(args.output) / 'verify')
                 comparable = lambda r: {k: v for k, v in r.items() if k not in ('metrics', 'manifest')}

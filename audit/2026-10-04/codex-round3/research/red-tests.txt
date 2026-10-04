@@ -1,0 +1,101 @@
+test_artificial_labels_are_demo_only (tests.test_round3_research.Round3ResearchTests.test_artificial_labels_are_demo_only) ... ERROR
+test_delayed_and_partial_exit_quotes_are_unestimable (tests.test_round3_research.Round3ResearchTests.test_delayed_and_partial_exit_quotes_are_unestimable) ... FAIL
+test_formal_provenance_and_frozen_day_gate (tests.test_round3_research.Round3ResearchTests.test_formal_provenance_and_frozen_day_gate) ... ERROR
+test_nondividing_and_larger_grid_include_endpoint (tests.test_round3_research.Round3ResearchTests.test_nondividing_and_larger_grid_include_endpoint) ... FAIL
+test_one_day_bootstrap_cannot_claim_independence (tests.test_round3_research.Round3ResearchTests.test_one_day_bootstrap_cannot_claim_independence) ... FAIL
+test_partial_quote_entry_cannot_be_silent_zero (tests.test_round3_research.Round3ResearchTests.test_partial_quote_entry_cannot_be_silent_zero) ... FAIL
+test_unfilled_requires_complete_entry_ttl_coverage (tests.test_round3_research.Round3ResearchTests.test_unfilled_requires_complete_entry_ttl_coverage) ... FAIL
+test_untyped_quote_baseline_cannot_be_deployed_as_calibration (tests.test_round3_research.Round3ResearchTests.test_untyped_quote_baseline_cannot_be_deployed_as_calibration) ... FAIL
+test_zero_days_with_samples_is_invalid (tests.test_round3_research.Round3ResearchTests.test_zero_days_with_samples_is_invalid) ... FAIL
+
+======================================================================
+ERROR: test_artificial_labels_are_demo_only (tests.test_round3_research.Round3ResearchTests.test_artificial_labels_are_demo_only)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "F:\ibkr-jp-microalpha\tests\test_round3_research.py", line 79, in test_artificial_labels_are_demo_only
+    row = CalibrationRow('p', 'v', 2, 100, 0, None, 20, 100, D(100), D(50), 1,
+                         label_source='ARTIFICIAL', provenance={'source':'ARTIFICIAL_FIXTURE'})
+TypeError: CalibrationRow.__init__() got an unexpected keyword argument 'label_source'
+
+======================================================================
+ERROR: test_formal_provenance_and_frozen_day_gate (tests.test_round3_research.Round3ResearchTests.test_formal_provenance_and_frozen_day_gate)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "F:\ibkr-jp-microalpha\tests\test_round3_research.py", line 68, in test_formal_provenance_and_frozen_day_gate
+    row = CalibrationRow('p', 'v', 2, 100, 0, None, 20, 100, D(100), D(50), 1,
+                         label_source='VERIFIED_REPLAY', provenance=provenance())
+TypeError: CalibrationRow.__init__() got an unexpected keyword argument 'label_source'
+
+======================================================================
+FAIL: test_delayed_and_partial_exit_quotes_are_unestimable (tests.test_round3_research.Round3ResearchTests.test_delayed_and_partial_exit_quotes_are_unestimable)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "F:\ibkr-jp-microalpha\tests\test_round3_research.py", line 44, in test_delayed_and_partial_exit_quotes_are_unestimable
+    self.assertIsNone(label_intent(quotes, 0, 100, POLICY, TickTable(), FEES,
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                   NOW + timedelta(seconds=20)))
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Decimal('330.0') is not None
+
+======================================================================
+FAIL: test_nondividing_and_larger_grid_include_endpoint (tests.test_round3_research.Round3ResearchTests.test_nondividing_and_larger_grid_include_endpoint)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "F:\ibkr-jp-microalpha\tests\test_round3_research.py", line 95, in test_nondividing_and_larger_grid_include_endpoint
+    self.assertAlmostEqual(value, 10000*log(2))
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0.0 != 6931.471805599453 within 7 places (6931.471805599453 difference)
+
+======================================================================
+FAIL: test_one_day_bootstrap_cannot_claim_independence (tests.test_round3_research.Round3ResearchTests.test_one_day_bootstrap_cannot_claim_independence)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "F:\ibkr-jp-microalpha\tests\test_round3_research.py", line 60, in test_one_day_bootstrap_cannot_claim_independence
+    with self.assertRaises(ValueError):
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_partial_quote_entry_cannot_be_silent_zero (tests.test_round3_research.Round3ResearchTests.test_partial_quote_entry_cannot_be_silent_zero)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "F:\ibkr-jp-microalpha\tests\test_round3_research.py", line 37, in test_partial_quote_entry_cannot_be_silent_zero
+    self.assertIsNone(label_intent(quotes, 0, 100, POLICY, TickTable(), FEES,
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                   NOW + timedelta(seconds=20)))
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Decimal('0') is not None
+
+======================================================================
+FAIL: test_unfilled_requires_complete_entry_ttl_coverage (tests.test_round3_research.Round3ResearchTests.test_unfilled_requires_complete_entry_ttl_coverage)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "F:\ibkr-jp-microalpha\tests\test_round3_research.py", line 48, in test_unfilled_requires_complete_entry_ttl_coverage
+    self.assertIsNone(label_intent([quote(0)], 0, 100, POLICY, TickTable(), FEES,
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                   NOW + timedelta(seconds=20)))
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Decimal('0') is not None
+
+======================================================================
+FAIL: test_untyped_quote_baseline_cannot_be_deployed_as_calibration (tests.test_round3_research.Round3ResearchTests.test_untyped_quote_baseline_cannot_be_deployed_as_calibration)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "F:\ibkr-jp-microalpha\tests\test_round3_research.py", line 54, in test_untyped_quote_baseline_cannot_be_deployed_as_calibration
+    with self.assertRaisesRegex(ValueError, 'ReplayIntentLabel'):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_zero_days_with_samples_is_invalid (tests.test_round3_research.Round3ResearchTests.test_zero_days_with_samples_is_invalid)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "F:\ibkr-jp-microalpha\tests\test_round3_research.py", line 64, in test_zero_days_with_samples_is_invalid
+    with self.assertRaises(ValueError):
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.008s
+
+FAILED (failures=7, errors=2)

@@ -1,0 +1,103 @@
+{
+  "note": "SYNTHETIC UNIT FIXTURES: verified Replay contract only; no real-data profitability evidence.",
+  "branches": [
+    {
+      "day": "2026-10-02",
+      "target": 100,
+      "bought": 0,
+      "sold": 0,
+      "final_fees": "0",
+      "net": "0",
+      "max_chase_ticks": 10,
+      "source": "VERIFIED_REPLAY",
+      "manifest": {
+        "code_sha256": "779b450e41fd016a5ad294138327675c6f19cbceab088082d04948c1edca39bf",
+        "config_sha256": "00941549fbd2c9a8bf841f4e1d3f72017f3653b2f531a9e95f2498cce3f863c7",
+        "input_sha256": "c0109ed44eb1b481f5b6ba1af35bec117a9dc920efb7a018ded8f3add202b9a9",
+        "events": 3047
+      }
+    },
+    {
+      "day": "2026-10-03",
+      "target": 100,
+      "bought": 40,
+      "sold": 40,
+      "final_fees": "40",
+      "net": "-452.0",
+      "max_chase_ticks": 10,
+      "source": "VERIFIED_REPLAY",
+      "manifest": {
+        "code_sha256": "779b450e41fd016a5ad294138327675c6f19cbceab088082d04948c1edca39bf",
+        "config_sha256": "00941549fbd2c9a8bf841f4e1d3f72017f3653b2f531a9e95f2498cce3f863c7",
+        "input_sha256": "a7e356b9137d5acb861506a5607e927d1c35ab748816b19c8afbf9fb094450aa",
+        "events": 3798
+      }
+    },
+    {
+      "day": "2026-10-04",
+      "target": 100,
+      "bought": 100,
+      "sold": 100,
+      "final_fees": "40",
+      "net": "-1070.0",
+      "max_chase_ticks": 10,
+      "source": "VERIFIED_REPLAY",
+      "manifest": {
+        "code_sha256": "779b450e41fd016a5ad294138327675c6f19cbceab088082d04948c1edca39bf",
+        "config_sha256": "00941549fbd2c9a8bf841f4e1d3f72017f3653b2f531a9e95f2498cce3f863c7",
+        "input_sha256": "e6b7901694f0a368c8475a6ac2f706b01970b76b37d42913bc5fe335a0a90c89",
+        "events": 3798
+      }
+    }
+  ],
+  "row_event": {
+    "version": "unit-closed-loop",
+    "known_at": "2026-10-06T10:00:00+09:00",
+    "rows": [
+      {
+        "policy_id": "l1-proxy-h120-v1",
+        "version": "synthetic-v1",
+        "holding_seconds": 120,
+        "quantity": 100,
+        "score_low": 0.0,
+        "score_high": null,
+        "sample_days": 3,
+        "sample_count": 3,
+        "mean_net_amount": "-507.33",
+        "lower_net_amount": "-864.00",
+        "max_chase_ticks": 10,
+        "label_source": "VERIFIED_REPLAY",
+        "provenance": {
+          "policy_hash": "0fe3a8b3be5034c4f8e8228cb2f236a1316ed82d9fcfb4910e71a47580e438db",
+          "fee_version": "illustrative-fixed-v1",
+          "code_hashes": [
+            "779b450e41fd016a5ad294138327675c6f19cbceab088082d04948c1edca39bf"
+          ],
+          "input_hashes": [
+            "a7e356b9137d5acb861506a5607e927d1c35ab748816b19c8afbf9fb094450aa",
+            "c0109ed44eb1b481f5b6ba1af35bec117a9dc920efb7a018ded8f3add202b9a9",
+            "e6b7901694f0a368c8475a6ac2f706b01970b76b37d42913bc5fe335a0a90c89"
+          ],
+          "labels_hash": "afdcf5224b63c253d36457e029269f70021b43201f17a68da993a24c946ea10c",
+          "trained_until": "2026-10-04T09:12:31+09:00",
+          "independent_days": [
+            "2026-10-02",
+            "2026-10-03",
+            "2026-10-04"
+          ],
+          "max_chase_ticks": 10,
+          "complete_policy": true,
+          "includes_partial": true,
+          "fees_final": true
+        }
+      }
+    ]
+  },
+  "min_20_days_result": [],
+  "rejected": {
+    "changed_chase_cap": "replay label chase cap does not match the requested calibration policy",
+    "single_day": "min_days must be at least two and min_samples positive",
+    "tampered_cap_row": "calibration chase cap differs from verified replay policy",
+    "missing_final_fee": "final commission report missing for simulation-fill:1"
+  }
+}

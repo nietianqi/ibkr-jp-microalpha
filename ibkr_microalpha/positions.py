@@ -78,18 +78,22 @@ class PositionManager:
             e._note(at, 'EXIT_BLOCKED', symbol, f'exit price rule: {error}')
             e.risk.lock('exit_price_rule_invalid')
             return
-        e._exit_sequence += 1
-        try:
-            order = e.book.submit(f'exit:{symbol}:{e._exit_sequence}', symbol, Side.SELL,
-                                  available, limit, at, emergency=escalated)
-        except ValueError as error:
-            e._note(at, 'EXIT_BLOCKED', symbol, str(error))
-            return
-        e._clear_note('EXIT_BLOCKED', symbol)
-        e.intents.link_exit(symbol, order.order_id)
-        e.execution_quality.on_submit(order, quote, at)
-        e._record(at, 'EXIT_REQUEST', symbol=symbol, order_id=order.order_id, reason=reason,
-                  emergency=escalated, limit_price=str(limit))
+        # A late bust can reopen an older intent after a newer same-symbol entry.
+        # Separate child orders keep both complete paths attributable; their sum
+        # is capped by the book's confirmed holdings less all possible sells.
+        for intent_id, quantity in e.intents.exit_allocations(symbol, available, e.book):
+            e._exit_sequence += 1
+            try:
+                order = e.book.submit(f'exit:{symbol}:{e._exit_sequence}', symbol, Side.SELL,
+                                      quantity, limit, at, emergency=escalated)
+            except ValueError as error:
+                e._note(at, 'EXIT_BLOCKED', symbol, str(error))
+                return
+            e._clear_note('EXIT_BLOCKED', symbol)
+            e.intents.link_exit(symbol, order.order_id, intent_id=intent_id)
+            e.execution_quality.on_submit(order, quote, at)
+            e._record(at, 'EXIT_REQUEST', symbol=symbol, order_id=order.order_id, reason=reason,
+                      intent_id=intent_id, emergency=escalated, limit_price=str(limit))
 
     # --------------------------------------------------------------- timer
     def _residual_alarm(self, symbol, at, session, quantity, active):

@@ -1,0 +1,32 @@
+{
+  "method": "tracemalloc after engine construction; all events same-time unique timer; raw/audit NullSink; no original logs changed",
+  "samples": [
+    {
+      "events": 10000,
+      "traced_bytes": 2140548,
+      "peak_bytes": 2142131,
+      "digests": 10000,
+      "duration_samples": 10000,
+      "audit_records": 0,
+      "raw_lines": 0
+    },
+    {
+      "events": 25000,
+      "traced_bytes": 5843000,
+      "peak_bytes": 5844583,
+      "digests": 25000,
+      "duration_samples": 25000,
+      "audit_records": 0,
+      "raw_lines": 0
+    },
+    {
+      "events": 50000,
+      "traced_bytes": 11679880,
+      "peak_bytes": 11681463,
+      "digests": 50000,
+      "duration_samples": 50000,
+      "audit_records": 0,
+      "raw_lines": 0
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "events_processed": 0,
+  "mode": "offline_replay",
+  "profile": "demo",
+  "funnel": {},
+  "rejections": {},
+  "layer_funnel": {
+    "environment_long_time_share": null,
+    "candidates": 0,
+    "economics_rejected_candidates": 0,
+    "risk_rejected_candidates": 0,
+    "confirmed": 0,
+    "intents": 0,
+    "intents_with_fills": 0,
+    "net_profitable_intents": 0,
+    "rejection_reasons": {},
+    "rejection_seconds": {}
+  },
+  "intents": [],
+  "execution_quality": {
+    "fills": [],
+    "total_price_cost_vs_arrival": "0",
+    "post_fill_drift": {
+      "BUY": {
+        "5s": {
+          "samples": 0,
+          "mean_signed_bps": null,
+          "unavailable": 0
+        },
+        "30s": {
+          "samples": 0,
+          "mean_signed_bps": null,
+          "unavailable": 0
+        },
+        "120s": {
+          "samples": 0,
+          "mean_signed_bps": null,
+          "unavailable": 0
+        }
+      },
+      "SELL": {
+        "5s": {
+          "samples": 0,
+          "mean_signed_bps": null,
+          "unavailable": 0
+        },
+        "30s": {
+          "samples": 0,
+          "mean_signed_bps": null,
+          "unavailable": 0
+        },
+        "120s": {
+          "samples": 0,
+          "mean_signed_bps": null,
+          "unavailable": 0
+        }
+      }
+    },
+    "drift_sign": "positive is favourable to the filled side",
+    "missed_opportunity_rate": "NOT_COMPUTED: requires frozen realized-signal labels"
+  },
+  "alarms": [],
+  "disabled_symbols": {},
+  "enhanced_ready_candidate_ratio": null,
+  "positions": {},
+  "active_orders": 0,
+  "daily_net_pnl_estimate": null,
+  "unreported_fee_reserve": "0",
+  "cash_source": "modeled",
+  "risk_locks": [],
+  "soft_blocks": [],
+  "requests_sent": {},
+  "routine_requests_sent": 0,
+  "entry_intents_today": 0,
+  "broker_reconciled": false,
+  "live_readiness": "NOT_VERIFIED",
+  "manifest": {
+    "code_sha256": "219722e1597e1787da8a1149afc474fef76ed22779274511ea1cfb6e998c8e95",
+    "config_sha256": "a4092100875e5eeaa55219f75627fc7eceb52e1d9ca79d373cee83fb5dacabda",
+    "input_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "events": 0
+  },
+  "metrics": {
+    "processing_seconds": 0.0,
+    "events_per_second": null,
+    "by_event_type": {},
+    "retained": {
+      "event_digests": 0,
+      "audit_records_in_memory": 0,
+      "journal_records": 0
+    },
+    "queue_lag": "NOT_APPLICABLE: offline replay has no live receive clock",
+    "note": "Local CPU timing of the replay core; not broker or exchange latency."
+  },
+  "interpretation": "Replay safety evidence only; no profitability or broker execution claim."
+}

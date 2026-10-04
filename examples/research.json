@@ -4,7 +4,7 @@
   "benchmark_symbol": "BENCH_SYNTHETIC",
   "engine": {
     "policy_id": "l1-proxy-h120-v1", "model_version": "synthetic-v1", "score_version": "l1-proxy-v1",
-    "holding_seconds": 120, "min_samples": 30,
+    "holding_seconds": 120, "min_samples": 30, "min_independent_days": 20,
     "forecast_max_age_seconds": 60, "market_max_age_seconds": 2,
     "submit_p99_seconds": 1, "cancel_p99_seconds": 1, "exit_buffer_seconds": 5,
     "order_timeout_seconds": 5, "exit_escalation_seconds": 3,

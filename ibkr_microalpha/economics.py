@@ -6,8 +6,11 @@ commission plan or execution probability is assumed to be suitable for trading.
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
+from copy import deepcopy
+import hashlib
+import json
 from math import isfinite, sqrt
 from typing import Iterable, Mapping
 
@@ -25,6 +28,76 @@ def _decimal(value: Decimal, name: str, *, nonnegative: bool = True) -> None:
 def _time(value: datetime) -> None:
     if value.tzinfo is None or value.utcoffset() is None:
         raise ValueError("timestamps must be timezone aware")
+
+
+def policy_fingerprint(document: Mapping) -> str:
+    """Identify the entire frozen executable configuration, excluding its citations.
+
+    Provenance is excluded to avoid a self-referential training artifact hash.
+    Fee schedule, execution, signal, risk and feature settings remain covered.
+    """
+    payload = {key: value for key, value in document.items() if key != 'provenance'}
+    return hashlib.sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False,
+                                    separators=(',', ':')).encode('utf-8')).hexdigest()
+
+
+def _sha256(value) -> bool:
+    return isinstance(value, str) and len(value) == 64 and all(c in '0123456789abcdef' for c in value)
+
+
+def calibration_evidence_error(*, label_source: str, provenance: Mapping | None,
+                               sample_days: int, sample_count: int, min_independent_days: int = 2,
+                               allow_artificial: bool = False, policy_hash: str | None = None,
+                               fee_version: str | None = None, as_of: datetime | None = None) -> str | None:
+    """Fail-closed deployment contract; a sample count is never a day count."""
+    if type(min_independent_days) is not int or min_independent_days < 2:
+        raise ValueError('min_independent_days must be at least two')
+    if type(allow_artificial) is not bool:
+        raise ValueError('allow_artificial must be a boolean')
+    if sample_days < min_independent_days or sample_count < sample_days:
+        return 'insufficient independent calibration days'
+    if not isinstance(provenance, Mapping):
+        return 'calibration provenance unavailable'
+    if label_source == 'ARTIFICIAL':
+        if not allow_artificial or provenance.get('source') != 'ARTIFICIAL_FIXTURE':
+            return 'artificial calibration is restricted to explicit demo fixtures'
+        return None
+    if label_source != 'VERIFIED_REPLAY':
+        return 'full-policy replay labels required; quote baselines are not deployable'
+    if any(provenance.get(name) is not True for name in ('complete_policy', 'includes_partial', 'fees_final')):
+        return 'complete policy, partial branches and final fees must be verified'
+    for name in ('policy_hash', 'labels_hash'):
+        if not _sha256(provenance.get(name)):
+            return f'calibration {name} unavailable'
+    for name in ('input_hashes', 'code_hashes'):
+        values = provenance.get(name)
+        if not isinstance(values, (list, tuple)) or not values or any(not _sha256(v) for v in values):
+            return f'calibration {name} unavailable'
+    if not isinstance(provenance.get('fee_version'), str) or not provenance['fee_version']:
+        return 'calibration fee version unavailable'
+    if policy_hash is not None and provenance['policy_hash'] != policy_hash:
+        return 'full policy fingerprint mismatch'
+    if fee_version is not None and provenance['fee_version'] != fee_version:
+        return 'calibration fee schedule mismatch'
+    try:
+        trained_until = datetime.fromisoformat(provenance['trained_until'])
+        _time(trained_until)
+        days = provenance['independent_days']
+        if not isinstance(days, (list, tuple)) or any(not isinstance(day, str) for day in days):
+            return 'independent day identities unavailable'
+        parsed = [date.fromisoformat(day) for day in days]
+        if len(parsed) != sample_days or len(set(parsed)) != sample_days:
+            return 'independent day identities mismatch'
+        # A trading day can finish on another UTC date; compare in its recorded timezone.
+        if any(day > trained_until.date() for day in parsed):
+            return 'training cutoff precedes independent sample days'
+        if as_of is not None:
+            _time(as_of)
+            if trained_until >= as_of:
+                return 'training cutoff must precede calibration availability'
+    except (ValueError, KeyError, TypeError):
+        return 'invalid training cutoff or independent day evidence'
+    return None
 
 
 @dataclass(frozen=True)
@@ -69,6 +142,9 @@ class Prediction:
     reliable: bool
     calibrated: bool
     max_holding_seconds: int
+    sample_days: int = 0
+    label_source: str = 'UNVERIFIED'
+    provenance: dict | None = None
 
     def __post_init__(self) -> None:
         _decimal(self.mean_net_amount, "mean_net_amount", nonnegative=False)
@@ -85,6 +161,11 @@ class Prediction:
             raise ValueError("max_holding_seconds must be positive")
         if self.lower_net_amount > self.mean_net_amount:
             raise ValueError("lower confidence bound cannot exceed the mean")
+        if type(self.sample_days) is not int or not 0 <= self.sample_days <= self.sample_count:
+            raise ValueError('sample_days must be an independent day count bounded by samples')
+        if not isinstance(self.label_source, str):
+            raise ValueError('label_source must be explicit')
+        object.__setattr__(self, 'provenance', deepcopy(self.provenance))
 
 
 @dataclass(frozen=True)
@@ -97,6 +178,9 @@ def prediction_gate(
     prediction: Prediction | None, *, policy_id: str, version: str,
     quantity: int, min_samples: int, safety_margin: Decimal,
     max_holding_seconds: int | None = None,
+    min_independent_days: int = 2, allow_artificial: bool = False,
+    policy_hash: str | None = None, fee_version: str | None = None,
+    as_of: datetime | None = None,
 ) -> EconomicGate:
     _decimal(safety_margin, "safety_margin")
     if type(min_samples) is not int or min_samples <= 0:
@@ -113,6 +197,13 @@ def prediction_gate(
         return EconomicGate(False, "holding policy mismatch")
     if prediction.sample_count < min_samples:
         return EconomicGate(False, "insufficient independent calibration samples")
+    evidence_error = calibration_evidence_error(
+        label_source=prediction.label_source, provenance=prediction.provenance,
+        sample_days=prediction.sample_days, sample_count=prediction.sample_count,
+        min_independent_days=min_independent_days, allow_artificial=allow_artificial,
+        policy_hash=policy_hash, fee_version=fee_version, as_of=as_of)
+    if evidence_error:
+        return EconomicGate(False, evidence_error)
     if prediction.lower_net_amount <= safety_margin:
         return EconomicGate(False, "net mean confidence bound below safety margin")
     return EconomicGate(True, "net mean confidence bound passed")
@@ -157,6 +248,8 @@ class CalibrationRow:
     mean_net_amount: Decimal
     lower_net_amount: Decimal
     max_chase_ticks: int
+    label_source: str = 'UNVERIFIED'
+    provenance: dict | None = None
 
     def __post_init__(self) -> None:
         if not self.policy_id or not self.version:
@@ -174,13 +267,25 @@ class CalibrationRow:
         _decimal(self.lower_net_amount, "lower_net_amount", nonnegative=False)
         if self.lower_net_amount > self.mean_net_amount:
             raise ValueError("lower confidence bound cannot exceed the mean")
+        if self.sample_days > self.sample_count or (self.sample_count > 0 and self.sample_days == 0):
+            raise ValueError('calibration samples require nonzero, bounded independent days')
+        if not isinstance(self.label_source, str):
+            raise ValueError('label_source must be explicit')
+        object.__setattr__(self, 'provenance', deepcopy(self.provenance))
 
     def contains(self, score: float) -> bool:
         return self.score_low <= score and (self.score_high is None or score < self.score_high)
 
     def prediction(self) -> Prediction:
+        verified = calibration_evidence_error(
+            label_source=self.label_source, provenance=self.provenance,
+            sample_days=self.sample_days, sample_count=self.sample_count,
+            allow_artificial=self.label_source == 'ARTIFICIAL') is None
+        if self.label_source == 'VERIFIED_REPLAY':
+            verified = verified and self.provenance.get('max_chase_ticks') == self.max_chase_ticks
         return Prediction(self.policy_id, self.version, self.quantity, self.sample_count,
-                          self.mean_net_amount, self.lower_net_amount, True, True, self.holding_seconds)
+                          self.mean_net_amount, self.lower_net_amount, verified, verified, self.holding_seconds,
+                          self.sample_days, self.label_source, self.provenance)
 
 
 class CalibrationTable:
@@ -203,6 +308,24 @@ class CalibrationTable:
                    for other in bucket):
                 raise ValueError("calibration score buckets overlap")
             bucket.append(row)
+
+    def validate_for_profile(self, profile: str, *, min_independent_days: int = 2,
+                             policy_hash: str | None = None, fee_version: str | None = None,
+                             as_of: datetime | None = None) -> None:
+        if profile not in ('demo', 'research', 'shadow'):
+            raise ValueError('unknown calibration profile')
+        for row in self.rows:
+            if (row.label_source == 'VERIFIED_REPLAY' and (not isinstance(row.provenance, Mapping)
+                    or type(row.provenance.get('max_chase_ticks')) is not int
+                    or row.provenance['max_chase_ticks'] != row.max_chase_ticks)):
+                raise ValueError('calibration chase cap differs from verified replay policy')
+            error = calibration_evidence_error(
+                label_source=row.label_source, provenance=row.provenance,
+                sample_days=row.sample_days, sample_count=row.sample_count,
+                min_independent_days=min_independent_days, allow_artificial=profile == 'demo',
+                policy_hash=policy_hash, fee_version=fee_version, as_of=as_of or self.known_at)
+            if error:
+                raise ValueError(error)
 
     def quantities(self, policy_id: str, version: str, holding_seconds: int) -> tuple[int, ...]:
         return tuple(sorted({key[3] for key in self._rows

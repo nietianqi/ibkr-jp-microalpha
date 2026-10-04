@@ -1,0 +1,11 @@
+{
+  "error": "AUDIT simulated disk full",
+  "failed": false,
+  "events_processed": 1,
+  "identity_committed": true,
+  "raw_lines": 0,
+  "engine_last_at": "2026-10-02T01:00:00+00:00",
+  "exact_retry": "silently returned",
+  "later_event_accepted": true,
+  "saved_stream_contains_first_event": false
+}

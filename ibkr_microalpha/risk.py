@@ -69,22 +69,36 @@ class RiskConfig:
 
 @dataclass(frozen=True)
 class AccountSnapshot:
-    """Broker-reported funds for the strategy account (review EXE-05)."""
+    """Funds at an explicit ledger barrier, net of the covered broker buy orders.
+
+    Missing coverage metadata is retained as an input fact but cannot authorize
+    entries. The adapter must establish the same account/query barrier; receive
+    timestamps alone never establish whether a fill was included.
+    """
     account_id: str
     currency: str
     available_funds: Decimal
     net_liquidation: Decimal
     received_at: datetime
     source: str
+    ledger_sequence: int | None = None
+    covered_order_ids: tuple[int, ...] = ()
 
     def __post_init__(self):
         aware(self.received_at)
-        if not self.account_id or not self.source or self.currency != "JPY":
+        if (not isinstance(self.account_id, str) or not self.account_id
+                or not isinstance(self.source, str) or not self.source or self.currency != "JPY"):
             raise ValueError("account snapshot needs account, source and JPY funds")
         finite_decimal(self.available_funds, "available_funds")
         finite_decimal(self.net_liquidation, "net_liquidation")
         if self.available_funds < 0:
             raise ValueError("available funds cannot be negative")
+        if self.ledger_sequence is not None and (type(self.ledger_sequence) is not int or self.ledger_sequence < 0):
+            raise ValueError('ledger_sequence must be a nonnegative integer')
+        if (not isinstance(self.covered_order_ids, tuple)
+                or any(type(i) is not int or i <= 0 for i in self.covered_order_ids)
+                or len(set(self.covered_order_ids)) != len(self.covered_order_ids)):
+            raise ValueError('covered_order_ids must be unique positive order IDs')
 
 
 @dataclass(frozen=True)
@@ -213,9 +227,11 @@ class PortfolioRisk:
                  stop_distance: Decimal, exit_slippage: Decimal,
                  liquidity_quantity: int, requested_quantity: int,
                  fees: Callable[[int, Decimal], tuple[Decimal, Decimal]],
-                 *, gap_reserve: Decimal = Decimal(0)) -> RiskDecision:
+                 *, gap_reserve: Decimal = Decimal(0), exact_quantity: bool = False) -> RiskDecision:
         """Re-evaluate minimum commissions at every legal lot; never enlarge size."""
         with self._mutex:
+            if type(exact_quantity) is not bool:
+                raise ValueError('exact_quantity must be a boolean')
             if self.locked:
                 return RiskDecision(False, "risk_locked")
             if self.soft_blocks:
@@ -261,7 +277,11 @@ class PortfolioRisk:
                                c.capital * c.portfolio_fraction - used,
                                c.capital * c.sector_fraction - sector_used)
             upper = min(upper, max(0, int(max_notional / price) // lot * lot))
+            if exact_quantity and (upper < requested_quantity or requested_quantity % lot):
+                return RiskDecision(False, 'exact_quantity_unavailable')
             for quantity in range(upper, 0, -lot):
+                if exact_quantity and quantity != requested_quantity:
+                    break
                 entry_fee, exit_fee = fees(quantity, price)
                 for value in (entry_fee, exit_fee):
                     finite_decimal(value, "fee")
@@ -280,3 +300,46 @@ class PortfolioRisk:
                 self.reservations[key] = reservation
                 return RiskDecision(True, "reserved", reservation)
             return RiskDecision(False, "less_than_one_legal_lot")
+
+    def validate_existing_entry_budget(self, symbol: str, sector: str,
+                                       quantity: int, stress_loss: Decimal) -> str | None:
+        """Validate an unchanged unsent order already included in account exposure.
+
+        Valuation has reserved every possible buy and its fees before this call.
+        Checking that net budget (rather than allocating the same order again)
+        avoids both double reservation and sharing one free balance across buys.
+        The daily intent count was consumed at creation, not again at dispatch.
+        """
+        with self._mutex:
+            if self.entries_blocked:
+                return 'entries_blocked'
+            if not self.account_verified:
+                return 'account_unverified'
+            c = self.config
+            if (type(quantity) is not int or quantity <= 0 or quantity % c.lot_size
+                    or quantity > c.max_quantity):
+                return 'entry_quantity_invalid'
+            if self.cash < sum((r.cash for r in self.reservations.values()), Decimal(0)):
+                return 'entry_cash_budget'
+            exposure = dict(self.exposure)
+            sectors = dict(self.sectors)
+            stress = dict(self.stress)
+            for r in self.reservations.values():
+                exposure[r.symbol] = exposure.get(r.symbol, Decimal(0)) + r.notional
+                sectors[r.symbol] = r.sector
+                stress[r.symbol] = stress.get(r.symbol, Decimal(0)) + r.stress_loss
+            if symbol not in exposure or sectors.get(symbol) != sector:
+                return 'entry_reservation_missing'
+            if len([v for v in exposure.values() if v > 0]) > c.max_positions:
+                return 'position_limit'
+            if exposure[symbol] > c.capital * c.symbol_fraction:
+                return 'symbol_notional_budget'
+            if sum(exposure.values(), Decimal(0)) > c.capital * c.portfolio_fraction:
+                return 'portfolio_notional_budget'
+            if sum((v for s,v in exposure.items() if sectors[s] == sector), Decimal(0)) > c.capital * c.sector_fraction:
+                return 'sector_notional_budget'
+            if stress_loss > c.capital * c.trade_risk_fraction:
+                return 'trade_stress_budget'
+            if sum(stress.values(), Decimal(0)) > c.capital * c.portfolio_stress_fraction:
+                return 'portfolio_stress_budget'
+            return None

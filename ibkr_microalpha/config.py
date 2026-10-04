@@ -67,7 +67,9 @@ def _check_provenance(document):
         for field in ('source', 'trained_until', 'code_hash'):
             if not isinstance(entry.get(field), str) or not entry[field]:
                 raise ValueError(f'provenance.{key}.{field} is required')
-        datetime.fromisoformat(entry['trained_until'])
+        cutoff = datetime.fromisoformat(entry['trained_until'])
+        if cutoff.tzinfo is None or cutoff.utcoffset() is None:
+            raise ValueError(f'provenance.{key}.trained_until requires a timezone')
     clip_rates = provenance['scalers'].get('clip_rates')
     if not isinstance(clip_rates, dict) or set(clip_rates) != set(document['scalers']):
         raise ValueError('provenance.scalers.clip_rates must report every frozen scaler')
@@ -92,6 +94,9 @@ def validate_document(document):
         raise ValueError(f'missing configuration groups: {sorted(REQUIRED_GROUPS - set(document))}')
     if document['profile'] not in PROFILES:
         raise ValueError(f'profile must be one of {PROFILES}')
+    minimum_days = document['engine'].get('min_independent_days')
+    if type(minimum_days) is not int or minimum_days < 2:
+        raise ValueError('engine.min_independent_days must be explicitly frozen at two or more')
     if document['profile'] != 'demo':
         _check_provenance(document)
     return document

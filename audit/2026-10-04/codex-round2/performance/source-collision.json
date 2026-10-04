@@ -1,0 +1,10 @@
+{
+  "source": "F:\\ibkr-jp-microalpha\\audit\\2026-10-04\\codex-round2\\performance\\source-collision\\raw-input.jsonl",
+  "before_bytes": 109,
+  "before_sha256": "d3b39e3e5e72911750d80682ee8882d89e3f1032f2ed244fc8f57b7c29ea1cce",
+  "after_bytes": 0,
+  "events_reported": 0,
+  "success_report_created": true,
+  "risk_locks": [],
+  "failure_created": false
+}

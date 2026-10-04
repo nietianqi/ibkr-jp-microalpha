@@ -1,0 +1,64 @@
+{
+  "version": 2,
+  "next_order_id": 1,
+  "connected": true,
+  "reconciling": false,
+  "lock_reasons": [],
+  "orders": [],
+  "executions": [],
+  "commissions": {},
+  "broker_positions": {},
+  "unmanaged_orders": [],
+  "position_metadata": {},
+  "journal": [
+    {
+      "sequence": 1,
+      "kind": "REQUEST_POLICY",
+      "at": null,
+      "payload": {
+        "version": 1,
+        "daily_request_budget": 500
+      }
+    },
+    {
+      "sequence": 2,
+      "kind": "RECONCILE",
+      "at": "2026-10-02T08:55:00+09:00",
+      "payload": {
+        "positions": {},
+        "open_orders": [],
+        "executions": [],
+        "complete": true,
+        "ownership_confirmed": true,
+        "next_order_id": 1
+      }
+    },
+    {
+      "sequence": 3,
+      "kind": "RECONCILED",
+      "at": "2026-10-02T08:55:00+09:00",
+      "payload": {}
+    },
+    {
+      "sequence": 4,
+      "kind": "REQUEST_DAY",
+      "at": "2026-10-02T09:00:00+09:00",
+      "payload": {
+        "day": "2026-10-02"
+      }
+    }
+  ],
+  "request_policy": {
+    "version": 1,
+    "daily_request_budget": 500,
+    "routine_requests_sent": 0,
+    "sent_counts": {},
+    "request_day": "2026-10-02",
+    "verified": true
+  },
+  "pacing": {
+    "rate": 50.0,
+    "capacity": 50,
+    "reserved_risk_tokens": 5
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "restore": {
+    "snapshot": {
+      "budget": 1,
+      "routine": 1,
+      "sent_counts": {
+        "SUBMIT": 2,
+        "CANCEL": 1,
+        "QUERY": 1
+      },
+      "request_day": "2026-10-02",
+      "connected": false,
+      "queued": 0
+    },
+    "journal": {
+      "budget": 1,
+      "routine": 1,
+      "sent_counts": {
+        "SUBMIT": 2,
+        "CANCEL": 1,
+        "QUERY": 1
+      },
+      "request_day": "2026-10-02",
+      "connected": false,
+      "queued": 0
+    }
+  },
+  "sell_bust_repaired": {
+    "first_sell_owner": "STOCK_SYNTHETIC:l1-proxy-v1:2026-10-02T01:00:10+00:00",
+    "repair_sell_owner": "STOCK_SYNTHETIC:l1-proxy-v1:2026-10-02T01:00:10+00:00",
+    "position_final": 0,
+    "intents_final": [
+      {
+        "intent_id": "STOCK_SYNTHETIC:l1-proxy-v1:2026-10-02T01:00:10+00:00",
+        "symbol": "STOCK_SYNTHETIC",
+        "created_at": "2026-10-02T01:00:12+00:00",
+        "target_quantity": 100,
+        "status": "CLOSED",
+        "bought": 100,
+        "sold": 100,
+        "buy_amount": "300100",
+        "sell_amount": "300000",
+        "actual_fees": "0",
+        "unreported_fee_reserve": "480.0800",
+        "net_amount": "-580.0800",
+        "valuation": "realized",
+        "valuation_reason": "valued at common cutoff",
+        "stress_budget": "1330.5200",
+        "stress_exceeded": false,
+        "child_orders": 3
+      }
+    ],
+    "daily_net_pnl_estimate": "-580.0800"
+  },
+  "initial_red_run": {
+    "new_tests": 8,
+    "failures_including_subtests": 3,
+    "errors_from_missing_new_APIs": 6
+  }
+}

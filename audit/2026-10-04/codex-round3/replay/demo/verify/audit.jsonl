@@ -1,0 +1,6 @@
+{"at": "2026-10-02T08:55:00+09:00", "kind": "CALIBRATION", "version": "ARTIFICIAL-calibration-v1", "rows": 1}
+{"at": "2026-10-02T09:00:00+09:00", "kind": "NO_TRADE", "symbol": "STOCK_SYNTHETIC", "reason": "entries_blocked"}
+{"at": "2026-10-02T09:05:01+09:00", "kind": "NO_TRADE", "symbol": "STOCK_SYNTHETIC", "reason": "SESSION_WARMUP"}
+{"at": "2026-10-02T09:10:00+09:00", "kind": "CANDIDATE", "symbol": "STOCK_SYNTHETIC", "candidate_id": "STOCK_SYNTHETIC:l1-proxy-v1:2026-10-02T09:10:00+09:00", "score": 2.8675213682449385, "expires_at": "2026-10-02T09:10:20+09:00"}
+{"at": "2026-10-02T09:10:00+09:00", "kind": "CANDIDATE_INVALIDATED", "symbol": "STOCK_SYNTHETIC", "reason": "uncalibrated or unreliable prediction"}
+{"at": "2026-10-02T09:10:00+09:00", "kind": "NO_TRADE", "symbol": "STOCK_SYNTHETIC", "reason": "uncalibrated or unreliable prediction"}

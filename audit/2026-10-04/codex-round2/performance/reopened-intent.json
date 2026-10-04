@@ -1,0 +1,71 @@
+{
+  "initial": [
+    {
+      "intent_id": "STOCK_SYNTHETIC:l1-proxy-v1:2026-10-02T01:00:10+00:00",
+      "symbol": "STOCK_SYNTHETIC",
+      "created_at": "2026-10-02T01:00:12+00:00",
+      "target_quantity": 100,
+      "status": "CLOSED",
+      "bought": 100,
+      "sold": 100,
+      "buy_amount": "300100",
+      "sell_amount": "300000",
+      "actual_fees": "0",
+      "unreported_fee_reserve": "480.0800",
+      "net_amount": "-580.0800",
+      "valuation": "realized",
+      "valuation_reason": "valued at common cutoff",
+      "stress_budget": "1330.5200",
+      "stress_exceeded": false,
+      "child_orders": 2
+    }
+  ],
+  "reconciled_after_bust": true,
+  "first_sell_id": 2,
+  "new_sell_id": 3,
+  "position_final": 0,
+  "intents_final": [
+    {
+      "intent_id": "STOCK_SYNTHETIC:l1-proxy-v1:2026-10-02T01:00:10+00:00",
+      "symbol": "STOCK_SYNTHETIC",
+      "created_at": "2026-10-02T01:00:12+00:00",
+      "target_quantity": 100,
+      "status": "OPEN",
+      "bought": 100,
+      "sold": 0,
+      "buy_amount": "300100",
+      "sell_amount": "0",
+      "actual_fees": "0",
+      "unreported_fee_reserve": "240.0800",
+      "net_amount": "-580.0800",
+      "valuation": "conservative_residual",
+      "valuation_reason": "valued at common cutoff",
+      "stress_budget": "1330.5200",
+      "stress_exceeded": false,
+      "child_orders": 2
+    },
+    {
+      "intent_id": "unattributed:STOCK_SYNTHETIC:3",
+      "symbol": "STOCK_SYNTHETIC",
+      "created_at": null,
+      "target_quantity": 0,
+      "status": "OPEN",
+      "bought": 0,
+      "sold": 100,
+      "buy_amount": "0",
+      "sell_amount": "300000",
+      "actual_fees": "0",
+      "unreported_fee_reserve": "240.0000",
+      "net_amount": null,
+      "valuation": "not_estimable",
+      "valuation_reason": "quantity mismatch or uncontrolled short position",
+      "stress_budget": null,
+      "stress_exceeded": false,
+      "child_orders": 1
+    }
+  ],
+  "daily_net_pnl_estimate": "-580.0800",
+  "risk_locks": [
+    "AUDIT_EXIT"
+  ]
+}

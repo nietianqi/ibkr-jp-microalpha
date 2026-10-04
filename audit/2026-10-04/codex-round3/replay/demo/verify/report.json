@@ -1,0 +1,167 @@
+{
+  "events_processed": 3789,
+  "mode": "offline_replay",
+  "profile": "demo",
+  "funnel": {
+    "candidates": 1,
+    "economics_rejected": 1
+  },
+  "rejections": {
+    "entries_blocked": 301,
+    "SESSION_WARMUP": 299,
+    "uncalibrated or unreliable prediction": 1
+  },
+  "layer_funnel": {
+    "environment_long_time_share": 0.5853333333333334,
+    "candidates": 1,
+    "economics_rejected_candidates": 1,
+    "risk_rejected_candidates": 0,
+    "confirmed": 0,
+    "intents": 0,
+    "intents_with_fills": 0,
+    "net_profitable_intents": 0,
+    "rejection_reasons": {
+      "entries_blocked": 301,
+      "SESSION_WARMUP": 299,
+      "uncalibrated or unreliable prediction": 1
+    },
+    "rejection_seconds": {
+      "entries_blocked": 301,
+      "SESSION_WARMUP": 299,
+      "uncalibrated or unreliable prediction": 1
+    }
+  },
+  "intents": [],
+  "execution_quality": {
+    "fills": [],
+    "total_price_cost_vs_arrival": "0",
+    "post_fill_drift": {
+      "BUY": {
+        "5s": {
+          "samples": 0,
+          "mean_signed_bps": null,
+          "unavailable": 0
+        },
+        "30s": {
+          "samples": 0,
+          "mean_signed_bps": null,
+          "unavailable": 0
+        },
+        "120s": {
+          "samples": 0,
+          "mean_signed_bps": null,
+          "unavailable": 0
+        }
+      },
+      "SELL": {
+        "5s": {
+          "samples": 0,
+          "mean_signed_bps": null,
+          "unavailable": 0
+        },
+        "30s": {
+          "samples": 0,
+          "mean_signed_bps": null,
+          "unavailable": 0
+        },
+        "120s": {
+          "samples": 0,
+          "mean_signed_bps": null,
+          "unavailable": 0
+        }
+      }
+    },
+    "drift_sign": "positive is favourable to the filled side",
+    "missed_opportunity_rate": "NOT_COMPUTED: requires frozen realized-signal labels"
+  },
+  "alarms": [],
+  "disabled_symbols": {},
+  "enhanced_ready_candidate_ratio": null,
+  "positions": {},
+  "active_orders": 0,
+  "daily_net_pnl_estimate": "0",
+  "unreported_fee_reserve": "0",
+  "cash_source": "reconciled",
+  "risk_locks": [],
+  "soft_blocks": [],
+  "requests_sent": {},
+  "routine_requests_sent": 0,
+  "entry_intents_today": 0,
+  "broker_reconciled": true,
+  "live_readiness": "NOT_VERIFIED",
+  "manifest": {
+    "code_sha256": "02ee90a8cec938929cd6c2f8317f3415cad6b7d861e404ba1781f680898e1acd",
+    "config_sha256": "6c6e7673edad56fd26d1cd7325948635eeddff6e6a544f7f6da596eed9006f03",
+    "input_sha256": "8987af2f464c76771d3bf06d30d9f284f1e6b27d385c51665a1147c161911e24",
+    "events": 3789
+  },
+  "metrics": {
+    "processing_seconds": 0.7725,
+    "events_per_second": 4904.7,
+    "by_event_type": {
+      "account_snapshot": {
+        "events": 26,
+        "p50_ms": 0.0905,
+        "p99_ms": 0.1042,
+        "max_ms": 0.1042
+      },
+      "calendar": {
+        "events": 1,
+        "p50_ms": 0.1725,
+        "p99_ms": 0.1725,
+        "max_ms": 0.1725
+      },
+      "calibration_table": {
+        "events": 1,
+        "p50_ms": 0.1328,
+        "p99_ms": 0.1328,
+        "max_ms": 0.1328
+      },
+      "cumulative_volume": {
+        "events": 751,
+        "p50_ms": 0.128,
+        "p99_ms": 0.2348,
+        "max_ms": 0.5808
+      },
+      "quote": {
+        "events": 1502,
+        "p50_ms": 0.1076,
+        "p99_ms": 0.181,
+        "max_ms": 0.4304
+      },
+      "quote_stream_health": {
+        "events": 752,
+        "p50_ms": 0.064,
+        "p99_ms": 0.1076,
+        "max_ms": 0.2123
+      },
+      "reconcile": {
+        "events": 1,
+        "p50_ms": 0.1307,
+        "p99_ms": 0.1307,
+        "max_ms": 0.1307
+      },
+      "requests": {
+        "events": 751,
+        "p50_ms": 0.7241,
+        "p99_ms": 1.024,
+        "max_ms": 2.0805
+      },
+      "same_time_profile": {
+        "events": 4,
+        "p50_ms": 0.064,
+        "p99_ms": 0.0846,
+        "max_ms": 0.0846
+      }
+    },
+    "retained": {
+      "event_digests": 3789,
+      "audit_records_in_memory": 0,
+      "journal_records": 4,
+      "timing_bins": 1728
+    },
+    "queue_lag": "NOT_APPLICABLE: offline replay has no live receive clock",
+    "note": "Local dispatch wall-clock timing including evidence writes; excludes input reading, final batch/flush and save; not broker or exchange latency. Percentiles are approximate (192 logarithmic bins per event type; overflow uses maximum). Digests retain one frozen trading day and still grow with unique events."
+  },
+  "interpretation": "Replay safety evidence only; no profitability or broker execution claim."
+}

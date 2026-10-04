@@ -46,7 +46,7 @@ def create_demo(config_path, destination):
         {'policy_id': c.policy_id, 'version': c.model_version, 'holding_seconds': c.holding_seconds,
          'quantity': 100, 'score_low': 0.5, 'score_high': None, 'sample_days': 40,
          'sample_count': 100, 'mean_net_amount': '1000', 'lower_net_amount': '800',
-         'max_chase_ticks': 10}]})
+         'max_chase_ticks': 10, 'label_source':'ARTIFICIAL', 'provenance':{'source':'ARTIFICIAL_FIXTURE'}}]})
     # One same-time bucket row replaces 20 days x 1 row per second (review DATA-03).
     features = engine.features.config
     bucket = features.baseline_bucket_seconds
@@ -66,7 +66,10 @@ def create_demo(config_path, destination):
         if second % 30 == 0:
             emit(at, 'account_snapshot', {'account_id': 'ARTIFICIAL', 'currency': 'JPY',
                                           'available_funds': '5000000', 'net_liquidation': '5000000',
-                                          'source': 'ARTIFICIAL_FIXTURE'})
+                                          'source': 'ARTIFICIAL_FIXTURE',
+                                          'ledger_sequence': engine.book.journal[-1]['sequence'],
+                                          'covered_order_ids': [o.order_id for o in engine.book.active_orders()
+                                                                if o.side.value == 'BUY' and o.submitted_at is not None]})
         if second % 2 == 0:
             for symbol in (BENCH, STOCK):
                 emit(at, 'quote_stream_health', {'symbol': symbol, 'healthy': True})

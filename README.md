@@ -1,6 +1,6 @@
 # IBKR 日本股票多周期研究核心
 
-根据 `IBKR日本股票多周期协同策略文档.md` v1.2 新建，并按 `CLAUDE_CODEX_协作文档.md`（2026-10-04 评审）完成第 1 轮修复。本项目实现 Python 3.11+ 的离线研究、事件回放、订单生命周期核心和研究校准工具，仅使用标准库。Python 3.14 下已运行验证。
+根据 `IBKR日本股票多周期协同策略文档.md` v1.2 新建，并按 `CLAUDE_CODEX_协作文档.md`（2026-10-04 评审）完成 Claude 首轮修复及 Codex 复核发现问题的修复。本项目实现 Python 3.11+ 的离线研究、事件回放、订单生命周期核心和研究校准工具，仅使用标准库。Python 3.14 下已运行验证。
 
 四层依次负责环境、主信号、入场确认和执行。账户风险、对账、时间退出始终优先于新入场。首版为日内长仓趋势延续，多股票共享资金与风险额度。
 
@@ -25,7 +25,9 @@ python -m ibkr_microalpha demo --verify-replay
 python -m ibkr_microalpha replay runs/demo/events.jsonl --config examples/research.json --output runs/replayed
 ```
 
-成功时输出 `report.json`、`audit.jsonl`、`execution-journal.jsonl`、`execution.json`、`raw-input.jsonl` 和 `frozen-config.json`；原始输入与审计在运行中流式写盘。失败时不写 `report.json`，改写 `failure.json`（来源、已验证事件数、错误、manifest）。报告包含逐层漏斗、逐意图结果（含压力预算是否被突破）、执行质量、软/硬风险状态、请求计数、运行清单（代码/配置/输入 SHA-256）及本机处理耗时指标。
+成功时输出 `report.json`、`audit.jsonl`、`execution-journal.jsonl`、`execution.json`、`raw-input.jsonl` 和 `frozen-config.json`。输入/config 与任何产物指向同一文件（包括 hardlink）会在写前拒绝。CLI 将原始输入与审计流式写入同文件系统临时目录；两个流关闭成功后发布产物，最后发布 `report.json` 作为成功标记。可捕获的发布失败会回滚旧完整运行；失败尝试放在空输出目录的 `failure.json`，或既有输出目录的 `.failed/<id>/`。若回滚也失败，保留 backup 并移除成功标记。任何应用或证据持久化错误都会封锁本次 Replay，必须从原输入重建。
+
+报告包含逐层漏斗、逐意图结果（含压力预算是否被突破）、执行质量、软/硬风险状态、请求计数及代码/配置/输入 SHA-256。耗时使用每事件类型固定 192 桶；count/max 精确，p50/p99 近似。计量范围为本机 dispatch 墙钟，包含证据写入，不含源文件读取、最终批次/flush 和 save，不表示券商延迟。此发布协议未提供断电持久性或并发读者的多文件快照隔离。
 
 一个回放运行对应一个日初冻结的账户交易日。多日研究应逐日运行并另行汇总，不能将跨日资金、费用或日损失阈值静默拼接。
 
@@ -54,7 +56,10 @@ python -m ibkr_microalpha replay runs/demo/events.jsonl --config examples/resear
 - **风险锁分两级**：HARD（日损失、KILL_SWITCH、账本/对账不一致、残余风险、退出价格规则、升级后的 SOFT）需人工解除并退出受控风险；SOFT（估值暂缺、行情或市场数据过期、账户快照缺失）只阻止开仓，条件恢复即解除，持有受控风险时持续超过 `max_soft_block_seconds` 才升级为 HARD。
 - **无变化≠断流**：`quote_stream_health` 心跳证明订阅存活时，安静的盘口不重置窗口；入场用 `max_age_seconds`（2 秒），估值、止损和退出定价用 `valuation_max_age_seconds`（30 秒）。持仓股特征暖机只清零信号退出状态，硬退出照常。
 - **市场数据缺失是 MARKET_UNKNOWN**：阻止开仓，不触发紧急清仓；只有阈值触发的 MARKET_RISK_OFF 或交易所异常才退出全部受控风险。
-- **经济门控用冻结校准表**：`economics_source: calibration` 时由 `calibration_table` 事件提供（策略 × 持仓期 × 数量 × 分数桶的均值与置信下界）；`forecast` 事件仅用于研究覆盖。数量与校准不符时以 `calibrated_quantity_unavailable` 明确拒绝。
+- **经济门控用冻结校准表**：`economics_source: calibration` 时由 `calibration_table` 事件提供（策略 × 持仓期 × 数量 × 分数桶的均值与置信下界）；`forecast` 同样需要来源与独立日证据。每个数量使用自己的价格上限、止损和费用，较大数量不能缩量后沿用原上限。临时越过价格上限的未下单候选可在原 TTL 内继续等待，活动买单越界仍撤余量。
+- **资金快照需账本屏障**：`ledger_sequence` 必须对应完整对账后的当前 journal 序号，`covered_order_ids` 明确快照已计入的全部活动且已发送 BUY。相同账户锚点后的新买入与费用继续扣除；覆盖中的买单本金不重复扣除。卖出、bust、更正及撤单不自动释放券商余额，资金增加需新屏障快照确认。缺少屏障、账户变更或快照失效阻止开仓。待发送 BUY 复核包含全部排队占用的资金、单股/组合/行业金额与压力；拒绝时原数量不变并本地终止。
+- **异常空头保留事实并报警**：买入更正后晚到 SELL 造成负仓位时，冻结新交易、请求对账并继续其他风险检查；不会将负数量传入长仓费用函数，也不会继续卖出异常空头。
+- **恢复包含请求政策**：execution 快照 v2 与新 journal 保存冻结预算、JST 请求日、例行和总发送计数；恢复后断连、清空旧请求并要求完整对账。旧格式缺预算/发送证据时关闭例行发送；显式预算及完整历史才能迁移，风险请求保留优先权。旧退出被 bust 后，原订单到意图映射保留；修复退出按原意图残余拆分归属。
 - **入场单**：限价 = min(候选不可变上限, ask + `entry_limit_ticks`)，订单 TTL = `entry_order_ttl_seconds`，到期撤余量且同一候选不重挂；排队中的入场单在真正发送前按当时报价、预测、上限和风险复核。
 - **止损与压力**：止损 = max(`min_stop_ticks` 个价档, `stop_bps`, `stop_volatility_multiple` × 已知波动)，换算为 JPY/股；退出滑点按价档数；压力损失含 `gap_reserve_bps` 跳价储备，并受 `portfolio_stress_fraction` 组合上限约束。实际亏损超过压力预算时报告并审计 `STRESS_BUDGET_EXCEEDED`。
 - **确认层**：单次负失衡只返回 WAIT；平滑 OBI 在完整平滑跨度上反转才否决。
@@ -82,7 +87,7 @@ python -m ibkr_microalpha replay runs/demo/events.jsonl --config examples/resear
 | `forecast` | 研究覆盖用逐股预测（`economics_source: forecast`） |
 | `market_snapshot` | 仅 `market_source: external` 时接受 |
 | `feature_snapshot` | 预计算特征（严格布尔 `valid`） |
-| `account_snapshot` | `account_id,currency(JPY),available_funds,net_liquidation,source` |
+| `account_snapshot` | `account_id,currency(JPY),available_funds,net_liquidation,source,ledger_sequence,covered_order_ids[]`；最后两项为资金对账屏障 |
 | `exchange_status` | `normal,reason`；异常即 MARKET_RISK_OFF |
 | `requests` | 先完成同时刻评估与风险轮询，再按复核结果发送 |
 | `status` / `fill` / `commission` / `reconcile` | 回报与对账，语义同前 |
@@ -95,7 +100,9 @@ L1 配置使用 `vwap_proxy_*`，冻结版本必须为 `l1-proxy-*`。增强版�
 
 ## 研究工具
 
-`ibkr_microalpha.research` 提供把真实采集数据变成冻结参数的最小管线：`label_intent`（与协调器同一固定主动政策的意图净额，未成交为 0、无法平仓为 None）、`walk_forward`（按交易日滚动、隔离期、最终保留期）、`build_calibration_rows` 与 `day_block_lower_bound`（按交易日区块自助法的均值置信下界）、`fit_scalers`（含截断率）和 `calibration_table_event`。这些工具只处理离线数据，不连接券商。
+`quote_baseline_label` / 兼容数值接口 `label_intent` 仅提供 `QUOTE_BASELINE_V1` 报价基线；部分成交、覆盖不足及不完整退出返回 None，不能制作正式校准。`replay_intent_labels(runner, verified_manifest=..., source_events=...)` 从原始事件重建完整协调器，核验 manifest、原始候选评分、政策元数据、终态、对账及每笔最终费用，生成 `ReplayIntentLabel`；使用 raw sink 时必须提供原始事件，直接修改 runner 账本不能生成标签。
+
+`build_calibration_rows` 仅接受该工厂标签，按交易日区块自助法生成置信下界并附完整政策、费用、代码、输入、标签哈希和训练截止证据。`engine.min_independent_days` 必须显式冻结且至少为 2（示例为 20，并非研究上足够的保证）；1 日高密度样本和矛盾 day/count 被拒绝，不足的桶省略。非 demo 只接受 `VERIFIED_REPLAY` 且训练截止严格早于表可用时刻；人工标签只能进入明确的 demo。追价上限须与标签原执行政策一致。`walk_forward`、`fit_scalers` 和 `calibration_table_event` 仍用于离线切分、拟合及序列化，不连接券商。
 
 ## 验证边界
 

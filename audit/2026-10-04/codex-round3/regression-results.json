@@ -1,0 +1,162 @@
+{
+  "at": "2026-10-04T13:58:47.218773+00:00",
+  "python": "3.14.0 (tags/v3.14.0:ebf955d, Oct  7 2025, 10:15:03) [MSC v.1944 64 bit (AMD64)]",
+  "tests_run": 256,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "tests_by_module": {
+    "test_coordinator_edges": 6,
+    "test_economics": 13,
+    "test_engine": 17,
+    "test_execution": 34,
+    "test_market": 19,
+    "test_replay": 11,
+    "test_reporting": 14,
+    "test_review_fixes": 41,
+    "test_risk": 13,
+    "test_round3_entry_risk": 14,
+    "test_round3_execution": 14,
+    "test_round3_replay": 20,
+    "test_round3_research": 13,
+    "test_signals": 20,
+    "test_subscriptions": 7
+  },
+  "new_round3_tests": 61,
+  "successful": true,
+  "live_readiness": "NOT_VERIFIED",
+  "compileall": "PASSED",
+  "config": "PASSED",
+  "demo": {
+    "events": 3797,
+    "funnel": {
+      "candidates": 1,
+      "confirmed": 1,
+      "intents": 1
+    },
+    "active_orders": 0,
+    "intents": [
+      {
+        "intent_id": "STOCK_SYNTHETIC:l1-proxy-v1:2026-10-02T09:10:00+09:00",
+        "symbol": "STOCK_SYNTHETIC",
+        "created_at": "2026-10-02T09:10:02+09:00",
+        "target_quantity": 100,
+        "status": "CLOSED",
+        "bought": 100,
+        "sold": 100,
+        "buy_amount": "96030.0",
+        "sell_amount": "95000",
+        "actual_fees": "160.0",
+        "unreported_fee_reserve": "0",
+        "net_amount": "-1190.0",
+        "valuation": "realized",
+        "valuation_reason": "valued at common cutoff",
+        "stress_budget": "410.1000",
+        "stress_exceeded": true,
+        "child_orders": 2
+      }
+    ],
+    "daily_net_pnl_estimate": "-1190.0",
+    "identical_business_report": true,
+    "metrics": {
+      "processing_seconds": 1.0073,
+      "events_per_second": 3769.4,
+      "by_event_type": {
+        "account_snapshot": {
+          "events": 26,
+          "p50_ms": 0.0987,
+          "p99_ms": 0.3421,
+          "max_ms": 0.3421
+        },
+        "calendar": {
+          "events": 1,
+          "p50_ms": 0.159,
+          "p99_ms": 0.159,
+          "max_ms": 0.159
+        },
+        "calibration_table": {
+          "events": 1,
+          "p50_ms": 0.261,
+          "p99_ms": 0.261,
+          "max_ms": 0.261
+        },
+        "commission": {
+          "events": 2,
+          "p50_ms": 0.2153,
+          "p99_ms": 0.4143,
+          "max_ms": 0.4143
+        },
+        "cumulative_volume": {
+          "events": 751,
+          "p50_ms": 0.128,
+          "p99_ms": 0.5583,
+          "max_ms": 0.6544
+        },
+        "fill": {
+          "events": 2,
+          "p50_ms": 0.6089,
+          "p99_ms": 0.6225,
+          "max_ms": 0.6225
+        },
+        "quote": {
+          "events": 1502,
+          "p50_ms": 0.1174,
+          "p99_ms": 0.512,
+          "max_ms": 0.9193
+        },
+        "quote_stream_health": {
+          "events": 752,
+          "p50_ms": 0.0698,
+          "p99_ms": 0.362,
+          "max_ms": 0.526
+        },
+        "reconcile": {
+          "events": 1,
+          "p50_ms": 0.1393,
+          "p99_ms": 0.1393,
+          "max_ms": 0.1393
+        },
+        "requests": {
+          "events": 751,
+          "p50_ms": 0.7241,
+          "p99_ms": 2.2334,
+          "max_ms": 3.0514
+        },
+        "same_time_profile": {
+          "events": 4,
+          "p50_ms": 0.0587,
+          "p99_ms": 0.0768,
+          "max_ms": 0.0768
+        },
+        "status": {
+          "events": 4,
+          "p50_ms": 0.362,
+          "p99_ms": 0.5163,
+          "max_ms": 0.5163
+        }
+      },
+      "retained": {
+        "event_digests": 3797,
+        "audit_records_in_memory": 0,
+        "journal_records": 18,
+        "timing_bins": 2304
+      },
+      "queue_lag": "NOT_APPLICABLE: offline replay has no live receive clock",
+      "note": "Local dispatch wall-clock timing including evidence writes; excludes input reading, final batch/flush and save; not broker or exchange latency. Percentiles are approximate (192 logarithmic bins per event type; overflow uses maximum). Digests retain one frozen trading day and still grow with unique events."
+    }
+  },
+  "fixes": {
+    "EXE-09": "IMPLEMENTED_LOCAL_REGRESSIONS_PASS_PENDING_CLAUDE_REVIEW",
+    "EXE-10": "IMPLEMENTED_LOCAL_REGRESSIONS_PASS_PENDING_CLAUDE_REVIEW",
+    "EXE-11": "IMPLEMENTED_LOCAL_REGRESSIONS_PASS_PENDING_CLAUDE_REVIEW",
+    "EXE-12": "IMPLEMENTED_LOCAL_REGRESSIONS_PASS_PENDING_CLAUDE_REVIEW",
+    "RPL-03": "IMPLEMENTED_LOCAL_REGRESSIONS_PASS_PENDING_CLAUDE_REVIEW",
+    "RPL-04": "IMPLEMENTED_LOCAL_REGRESSIONS_PASS_PENDING_CLAUDE_REVIEW",
+    "RPT-06": "IMPLEMENTED_LOCAL_REGRESSIONS_PASS_PENDING_CLAUDE_REVIEW",
+    "FLOW-05": "IMPLEMENTED_LOCAL_REGRESSIONS_PASS_PENDING_CLAUDE_REVIEW",
+    "FLOW-06": "IMPLEMENTED_LOCAL_REGRESSIONS_PASS_PENDING_CLAUDE_REVIEW",
+    "STR-09": "IMPLEMENTED_LOCAL_REGRESSIONS_PASS_PENDING_CLAUDE_REVIEW",
+    "STR-10": "IMPLEMENTED_LOCAL_REGRESSIONS_PASS_PENDING_CLAUDE_REVIEW",
+    "DATA-09": "IMPLEMENTED_LOCAL_REGRESSIONS_PASS_PENDING_CLAUDE_REVIEW"
+  }
+}

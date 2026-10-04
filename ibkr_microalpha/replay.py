@@ -1,17 +1,23 @@
 """Causal JSONL replay. This module performs disk I/O outside trading callbacks.
 
 Each event is parsed and validated before it touches the engine; its identity
-is committed only after it has been applied (review RPL-01). A failure while
-applying poisons the runner: the engine must be rebuilt from the frozen config
-and verified input, never retried in place. Identities are kept as digests and
+is committed only after application and evidence writes (reviews RPL-01/04).
+An application, evidence or whole-file failure poisons the runner: the engine
+must be rebuilt from the frozen config and verified input, never retried in
+place. Identities are kept as digests and
 raw input/audit can be streamed to disk, so memory does not hold every payload
 (review RPL-02).
 """
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
+from bisect import bisect_left
 import hashlib
 import json
+import math
+import os
+import shutil
+import tempfile
 import time
 
 from .domain import FeatureSnapshot, Quote, aware
@@ -23,6 +29,110 @@ from .reporting import layer_funnel
 from .risk import AccountSnapshot
 
 PACKAGE_ROOT = Path(__file__).resolve().parent
+RUN_FILES = ('raw-input.jsonl', 'audit.jsonl', 'frozen-config.json', 'execution.json',
+             'execution-journal.jsonl', 'report.json')
+
+
+def publish_run(staging, output):
+    """Publish closed artifacts, committing report last; roll back an older run.
+
+    While replacement is in progress no success marker is visible. Backups are
+    on the same filesystem and retained if rollback itself fails, so recovery
+    never depends on a temporary directory that would be deleted on exit.
+    """
+    staging, output = Path(staging).resolve(), Path(output).resolve()
+    names = [name for name in RUN_FILES if (staging/name).is_file()]
+    if 'report.json' not in names:
+        raise ValueError('cannot publish a run without its success report')
+    output.mkdir(parents=True, exist_ok=True)
+    for name in (*names, 'failure.json'):
+        target = output/name
+        if target.exists() and not target.is_file():
+            raise ValueError(f'run artifact must be a file: {target}')
+    backup = Path(tempfile.mkdtemp(prefix=f'.{output.name}-previous-', dir=output.parent)).resolve()
+    # All recursively removed files are confined to this newly created backup.
+    backup.relative_to(output.parent.resolve())
+    moved, published = set(), []
+    try:
+        for name in ('report.json', 'failure.json'):
+            target = output/name
+            if target.exists() or target.is_symlink():
+                os.replace(target, backup/name)
+                moved.add(name)
+        for name in names:
+            if name == 'report.json':
+                continue
+            target = output/name
+            if target.exists() or target.is_symlink():
+                os.replace(target, backup/name)
+                moved.add(name)
+            os.replace(staging/name, target)
+            published.append(name)
+        os.replace(staging/'report.json', output/'report.json')
+        published.append('report.json')
+    except Exception as error:
+        rollback_errors = []
+        for name in reversed(published):
+            if name == 'report.json':
+                continue
+            try:
+                if name in moved:
+                    os.replace(backup/name, output/name)
+                    moved.remove(name)
+                else:
+                    (output/name).unlink(missing_ok=True)
+            except OSError as rollback_error:
+                rollback_errors.append(str(rollback_error))
+        for name in sorted(moved - {'report.json'}):
+            try:
+                os.replace(backup/name, output/name)
+            except OSError as rollback_error:
+                rollback_errors.append(str(rollback_error))
+        # An old report may be restored only after all of its artifacts are back.
+        if not rollback_errors and 'report.json' in moved:
+            try:
+                os.replace(backup/'report.json', output/'report.json')
+            except OSError as rollback_error:
+                rollback_errors.append(str(rollback_error))
+        if rollback_errors:
+            error.add_note(f'rollback incomplete; recover previous artifacts from {backup}: '
+                           + '; '.join(rollback_errors))
+        else:
+            try:
+                shutil.rmtree(backup)
+            except OSError:
+                pass  # Old artifacts are restored; a leftover backup is recoverable.
+        raise
+    else:
+        try:
+            shutil.rmtree(backup)
+        except OSError:
+            pass  # Publication is committed; cleanup cannot turn it into a failed run.
+    return output/'report.json'
+
+
+class _DurationHistogram:
+    """192 fixed logarithmic bins, about 9% spacing; exact count and maximum."""
+    BOUNDS = tuple(int(1000 * 2 ** (index / 8)) for index in range(192))
+
+    def __init__(self):
+        self.bins = [0] * len(self.BOUNDS)
+        self.count = self.maximum = 0
+
+    def add(self, elapsed):
+        index = min(bisect_left(self.BOUNDS, elapsed), len(self.bins)-1)
+        self.bins[index] += 1
+        self.count += 1
+        self.maximum = max(self.maximum, elapsed)
+
+    def percentile(self, fraction):
+        target, cumulative = max(1, math.ceil(self.count*fraction)), 0
+        for index, count in enumerate(self.bins):
+            cumulative += count
+            if cumulative >= target:
+                # Overflow observations share the final bin; maximum remains exact.
+                return self.maximum if index == len(self.bins)-1 else min(self.maximum, self.BOUNDS[index])
+        return self.maximum
 
 
 def timestamp(value):
@@ -56,7 +166,7 @@ def code_hash() -> str:
 
 
 class ReplayFailed(RuntimeError):
-    """The runner applied a failing event; rebuild and replay verified input."""
+    """The runner aborted; rebuild and replay the original verified input."""
 
 
 def _decimal_fields(data, *names):
@@ -77,14 +187,15 @@ class Replay:
         self.last_key = None
         self.seen_digests: dict[str, str] = {}
         self.events_processed = 0
+        self.events_applied = 0
         self.last_commands = []
         self.day = None
         self.failed = False
         self.raw_sink, self.audit_sink = raw_sink, audit_sink
         self.raw_lines: list[str] = []      # compact canonical lines when no sink is configured
         self._input_hash = hashlib.sha256()
-        self._durations: dict[str, list[int]] = {}
-        self._started = None
+        self._durations: dict[str, _DurationHistogram] = {}
+        self._finished = False
         self._wall_ns = 0
 
     # ---------------------------------------------------------------- parse
@@ -213,6 +324,10 @@ class Replay:
             return lambda: e.set_calibration(table, at)
         if kind == 'account_snapshot':
             _decimal_fields(data, 'available_funds', 'net_liquidation')
+            if 'covered_order_ids' in data:
+                if not isinstance(data['covered_order_ids'], list):
+                    raise ValueError('covered_order_ids must be an array')
+                data['covered_order_ids'] = tuple(data['covered_order_ids'])
             snapshot = AccountSnapshot(received_at=at, **data)
             return lambda: e.set_account(snapshot, at)
         if kind == 'exchange_status':
@@ -265,9 +380,16 @@ class Replay:
         raise ValueError(f'unknown event type {kind}')
 
     # ------------------------------------------------------------- dispatch
-    def dispatch(self, event):
+    def _require_healthy(self):
         if self.failed:
             raise ReplayFailed('replay failed; rebuild the engine and replay verified input')
+
+    def mark_failed(self):
+        """Called by the output owner when closing or publishing evidence fails."""
+        self.failed = True
+
+    def dispatch(self, event):
+        self._require_healthy()
         started = time.perf_counter_ns()
         if not isinstance(event, dict):
             raise ValueError('event must be an object')
@@ -303,56 +425,80 @@ class Replay:
                             'requests', 'stream_health', 'quote_stream_health', 'data_reset',
                             'subscription_failed', 'fill', 'account_snapshot', 'exchange_status'):
                 e.poll(at)
+            self.events_applied += 1
+            if self.raw_sink is not None:
+                self._write(self.raw_sink, line + '\n')
+            else:
+                self.raw_lines.append(line)
+            self._drain_audit()
+            self.seen_digests[identity] = fingerprint
+            self.last_key, self.day = key, day
+            self.events_processed += 1
+            self._input_hash.update(line.encode('utf-8') + b'\n')
+            self._finished = False
         except Exception:
             self.failed = True
             raise
-        self.seen_digests[identity] = fingerprint
-        self.last_key, self.day = key, day
-        self.events_processed += 1
-        self._input_hash.update(line.encode('utf-8') + b'\n')
-        if self.raw_sink is not None:
-            self.raw_sink.write(line + '\n')
-        else:
-            self.raw_lines.append(line)
-        self._drain_audit()
         elapsed = time.perf_counter_ns() - started
-        self._durations.setdefault(kind, []).append(elapsed)
+        timings = self._durations.get(kind)
+        if timings is None:
+            timings = self._durations[kind] = _DurationHistogram()
+        timings.add(elapsed)
         self._wall_ns += elapsed
+
+    @staticmethod
+    def _write(sink, text):
+        written = sink.write(text)
+        if written is not None and written != len(text):
+            raise OSError('evidence sink did not accept the complete record')
 
     def _drain_audit(self):
         if self.audit_sink is not None and self.engine.audit:
             for record in self.engine.audit:
-                self.audit_sink.write(json.dumps(record, default=encode, ensure_ascii=False) + '\n')
+                self._write(self.audit_sink, json.dumps(record, default=encode, ensure_ascii=False) + '\n')
             self.engine.audit.clear()
+
+    def _flush_sinks(self):
+        for sink in (self.raw_sink, self.audit_sink):
+            if sink is not None and not getattr(sink, 'closed', False):
+                flush = getattr(sink, 'flush', None)
+                if flush is not None:
+                    flush()
 
     def finish(self):
         """Flush the final receive-time batch (idempotent)."""
-        if self.last_key is not None and not self.failed:
-            try:
+        self._require_healthy()
+        try:
+            if self.last_key is not None and not self._finished:
                 self.engine.flush(self.last_key[0])
-            except Exception:
-                self.failed = True
-                raise
             self._drain_audit()
+            self._flush_sinks()
+            self._finished = True
+        except Exception:
+            self.failed = True
+            raise
 
     def run(self, source):
-        with Path(source).open(encoding='utf-8') as stream:
-            for line_number, line in enumerate(stream, 1):
-                if line.strip():
-                    try:
-                        self.dispatch(json.loads(line))
-                    except (ValueError, KeyError, TypeError, ArithmeticError) as error:
-                        raise ValueError(f'{source}:{line_number}: {error}') from error
-        self.finish()
-        return self.report()
+        self._require_healthy()
+        try:
+            with Path(source).open(encoding='utf-8') as stream:
+                for line_number, line in enumerate(stream, 1):
+                    if line.strip():
+                        try:
+                            self.dispatch(json.loads(line))
+                        except (ValueError, KeyError, TypeError, ArithmeticError) as error:
+                            raise ValueError(f'{source}:{line_number}: {error}') from error
+            self.finish()
+            return self.report()
+        except Exception:
+            self.failed = True
+            raise
 
     # --------------------------------------------------------------- report
     def metrics(self):
-        def pct(values, p):
-            ordered = sorted(values)
-            return ordered[min(len(ordered) - 1, int(p * len(ordered)))] / 1e6
-        by_type = {kind: {'events': len(values), 'p50_ms': round(pct(values, .5), 4),
-                          'p99_ms': round(pct(values, .99), 4), 'max_ms': round(max(values) / 1e6, 4)}
+        by_type = {kind: {'events': values.count, 'p50_ms': round(values.percentile(.5)/1e6, 4),
+                          'p99_ms': round(values.percentile(.99)/1e6, 4),
+                          'max_ms': round(values.maximum/1e6, 4)}
                    for kind, values in sorted(self._durations.items())}
         processing = self._wall_ns / 1e9
         return {'processing_seconds': round(processing, 4),
@@ -360,9 +506,13 @@ class Replay:
                 'by_event_type': by_type,
                 'retained': {'event_digests': len(self.seen_digests),
                              'audit_records_in_memory': len(self.engine.audit),
-                             'journal_records': len(self.engine.book.journal)},
+                             'journal_records': len(self.engine.book.journal),
+                             'timing_bins': sum(len(values.bins) for values in self._durations.values())},
                 'queue_lag': 'NOT_APPLICABLE: offline replay has no live receive clock',
-                'note': 'Local CPU timing of the replay core; not broker or exchange latency.'}
+                'note': 'Local dispatch wall-clock timing including evidence writes; excludes input reading, '
+                        'final batch/flush and save; not broker or exchange latency. Percentiles are approximate '
+                        '(192 logarithmic bins per event type; overflow uses maximum). Digests retain one '
+                        'frozen trading day and still grow with unique events.'}
 
     def manifest(self):
         return {'code_sha256': code_hash(),
@@ -404,6 +554,16 @@ class Replay:
                 'interpretation': 'Replay safety evidence only; no profitability or broker execution claim.'}
 
     def save(self, output_directory, report=None):
+        self._require_healthy()
+        was_finished = self._finished
+        self.finish()
+        try:
+            return self._save(output_directory, report if was_finished else None)
+        except Exception:
+            self.failed = True
+            raise
+
+    def _save(self, output_directory, report=None):
         path = Path(output_directory).resolve()
         path.mkdir(parents=True, exist_ok=True)
         report = report if report is not None else self.report()

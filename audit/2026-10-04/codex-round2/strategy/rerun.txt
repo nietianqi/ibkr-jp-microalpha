@@ -1,0 +1,50 @@
+{
+  "new_grid_tail_omission": {
+    "grid_seconds": 7,
+    "jump_second": 59,
+    "valid": true,
+    "r_60": 6928.972742735018,
+    "volatility_bps": 0.0
+  },
+  "oversized_grid": {
+    "grid_seconds": 120,
+    "jump_second": 1,
+    "valid": true,
+    "r_60": 6928.972742735018,
+    "volatility_bps": 0.0
+  },
+  "labels": {
+    "partial_entry_label": "0",
+    "one_legal_partial_fill_path_net": "-2230.4320",
+    "all_delayed_quotes_label": "2417.5200",
+    "partial_exit_label": "-1770.0",
+    "first_exit_limit": "89.9",
+    "next_assumed_fill_bid": "80",
+    "same_two_child_exit_path_net_after_minimum_fees": "-1850.0",
+    "unimplemented_rules": [
+      "ordinary signal exits",
+      "volatility stop",
+      "submit latency",
+      "cancel/replace",
+      "partial entry"
+    ]
+  },
+  "independent_day_gate": {
+    "zero_days_row_allowed": true,
+    "reason": "net mean confidence bound passed",
+    "one_day_generated_mean": "100.00",
+    "one_day_generated_lower": "100.00",
+    "one_day_sample_count": 100,
+    "one_day_prediction_reliable": true
+  },
+  "previous_fixes": {
+    "past_twenty_valid_days_denominator": 1000.0,
+    "default_grid_anchor": {
+      "grid_seconds": 1,
+      "jump_second": 1,
+      "valid": true,
+      "r_60": 6928.972742735018,
+      "volatility_bps": 6928.972742735018
+    }
+  }
+}
