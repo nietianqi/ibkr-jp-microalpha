@@ -1,0 +1,16 @@
+{"decision_id": "0", "at": "2026-10-02T10:00:00+09:00", "completed_at": "2026-10-02T10:00:05+09:00", "features": {"x": 0.0}, "outcomes": {"a": "10", "b": "-10"}, "execution_source": "SIMULATED"}
+{"decision_id": "1", "at": "2026-10-03T10:00:00+09:00", "completed_at": "2026-10-03T10:00:05+09:00", "features": {"x": 1.0}, "outcomes": {"a": "10", "b": "-10"}, "execution_source": "SIMULATED"}
+{"decision_id": "2", "at": "2026-10-04T10:00:00+09:00", "completed_at": "2026-10-04T10:00:05+09:00", "features": {"x": 2.0}, "outcomes": {"a": "10", "b": "-10"}, "execution_source": "SIMULATED"}
+{"decision_id": "3", "at": "2026-10-05T10:00:00+09:00", "completed_at": "2026-10-05T10:00:05+09:00", "features": {"x": 0.0}, "outcomes": {"a": "10", "b": "-10"}, "execution_source": "SIMULATED"}
+{"decision_id": "4", "at": "2026-10-06T10:00:00+09:00", "completed_at": "2026-10-06T10:00:05+09:00", "features": {"x": 1.0}, "outcomes": {"a": "10", "b": "-10"}, "execution_source": "SIMULATED"}
+{"decision_id": "5", "at": "2026-10-07T10:00:00+09:00", "completed_at": "2026-10-07T10:00:05+09:00", "features": {"x": 2.0}, "outcomes": {"a": "10", "b": "-10"}, "execution_source": "SIMULATED"}
+{"decision_id": "6", "at": "2026-10-08T10:00:00+09:00", "completed_at": "2026-10-08T10:00:05+09:00", "features": {"x": 0.0}, "outcomes": {"a": "10", "b": "-10"}, "execution_source": "SIMULATED"}
+{"decision_id": "7", "at": "2026-10-09T10:00:00+09:00", "completed_at": "2026-10-09T10:00:05+09:00", "features": {"x": 1.0}, "outcomes": {"a": "10", "b": "-10"}, "execution_source": "SIMULATED"}
+{"decision_id": "8", "at": "2026-10-10T10:00:00+09:00", "completed_at": "2026-10-10T10:00:05+09:00", "features": {"x": 2.0}, "outcomes": {"a": "10", "b": "-10"}, "execution_source": "SIMULATED"}
+{"decision_id": "9", "at": "2026-10-11T10:00:00+09:00", "completed_at": "2026-10-11T10:00:05+09:00", "features": {"x": 0.0}, "outcomes": {"a": "10", "b": "-10"}, "execution_source": "SIMULATED"}
+{"decision_id": "10", "at": "2026-10-12T10:00:00+09:00", "completed_at": "2026-10-12T10:00:05+09:00", "features": {"x": 1.0}, "outcomes": {"a": "10", "b": "-10"}, "execution_source": "SIMULATED"}
+{"decision_id": "11", "at": "2026-10-13T10:00:00+09:00", "completed_at": "2026-10-13T10:00:05+09:00", "features": {"x": 2.0}, "outcomes": {"a": "10", "b": "-10"}, "execution_source": "SIMULATED"}
+{"decision_id": "12", "at": "2026-10-14T10:00:00+09:00", "completed_at": "2026-10-14T10:00:05+09:00", "features": {"x": 0.0}, "outcomes": {"a": "10", "b": "-10"}, "execution_source": "SIMULATED"}
+{"decision_id": "13", "at": "2026-10-15T10:00:00+09:00", "completed_at": "2026-10-15T10:00:05+09:00", "features": {"x": 1.0}, "outcomes": {"a": "10", "b": "-10"}, "execution_source": "SIMULATED"}
+{"decision_id": "14", "at": "2026-10-16T10:00:00+09:00", "completed_at": "2026-10-16T10:00:05+09:00", "features": {"x": 2.0}, "outcomes": {"a": "10", "b": "-10"}, "execution_source": "SIMULATED"}
+{"decision_id": "15", "at": "2026-10-17T10:00:00+09:00", "completed_at": "2026-10-17T10:00:05+09:00", "features": {"x": 0.0}, "outcomes": {"a": "10", "b": "-10"}, "execution_source": "SIMULATED"}

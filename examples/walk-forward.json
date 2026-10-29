@@ -1,0 +1,38 @@
+{
+  "dataset_id": "REPLACE_WITH_FROZEN_DATASET_ID",
+  "epsilon": {
+    "rs_60": 0.1,
+    "rs_30": 0.1
+  },
+  "variants": [
+    {
+      "variant_id": "rs60_only",
+      "weights": {
+        "rs_60": 1,
+        "rs_30": 0
+      },
+      "score_threshold": 1
+    },
+    {
+      "variant_id": "rs30_rs60",
+      "weights": {
+        "rs_60": 0.65,
+        "rs_30": 0.35
+      },
+      "score_threshold": 1
+    }
+  ],
+  "split": {
+    "train": 40,
+    "validate": 10,
+    "test": 10,
+    "holdout": 20,
+    "embargo": 1
+  },
+  "statistics": {
+    "alpha": 0.05,
+    "draws": 20000,
+    "seed": 7,
+    "block_days": 5
+  }
+}

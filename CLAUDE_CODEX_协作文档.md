@@ -1,6 +1,6 @@
 # Claude × Codex 协作文档：IBKR 日本股票多周期策略
 
-第 1 轮评审 / 第 2 轮修复复核 / 第 3 轮实施：2026-10-04（JST）· 维护方：Claude、Codex · 当前状态：第 12 节的 12 项问题已由 Codex 实施修复，状态为“已实施·待 Claude 独立复核”，详见第 13 节。第 2–12 节保留当时事实，最新实施与验证状态以第 13 节为准。
+维护方：Claude、Codex · 最新实施：2026-10-29（JST），双方意见综合及第 4 轮完善见第 14 节。第 2–13 节保留当时事实；第 13 节 12 项旧修复及第 14 节新增改动均保留“已实施·待独立复核”，未以本地测试代替 Claude 复核或实盘验收。
 
 本文档是两方协作的唯一问题台账。每个问题都有编号、位置、原因、影响、优先级、处置（删除/合并/重构/修复/新增/保留）、修改方案、验收标准、建议负责方和状态。修复时只需更新对应条目的状态，并在文末“变更记录”中追加一行。
 
@@ -1932,6 +1932,71 @@ python -m ibkr_microalpha demo --events audit/2026-10-04/codex-round3/demo/event
 
 ---
 
+## 14 双方意见综合与第 4 轮完善（2026-10-29）
+
+### 14.1 实施顺序与依据修正
+
+用户要求综合 Codex 与 Claude 的观点、整理思路并完善代码。本轮从 Git `bf61862` 的干净工作区开始，保留全部旧审计证据。共识顺序为：**正确的经济/时间口径 → 可复现的真实数据研究工具 → 市场与退出保护 → 真实交易适配与运维验收**。保持日内长仓趋势延续、L1 确认及主动限价的策略族；不凭讨论自动更改默认持有期、交易场所或订单类型。
+
+双方观点中需明确的边界：
+
+- “120 秒必然无法盈利”“公开 L1 的 IC 固定为某范围”“30–60 秒必然没有零售优势”均不能由当前人工数据证明。日波动平方根缩放、极端 z 值与线性 IC 的粗算可作情景分析，不能作为策略准入事实。当前默认 120 秒保留；新增 120/600/1800/3600 秒研究扫描及显式波动止损变体。
+- 按当前示例费率，平价往返的比例佣金本身约 16bp，另有最低佣金、价差与滑点；不能直接沿用“12.5–22.7bp”的通用区间。实际价格档位/数量的算术已保存于 [illustrative-costs.json](audit/2026-10-29/joint-round4/illustrative-costs.json)，该费率仍为演示值。
+- **负置信下界不等于证明负期望**。工具只有在足够样本、完整覆盖、足够 bootstrap 尾部解析度且上界为负时，才报告该模拟模型下的负期望证据；区间跨零、样本不足及未知路径分别标记。保守撮合器/报价基线都不是一切可行执行政策的数学上界，不能用其亏损淘汰整个策略族。
+- 20 日门槛是冻结的最低数据要求；t 值所需天数的 IID 粗算不是统一统计功效承诺。试验使用按日/连续多日块、完整参数登记、Bonferroni 家族区间及封存留出集；没有声称已实现 deflated Sharpe、SPA 或真实样本外优势。
+- IBKR 的 watchlist 数据是随产品/地区变化的采样流，不能固定假定所有品种都是 250ms。[官方 streaming data](https://www.interactivebrokers.com/docs/tws-api/doc/md/streaming-data)。账户更新文档对 `updatePortfolio` 未实现盈亏的三分钟描述，也不能等同于每种资金字段均严格三分钟更新。[官方账户更新](https://www.interactivebrokers.com/docs/tws-api/doc/accounts/updates)。本轮没有放宽资金快照时限或猜测资金屏障。
+
+### 14.2 代码实施台账
+
+| 编号 / 优先级 | 位置与实际改动 | 验收及边界 |
+| --- | --- | --- |
+| R4-01 / P1 | `provenance.py:FrozenParameterGuard/parameter_content_hash`、`config.py`、`engine.py:_clock`、`replay.py:dispatch`：非 demo 的 scaler/阈值/经济参数统一要求训练截止、可用时间、64位代码 SHA、参数内容 SHA；训练严格早于可用，接收时间不得早于可用，过期拒绝。修改权重或阈值不能复用旧引用 | 实现前 4 项新用例含 8 个失败子项；实现后未来 2099 年参数零订单、缺时间/同时间/错哈希拒绝，边界与到期通过。经济 row 的已有时间门控保留 |
+| R4-02 / P1 | `economics.py`、`research/labels.py/calibration.py`、`entry.py:_gate`：新增 `value_basis` 和逐实际成交路径成本基准。`REPLAY_POLICY_NET` 已含实际入场成本，只扣额外正成本；按实际成交股数而非目标股数，取路径最大增量同时下调均值/下界；不因价格改善凭空增加收益 | 完整工厂端到端：参考960.1、成交960.3、原净值-1070，复核仍-1070；partial40只按40计；unfilled不加益。不适用于当前价位的基准明确NO_TRADE；未宣称这是成交概率反事实模型 |
+| R4-03 / P1 | `research/labels.py`、`economics.py:calibration_evidence_error`：完整回放来源增加 `execution_source`。BROKER_REPORTS 需逐回报 `source_record_id`；含模拟/人工标记的输入降为 SIMULATED/ARTIFICIAL，未声明回报为 UNVERIFIED。模拟器产物不能通过正式部署门控 | 新测试验证模拟 fill 即使混合其他 broker 标记也不提升为 VERIFIED_REPLAY。原正向单元测试改为显式 UNIT_ONLY broker 协议桩，仍不是真实数据证据；旧无来源 artifact 需迁移 |
+| R4-04 / P1 | `execution.py:reconcile`：公共入口对完整性、归属、订单ID、下一ID、持仓数量和布尔值严格校验，非法快照锁定/查询且不半覆盖旧事实 | `"false"`、1、坏ID/数量不能解锁；原 JSON Replay 严格校验继续有效 |
+| R4-05 / P1 | `market.py:minimum_price/sell_limit_price`、`positions.py:request_exit`：卖出限价夹到有效正价档及权威日价格区间；无报价/未知状态/不支持规则时保留残仓、去重报警；继续保留可卖量和撤单确认屏障 | 合法bid0.1能生成0.1 SELL；HALT不生成新SELL；未确认撤单不能释放可卖量。旧EXE-03测试改为真实价格规则异常注入，不能继续把合法最低价当作错误验收 |
+| R4-06 / P1 | `market_controls.py`、`config.py`、`engine.py`、`entry.py`、`replay.py`：新增每日 PriceBand、时点 InstrumentRule、逐股 SymbolStatus 与 RestrictedWindow；接收时点、有效期、source/version和冲突检查；计划/发送前均核对上限缓冲、合法价档、venue和数量。状态或价格带不可信的BBO也不能进入账户估值 | 市场事实缺失阻入场，HALT事件即时复核排队BUY；未来事实不可用，旧覆盖过期不复活；越界报价不能制造账面利润。支持离线TSE/TSEJ场所标识，其他场所拒绝；这不是实际订单路由能力。限幅需权威输入，不按昨收猜特殊扩幅/除权基准 |
+| R4-07 / P1 | `beta.py`、`features.py`、`replay.py`：逐股过去配对收益估计 beta、显式向1收缩、known_at/有效期/样本数；可要求逐股beta，缺失不回退。PIT规则贯穿报价、成交、历史窗口与风险价档。`scale_stop_to_holding`显式启用sqrt(H/60)波动止损，保留旧默认 | beta OLS2经50%收缩得1.5，未来不可用、过期不复活；波动止损比值sqrt(2)用例通过。收缩程度和扩散假设需真实研究，未把基准自动改成OSE期货 |
+| R4-08 / P0 | `recording.py`、`ibkr_readonly.py`、CLI `capture-callbacks/capture-ibkr`：原始callback与规范事件双轨归档；字段独立接收时间、显式数量单位、单一累计量来源、farm/延迟/断流重置；输出失败封锁。可选官方ibapi只读行情驱动，合约未确认不连接，bounded queue溢出失败 | tick8和RTVolume不叠加lastSize；generic233对应回调48；close9不作实时last；halt0不伪造连续交易；farm恢复不产生逐股healthy=true。真实采集器代码已编译，SDK/TWS现场连接 **未验证且本轮未连接** |
+| R4-09 / P0 | `research/simulation.py`：独立版本化保守撮合，提交/ack/撤单延迟、到达后报价、价格穿越、参与率、子单费用、实际部分量、撤单期间成交、报价覆盖与残仓unknown、同一/未变盘口不重复使用流动性；可显式用预决策波动缩放止损 | 未成交、partial、缺覆盖、同盘口重用、取消延迟与SIMULATED来源用例。为条件单意图实验，不是完整组合回测或真实队列；未知路径不得转成0 |
+| R4-10 / P0 | `research/scan.py`、CLI `scan-holdings`：120/600/1800/3600持有期、分数桶/股票/数量、费用与滑点敏感性；冻结session预算，不够时段的意图记为明确政策拒绝；完整/未成交/未知覆盖、日/多日块区间、Bonferroni及尾部解析度提示 | 任何unknown使all-intents推断为空，known-only仅诊断；负LCB不判负期望。大量比较draws不足时标INCONCLUSIVE_BOOTSTRAP_RESOLUTION。新示例24单元均无真实优势结论 |
+| R4-11 / P0 | `research/experiments.py`、CLI `walk-forward`：注册全部变体/数据与代码哈希/统计方法/切分；每fold仅训练段拟合scaler，验证段择参，外层test只评价；训练标签需在验证前完成；留出集显式使用且独占文件在评价前消耗 | 修改holdout的结果不改变外层选择；重复消费同dataset+days拒绝；未来完成的训练标签拒绝。此驱动处理预先产生的完整条件研究结果，不生成可部署校准；完整策略/组合政策仍需协调器真实回报重放 |
+| R4-12 / P1 | `recovery.py:restore_from_events`：唯一受支持的全策略恢复从完整事件和匹配manifest重建；保留日损失锁/意图次数/冷却等，断连、清掉旧命令/候选/报价，要求新对账和资金屏障 | 完整输入恢复保留daily_loss与日计数，不会单凭execution快照开仓。它不是发送前WAL或崩溃一致性保证；缺失的原输入不能自动修复 |
+| R4-13 / P2 | `features.py:_get`惰性创建；研究文件哈希/事件解析流式，bootstrap先汇总日金额/数量再重采样 | 已有股票重复查询只构造一次状态。未删安全去重，全天digest/journal仍增长；未声称实盘RSS或吞吐已达标 |
+
+### 14.3 数据和接口迁移
+
+1. 非 demo 参数来源新增 `available_at`、`content_sha256`，`code_hash` 为64位小写 SHA。完成真实拟合并确定全部配置后，调用 `parameter_content_hash(document, group)` 为三组绑定实际内容；不得给历史参数补造可用时间。旧无完整来源文件将被拒绝。
+2. 正式经济行需明确 `REPLAY_POLICY_NET`、完整 `entry_cost_basis`、`execution_source=BROKER_REPORTS` 与输入追溯记录；旧仅有 VERIFIED_REPLAY 标签不再足以准入。人工/模拟结果始终不能作为真实执行证据。
+3. 新 replay 事件：`price_band`、`instrument_rule`、`symbol_status`、`symbol_window`、`beta_estimate`。市场事件需配置显式启用 `market_controls`。逐股事件窗口仅阻入场，风险退出独立处理；SQ/调仓/披露日的基准剔除仍需真实数据准备层按当时已知标签处理，不能自动猜测。
+4. `examples/guarded-demo.json` 明确启用资金、行情心跳、PIT市场事实、逐股beta及波动止损要求，仍是人工demo；事实缺失时阻断是预期行为。`capture-template.json` 合约确认默认false、单位未知，不可原样接真实行情。
+5. 采集字段时钟为本地接收时间；API不给交易所时间就保持未知。farm与参考合约活动仅说明各自范围，不能证明某股quiet BBO可一直使用。官方ibapi驱动不合成独立marketStatus、逐股heartbeat或资金屏障。
+6. `restore_from_events` 仅支持同日、完整输入与相同代码/配置；日切、传输结果不明、外部账户仓位、未知费用需要独立受控流程。不能把旧execution snapshot塞入新Engine当完整恢复。
+
+### 14.4 可复现命令与验收
+
+```powershell
+python -m ibkr_microalpha capture-callbacks callbacks.jsonl --capture-config examples/capture-template.json --output runs/capture
+python -m ibkr_microalpha scan-holdings runs/capture/events.jsonl --decisions decisions.jsonl --config verified-research.json --plan examples/holding-scan.json --registry runs/experiments --output runs/holding-scan.json
+python -m ibkr_microalpha walk-forward observations.jsonl --plan examples/walk-forward.json --registry runs/experiments --output runs/walk-forward.json
+# 最终保留集只在协议锁定后显式增加 --use-final-holdout，并且只消耗一次。
+python audit/2026-10-29/joint-round4/validate.py
+```
+
+最终本地 **324 项测试通过，新增68项，0失败/错误/跳过**；编译、原配置及guarded-demo配置通过；3,797事件人工demo用新引擎重放业务报告一致，1意图、持仓0、活动订单0，净亏损仍-1,190 JPY。持有期/费用/滑点24单元输出来源SIMULATED且deployable=false，全部为INSUFFICIENT_INDEPENDENT_DATA；未知覆盖分支由另行回归测试验证，不产生真实收益结论。CLI额外验证7条人工callback转1条规范quote、2个walk-forward fold，最终holdout保持封存。
+
+证据：[validation-results.json](audit/2026-10-29/joint-round4/validation-results.json)、[test-results.txt](audit/2026-10-29/joint-round4/test-results.txt)、[source-manifest.json](audit/2026-10-29/joint-round4/source-manifest.json)、[holding-screen.json](audit/2026-10-29/joint-round4/holding-screen.json)。旧round2/round3未覆盖。新旧测试中有关来源/成本basis/参数引用的预期已按新契约迁移，未通过删除风险断言维持绿灯。
+
+### 14.5 明确保留的下一阶段工作
+
+- **数据/策略证据**：尚无真实多日数据、真实佣金/滑点/成交率、幸存者偏差已消除的股票池、稳定样本外净优势或足够功效。研究工具不替代这些证据；按价格/流动性/时段同质分层，并保留留出股票检验。
+- **完整生产执行**：未实现实盘下单适配、已认证资金快照屏障、全账户与策略归属分层、IOC或OCA/券商止损政策。IOC支持、模拟止损触发规则和OCA部分成交竞态必须用真实合约与回报验证，不能假定OCA保证无超卖。
+- **运维**：尚无独立进程watchdog、发送前持久化WAL/全状态checkpoint、系统级告警推送、完整端到端延迟/实施损耗分解、多日回撤治理、全天内存/磁盘容量实测。新捕获只测可观察的本机处理，未观察到的队列/decision/send/ack保持UNKNOWN。RPT-05、RPL-02仍部分完成。
+- **市场机制**：PIT权威参考与事件入口已落地，真实状态源、公司行为/特殊限幅、调仓/SQ/披露日标注及行情场所一致性仍需数据供应证据。原价档表在2027-03-01前停止适用的保护保留；JPX已公布届时转为按流动性分类，需在此前独立实施新版规则。[JPX价档说明](https://www.jpx.co.jp/english/equities/trading/domestic/07.html)
+- **协作验收**：Claude提供的本轮建议不等同于已独立复核第3轮12项；旧条目继续待复核。本轮并行代理中途触发额度限制，已落地部分由主代理接手完成和全套验证，没有以未完成的代理报告当验收。当前所有结果为本地研究工程证据，实盘Gate保持 **NOT_VERIFIED**。
+
+---
+
 ## 附录 A 建议的目标流程
 
 ```mermaid
@@ -1962,3 +2027,4 @@ flowchart TD
 | 2026-10-04 | Claude | 应用户要求实施第 1 轮修复（第 11 节）：195 项测试通过，探针全部翻转（`probe-results-after.json`），更新 README、IMPLEMENTATION_STATUS、示例配置与 demo；第 2 节状态改为“已实施/部分实施·待复核”，等待 Codex 复核 |
 | 2026-10-04 | Codex | 独立复核 Git e592e34 的 Claude 修复版，195 项回归通过、11 个原探针跑通、3797事件demo新引擎重放一致；第12节新增12项可复现问题、修法示例与验收，区分已关闭范围和部分修复，证据隔离于 `audit/2026-10-04/codex-round2/`。未改生产代码、现有配置或测试 |
 | 2026-10-04 | Codex | 按用户“修复以上问题”实施第12节12项修复，并改为有界耗时统计；新增第13节实施/迁移/验收记录，更新README与IMPLEMENTATION_STATUS，证据隔离于codex-round3。状态为已实施·待Claude独立复核；未连接券商或提交Git |
+| 2026-10-29 | Codex | 综合双方观点实施第14节：时间/成本/来源正确性、严格对账与最低价退出、PIT市场控制与beta、只读采集、保守撮合、持有期扫描、试验登记/封存holdout及完整输入恢复入口；324测试含68新增通过，24个人工研究单元无优势结论。实盘仍NOT_VERIFIED，未进行外部连接或推送 |

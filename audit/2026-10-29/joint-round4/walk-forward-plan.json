@@ -1,0 +1,35 @@
+{
+  "dataset_id": "SYNTHETIC_JOINT_ROUND4_FOLDS",
+  "epsilon": {
+    "x": 0.1
+  },
+  "variants": [
+    {
+      "variant_id": "a",
+      "weights": {
+        "x": 1.0
+      },
+      "score_threshold": -100.0
+    },
+    {
+      "variant_id": "b",
+      "weights": {
+        "x": 1.0
+      },
+      "score_threshold": -100.0
+    }
+  ],
+  "split": {
+    "train": 4,
+    "validate": 2,
+    "test": 2,
+    "holdout": 3,
+    "embargo": 1
+  },
+  "statistics": {
+    "alpha": 0.05,
+    "draws": 400,
+    "seed": 7,
+    "block_days": 1
+  }
+}

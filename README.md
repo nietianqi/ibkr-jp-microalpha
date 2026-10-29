@@ -1,6 +1,6 @@
 # IBKR 日本股票多周期研究核心
 
-根据 `IBKR日本股票多周期协同策略文档.md` v1.2 新建，并按 `CLAUDE_CODEX_协作文档.md`（2026-10-04 评审）完成 Claude 首轮修复及 Codex 复核发现问题的修复。本项目实现 Python 3.11+ 的离线研究、事件回放、订单生命周期核心和研究校准工具，仅使用标准库。Python 3.14 下已运行验证。
+根据 `IBKR日本股票多周期协同策略文档.md` v1.2 新建，最新双方意见综合及第4轮完善见 `CLAUDE_CODEX_协作文档.md` 第14节（2026-10-29）。Python 3.11+ 离线研究、事件回放、订单生命周期及研究工具使用标准库；可选只读行情采集器需要另行提供官方 `ibapi` SDK。Python 3.14 下已运行验证。
 
 四层依次负责环境、主信号、入场确认和执行。账户风险、对账、时间退出始终优先于新入场。首版为日内长仓趋势延续，多股票共享资金与风险额度。
 
@@ -104,6 +104,29 @@ L1 配置使用 `vwap_proxy_*`，冻结版本必须为 `l1-proxy-*`。增强版�
 
 `build_calibration_rows` 仅接受该工厂标签，按交易日区块自助法生成置信下界并附完整政策、费用、代码、输入、标签哈希和训练截止证据。`engine.min_independent_days` 必须显式冻结且至少为 2（示例为 20，并非研究上足够的保证）；1 日高密度样本和矛盾 day/count 被拒绝，不足的桶省略。非 demo 只接受 `VERIFIED_REPLAY` 且训练截止严格早于表可用时刻；人工标签只能进入明确的 demo。追价上限须与标签原执行政策一致。`walk_forward`、`fit_scalers` 和 `calibration_table_event` 仍用于离线切分、拟合及序列化，不连接券商。
 
+第4轮增加以下可执行研究链路：
+
+```powershell
+# 原始回调 → 原始证据、规范replay事件、捕获报告（需先填写真实已知合约和单位）
+python -m ibkr_microalpha capture-callbacks callbacks.jsonl --capture-config examples/capture-template.json --output runs/capture
+# 预登记决策与参数网格 → 2/10/30/60分钟、费用/滑点敏感性研究
+python -m ibkr_microalpha scan-holdings runs/capture/events.jsonl --decisions decisions.jsonl --config verified-research.json --plan examples/holding-scan.json --registry runs/experiments --output runs/holding-scan.json
+# 每fold训练scaler、验证择参、外层test；最终holdout默认封存
+python -m ibkr_microalpha walk-forward observations.jsonl --plan examples/walk-forward.json --registry runs/experiments --output runs/walk-forward.json
+```
+
+`callbacks.jsonl` 每行字段为 `callback,received_at,request_id,data`；tickPrice/tickSize 使用 `data.tick_type` 和 `price/size`。bid/ask 保留各自本地接收时间，未知交易所时间不补造。只固定选用 tick8 或 RTVolume 一种累计量，并显式配置单位。farm恢复、halt=0及参考合约活动都不证明该股处于连续交易或有逐股heartbeat，缺权威状态的报价保留 UNKNOWN。模板 `contract_verified=false`，可选 `capture-ibkr --capture-config ... --output ...` 会在合约未确认时拒绝连接；本轮没有连接测试，也没有下单接口。
+
+`decisions.jsonl` 每行包括 `decision_id,symbol,at,score,quantity`，可提供决策前已知 `volatility_bps,volatility_window_seconds`。决策和网格必须预先冻结；不能看完结果再挑决策。版本化撮合器明确标记 SIMULATED，包含提交/确认/撤单延迟、部分成交、盘口消耗和覆盖未知；扫描是条件单意图实验，尚非完整策略/组合回测。任何未知路径使 all-intents 统计为空；负下界只表示未证实正优势，上界为负才支持该模型下负期望。比较多时自动用Bonferroni，并报告bootstrap尾部解析度不足。模拟结果不能部署。
+
+`observations.jsonl` 包括 `decision_id,at,completed_at,features,outcomes,execution_source`；`outcomes` 按预登记的 `variant_id` 保存已完整获得的净结果，不能删除不利/未知分支。实验登记全部试验、统计方法及代码/数据哈希。只有显式 `--use-final-holdout` 才评估保留集；同dataset与日期集合的消费凭证在评估前独占写入，失败也不恢复成可再次查看。输出不宣称已实现deflated Sharpe、SPA或真实盈利优势。
+
+非demo的 `provenance.scalers/thresholds/economics` 现在统一要求 `trained_until < available_at`、`code_hash`（64位小写SHA）及 `content_sha256`；使用 `parameter_content_hash(document, group)` 绑定实际冻结内容。接收时间早于可用或超过有效期会被拒绝。正式经济行使用 `REPLAY_POLICY_NET` 和实际成交成本基准；回报需 `execution_source=BROKER_REPORTS,source_record_id`，含模拟、人工或缺失来源不能升级成真实执行证据。旧artifact须按第14.3节迁移。
+
+`market_controls` 可显式启用逐日权威价格带、PIT价档/场所/手数规则、逐股状态及受限事件窗口；对应事件为 `price_band,instrument_rule,symbol_status,symbol_window`。逐股 `beta_estimate` 提供过去配对估计、收缩和可用/到期时间；缺失/过期可阻断信号。`examples/guarded-demo.json` 为这些保护的人工配置样例，不能作为真实校准或真实市场事实。`scale_stop_to_holding` 显式采用sqrt(H/60)波动缩放假设，默认保持旧行为，效果须研究验证。
+
+完整策略恢复使用 `recovery.restore_from_events(document, events, expected_manifest=...)`，重建风险锁和计数后断连、丢弃旧命令与报价，等待新的完整对账/资金屏障。execution快照本身仍不能恢复全策略；传输WAL、跨日管理、独立watchdog及全账户混合持仓管理尚待生产阶段实现。
+
 ## 验证边界
 
-评审问题台账与实施状态见 `CLAUDE_CODEX_协作文档.md`，T01–T30 对照见 `IMPLEMENTATION_STATUS.md`。没有 TWS/Gateway socket 客户端、真实账户凭证、实时数据订阅、真实交易所状态源或样本外盈利证据。CLI 仅支持 replay，不能打开实盘。
+评审问题台账与实施状态见 `CLAUDE_CODEX_协作文档.md`，T01–T30 对照见 `IMPLEMENTATION_STATUS.md`。最新验收324项测试通过，其中68项新增；完整命令为 `python audit/2026-10-29/joint-round4/validate.py`。已提供可选只读行情采集源码，真实SDK/通道尚未现场验证。真实数据、状态源、费用与样本外优势证据仍缺失；策略交易执行保持离线，无实盘下单入口。

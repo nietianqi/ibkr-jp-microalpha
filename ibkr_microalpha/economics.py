@@ -64,6 +64,8 @@ def calibration_evidence_error(*, label_source: str, provenance: Mapping | None,
         return None
     if label_source != 'VERIFIED_REPLAY':
         return 'full-policy replay labels required; quote baselines are not deployable'
+    if provenance.get('execution_source') != 'BROKER_REPORTS':
+        return 'verified broker execution provenance required; simulation is research only'
     if any(provenance.get(name) is not True for name in ('complete_policy', 'includes_partial', 'fees_final')):
         return 'complete policy, partial branches and final fees must be verified'
     for name in ('policy_hash', 'labels_hash'):
@@ -145,6 +147,8 @@ class Prediction:
     sample_days: int = 0
     label_source: str = 'UNVERIFIED'
     provenance: dict | None = None
+    value_basis: str = 'REFERENCE_ASK_NET'
+    entry_cost_basis: dict | None = None
 
     def __post_init__(self) -> None:
         _decimal(self.mean_net_amount, "mean_net_amount", nonnegative=False)
@@ -166,6 +170,9 @@ class Prediction:
         if not isinstance(self.label_source, str):
             raise ValueError('label_source must be explicit')
         object.__setattr__(self, 'provenance', deepcopy(self.provenance))
+        object.__setattr__(self, 'entry_cost_basis', deepcopy(self.entry_cost_basis))
+        if self.value_basis not in ('REFERENCE_ASK_NET', 'REPLAY_POLICY_NET'):
+            raise ValueError('an explicit supported value_basis is required')
 
 
 @dataclass(frozen=True)
@@ -197,6 +204,8 @@ def prediction_gate(
         return EconomicGate(False, "holding policy mismatch")
     if prediction.sample_count < min_samples:
         return EconomicGate(False, "insufficient independent calibration samples")
+    if prediction.label_source == 'VERIFIED_REPLAY' and prediction.value_basis != 'REPLAY_POLICY_NET':
+        return EconomicGate(False,'verified replay value basis must include complete actual entry costs')
     evidence_error = calibration_evidence_error(
         label_source=prediction.label_source, provenance=prediction.provenance,
         sample_days=prediction.sample_days, sample_count=prediction.sample_count,
@@ -221,10 +230,51 @@ def adjust_prediction_for_price(prediction: Prediction, *, reference_price: Deci
         _decimal(value, name)
         if value <= ZERO:
             raise ValueError(f"{name} must be positive")
-    quantity = Decimal(prediction.quantity)
-    drift = quantity * (limit_price - reference_price)
-    fee_change = (commissions.commission(limit_price * quantity)
-                  - commissions.commission(reference_price * quantity))
+    if prediction.value_basis == 'REPLAY_POLICY_NET':
+        # Raw complete-policy labels already contain realized entry drift. Bound
+        # only ADDITIONAL cost against each observed filled path. The maximum
+        # nonnegative path increment shifts both mean and LCB conservatively;
+        # no optimistic average-quantity rescaling or price-improvement credit.
+        basis = prediction.entry_cost_basis
+        if not isinstance(basis, dict) or basis.get('version') != 'ACTUAL_FILLED_PATHS_V1':
+            raise ValueError('complete actual filled cost basis required for raw policy net')
+        paths = basis.get('paths')
+        if not isinstance(paths, (list, tuple)) or not paths:
+            raise ValueError('complete filled path cost basis unavailable')
+        budgets = []
+        for path in paths:
+            children = path.get('children') if isinstance(path, dict) else None
+            if not isinstance(children, (list, tuple)):
+                raise ValueError('invalid entry child cost basis')
+            budget, filled = ZERO, 0
+            for child in children:
+                qty = child.get('quantity')
+                if type(qty) is not int or qty <= 0:
+                    raise ValueError('actual filled quantity must be positive')
+                original_reference = Decimal(str(child['reference_price']))
+                actual = Decimal(str(child['actual_notional']))
+                _decimal(original_reference, 'original reference')
+                _decimal(actual, 'actual entry notional')
+                if original_reference <= 0 or actual <= 0:
+                    raise ValueError('positive actual entry cost basis required')
+                filled += qty
+                prior_drift = actual / qty - original_reference
+                comparison_price = reference_price + prior_drift
+                if comparison_price <= 0:
+                    raise ValueError('cost basis cannot transfer to current price')
+                price_increment = Decimal(qty) * (limit_price - comparison_price)
+                fee_increment = (commissions.commission(limit_price * qty)
+                                 - commissions.commission(comparison_price * qty))
+                budget += max(ZERO, price_increment + fee_increment)
+            if filled > prediction.quantity:
+                raise ValueError('actual filled quantity exceeds intent target')
+            budgets.append(budget)
+        drift, fee_change = max(budgets), ZERO
+    else:
+        quantity = Decimal(prediction.quantity)
+        drift = max(ZERO, quantity * (limit_price - reference_price))
+        fee_change = max(ZERO, commissions.commission(limit_price * quantity)
+                         - commissions.commission(reference_price * quantity))
     return replace(prediction,
                    mean_net_amount=prediction.mean_net_amount - drift - fee_change,
                    lower_net_amount=prediction.lower_net_amount - drift - fee_change)
@@ -234,8 +284,9 @@ def adjust_prediction_for_price(prediction: Prediction, *, reference_price: Deci
 class CalibrationRow:
     """One frozen research result: complete-policy net JPY per intent for a score bucket.
 
-    Values are stated at the candidate's reference ask and already include all
-    child-order fees, unfilled and partially filled branches (section 9/11).
+    REPLAY_POLICY_NET contains actual filled-path costs. REFERENCE_ASK_NET is
+    an explicitly separate forecast basis; neither may silently impersonate
+    the other. Complete intents include fees, unfilled and partial branches.
     """
     policy_id: str
     version: str
@@ -250,6 +301,8 @@ class CalibrationRow:
     max_chase_ticks: int
     label_source: str = 'UNVERIFIED'
     provenance: dict | None = None
+    value_basis: str = 'REFERENCE_ASK_NET'
+    entry_cost_basis: dict | None = None
 
     def __post_init__(self) -> None:
         if not self.policy_id or not self.version:
@@ -272,6 +325,9 @@ class CalibrationRow:
         if not isinstance(self.label_source, str):
             raise ValueError('label_source must be explicit')
         object.__setattr__(self, 'provenance', deepcopy(self.provenance))
+        object.__setattr__(self, 'entry_cost_basis', deepcopy(self.entry_cost_basis))
+        if self.value_basis not in ('REFERENCE_ASK_NET', 'REPLAY_POLICY_NET'):
+            raise ValueError('an explicit supported value_basis is required')
 
     def contains(self, score: float) -> bool:
         return self.score_low <= score and (self.score_high is None or score < self.score_high)
@@ -285,7 +341,8 @@ class CalibrationRow:
             verified = verified and self.provenance.get('max_chase_ticks') == self.max_chase_ticks
         return Prediction(self.policy_id, self.version, self.quantity, self.sample_count,
                           self.mean_net_amount, self.lower_net_amount, verified, verified, self.holding_seconds,
-                          self.sample_days, self.label_source, self.provenance)
+                          self.sample_days, self.label_source, self.provenance,
+                          self.value_basis, self.entry_cost_basis)
 
 
 class CalibrationTable:
@@ -301,6 +358,16 @@ class CalibrationTable:
             raise ValueError("calibration table needs CalibrationRow entries")
         self._rows: dict[tuple, list[CalibrationRow]] = {}
         for row in self.rows:
+            if row.label_source == 'VERIFIED_REPLAY':
+                if row.value_basis != 'REPLAY_POLICY_NET':
+                    raise ValueError('formal replay calibration must declare raw policy value basis')
+                references=[Decimal(str(child['reference_price']))
+                    for path in (row.entry_cost_basis or {}).get('paths',[])
+                    for child in path.get('children',[])]
+                reference=max(references,default=Decimal(1))
+                adjust_prediction_for_price(row.prediction(), reference_price=reference,
+                                            limit_price=reference,
+                                            commissions=CommissionSchedule(ZERO,ZERO,ZERO,'basis-validation'))
             key = (row.policy_id, row.version, row.holding_seconds, row.quantity)
             bucket = self._rows.setdefault(key, [])
             if any(not (row.score_high is not None and row.score_high <= other.score_low

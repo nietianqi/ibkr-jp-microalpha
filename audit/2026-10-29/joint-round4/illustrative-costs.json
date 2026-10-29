@@ -1,0 +1,41 @@
+{
+  "assumptions": "Frozen illustrative schedule; flat reference market, one tick spread, one entry and one exit slippage tick, TOPIX500. Not actual account fees.",
+  "rows": [
+    {
+      "reference_ask": "300",
+      "quantity": 100,
+      "entry_worst_limit": "300.1",
+      "exit_worst_limit": "299.8",
+      "fees": "160.0",
+      "price_cost": "30.0",
+      "round_trip_bps": "63.33333333333333333333333333"
+    },
+    {
+      "reference_ask": "960.3",
+      "quantity": 100,
+      "entry_worst_limit": "960.4",
+      "exit_worst_limit": "960.1",
+      "fees": "160.0",
+      "price_cost": "30.0",
+      "round_trip_bps": "19.78548370300947620535249401"
+    },
+    {
+      "reference_ask": "3000",
+      "quantity": 100,
+      "entry_worst_limit": "3001",
+      "exit_worst_limit": "2999.0",
+      "fees": "480.00000",
+      "price_cost": "200.0",
+      "round_trip_bps": "22.66666666666666666666666667"
+    },
+    {
+      "reference_ask": "5000",
+      "quantity": 100,
+      "entry_worst_limit": "5001",
+      "exit_worst_limit": "4998",
+      "fees": "799.9200",
+      "price_cost": "300",
+      "round_trip_bps": "21.99840000"
+    }
+  ]
+}

@@ -1,0 +1,569 @@
+{
+  "schema_version": 1,
+  "execution_source": "SIMULATED",
+  "deployable": false,
+  "trial_count": 24,
+  "statistics": {
+    "method": "CIRCULAR_DAY_BLOCK_PERCENTILE",
+    "family_alpha": 0.05,
+    "cell_alpha": 0.0020833333333333333,
+    "multiple_testing": "BONFERRONI",
+    "draws": 2000,
+    "seed": 7,
+    "block_days": 5,
+    "tail_draws": 2.0833333333333335,
+    "resolution_warning": true
+  },
+  "policy": {
+    "version": "conservative-quote-v1",
+    "holding_seconds": 120,
+    "submit_latency_seconds": 1,
+    "ack_latency_seconds": 1,
+    "cancel_latency_seconds": 1,
+    "entry_ttl_seconds": 2,
+    "exit_ttl_seconds": 3,
+    "entry_limit_ticks": 1,
+    "exit_slippage_ticks": 1,
+    "min_stop_ticks": 5,
+    "stop_bps": "15",
+    "stop_volatility_multiple": 0,
+    "participation_rate": "0.25",
+    "passive_entry": false,
+    "max_exit_children": 3,
+    "tick_category": "TOPIX500",
+    "max_quote_gap_seconds": 2,
+    "quality": {
+      "max_age_seconds": 2,
+      "max_field_skew_seconds": 0.5,
+      "require_field_times": true,
+      "valuation_max_age_seconds": 30,
+      "require_quote_heartbeat": false
+    }
+  },
+  "commission_schedule": {
+    "rate": "0.0008",
+    "minimum_per_order": "80",
+    "additional_rate": "0",
+    "version": "illustrative-fixed-v1"
+  },
+  "rows": [
+    {
+      "symbol": "STOCK_SYNTHETIC",
+      "quantity": 100,
+      "score_low": 0,
+      "score_high": null,
+      "holding_seconds": 120,
+      "fee_multiplier": "1",
+      "exit_slippage_ticks": 1,
+      "status": "INSUFFICIENT_INDEPENDENT_DATA",
+      "intents": 1,
+      "independent_days": 1,
+      "coverage": {
+        "COMPLETE": 1
+      },
+      "session_rejected": 0,
+      "all_intents_mean": null,
+      "lower": null,
+      "upper": null,
+      "known_only_mean": "-680.0",
+      "unknown_intents": []
+    },
+    {
+      "symbol": "STOCK_SYNTHETIC",
+      "quantity": 100,
+      "score_low": 0,
+      "score_high": null,
+      "holding_seconds": 120,
+      "fee_multiplier": "1.5",
+      "exit_slippage_ticks": 1,
+      "status": "INSUFFICIENT_INDEPENDENT_DATA",
+      "intents": 1,
+      "independent_days": 1,
+      "coverage": {
+        "COMPLETE": 1
+      },
+      "session_rejected": 0,
+      "all_intents_mean": null,
+      "lower": null,
+      "upper": null,
+      "known_only_mean": "-760.00",
+      "unknown_intents": []
+    },
+    {
+      "symbol": "STOCK_SYNTHETIC",
+      "quantity": 100,
+      "score_low": 0,
+      "score_high": null,
+      "holding_seconds": 120,
+      "fee_multiplier": "2",
+      "exit_slippage_ticks": 1,
+      "status": "INSUFFICIENT_INDEPENDENT_DATA",
+      "intents": 1,
+      "independent_days": 1,
+      "coverage": {
+        "COMPLETE": 1
+      },
+      "session_rejected": 0,
+      "all_intents_mean": null,
+      "lower": null,
+      "upper": null,
+      "known_only_mean": "-840.0",
+      "unknown_intents": []
+    },
+    {
+      "symbol": "STOCK_SYNTHETIC",
+      "quantity": 100,
+      "score_low": 0,
+      "score_high": null,
+      "holding_seconds": 120,
+      "fee_multiplier": "1",
+      "exit_slippage_ticks": 2,
+      "status": "INSUFFICIENT_INDEPENDENT_DATA",
+      "intents": 1,
+      "independent_days": 1,
+      "coverage": {
+        "COMPLETE": 1
+      },
+      "session_rejected": 0,
+      "all_intents_mean": null,
+      "lower": null,
+      "upper": null,
+      "known_only_mean": "-680.0",
+      "unknown_intents": []
+    },
+    {
+      "symbol": "STOCK_SYNTHETIC",
+      "quantity": 100,
+      "score_low": 0,
+      "score_high": null,
+      "holding_seconds": 120,
+      "fee_multiplier": "1.5",
+      "exit_slippage_ticks": 2,
+      "status": "INSUFFICIENT_INDEPENDENT_DATA",
+      "intents": 1,
+      "independent_days": 1,
+      "coverage": {
+        "COMPLETE": 1
+      },
+      "session_rejected": 0,
+      "all_intents_mean": null,
+      "lower": null,
+      "upper": null,
+      "known_only_mean": "-760.00",
+      "unknown_intents": []
+    },
+    {
+      "symbol": "STOCK_SYNTHETIC",
+      "quantity": 100,
+      "score_low": 0,
+      "score_high": null,
+      "holding_seconds": 120,
+      "fee_multiplier": "2",
+      "exit_slippage_ticks": 2,
+      "status": "INSUFFICIENT_INDEPENDENT_DATA",
+      "intents": 1,
+      "independent_days": 1,
+      "coverage": {
+        "COMPLETE": 1
+      },
+      "session_rejected": 0,
+      "all_intents_mean": null,
+      "lower": null,
+      "upper": null,
+      "known_only_mean": "-840.0",
+      "unknown_intents": []
+    },
+    {
+      "symbol": "STOCK_SYNTHETIC",
+      "quantity": 100,
+      "score_low": 0,
+      "score_high": null,
+      "holding_seconds": 600,
+      "fee_multiplier": "1",
+      "exit_slippage_ticks": 1,
+      "status": "INSUFFICIENT_INDEPENDENT_DATA",
+      "intents": 1,
+      "independent_days": 1,
+      "coverage": {
+        "COMPLETE": 1
+      },
+      "session_rejected": 0,
+      "all_intents_mean": null,
+      "lower": null,
+      "upper": null,
+      "known_only_mean": "-680.0",
+      "unknown_intents": []
+    },
+    {
+      "symbol": "STOCK_SYNTHETIC",
+      "quantity": 100,
+      "score_low": 0,
+      "score_high": null,
+      "holding_seconds": 600,
+      "fee_multiplier": "1.5",
+      "exit_slippage_ticks": 1,
+      "status": "INSUFFICIENT_INDEPENDENT_DATA",
+      "intents": 1,
+      "independent_days": 1,
+      "coverage": {
+        "COMPLETE": 1
+      },
+      "session_rejected": 0,
+      "all_intents_mean": null,
+      "lower": null,
+      "upper": null,
+      "known_only_mean": "-760.00",
+      "unknown_intents": []
+    },
+    {
+      "symbol": "STOCK_SYNTHETIC",
+      "quantity": 100,
+      "score_low": 0,
+      "score_high": null,
+      "holding_seconds": 600,
+      "fee_multiplier": "2",
+      "exit_slippage_ticks": 1,
+      "status": "INSUFFICIENT_INDEPENDENT_DATA",
+      "intents": 1,
+      "independent_days": 1,
+      "coverage": {
+        "COMPLETE": 1
+      },
+      "session_rejected": 0,
+      "all_intents_mean": null,
+      "lower": null,
+      "upper": null,
+      "known_only_mean": "-840.0",
+      "unknown_intents": []
+    },
+    {
+      "symbol": "STOCK_SYNTHETIC",
+      "quantity": 100,
+      "score_low": 0,
+      "score_high": null,
+      "holding_seconds": 600,
+      "fee_multiplier": "1",
+      "exit_slippage_ticks": 2,
+      "status": "INSUFFICIENT_INDEPENDENT_DATA",
+      "intents": 1,
+      "independent_days": 1,
+      "coverage": {
+        "COMPLETE": 1
+      },
+      "session_rejected": 0,
+      "all_intents_mean": null,
+      "lower": null,
+      "upper": null,
+      "known_only_mean": "-680.0",
+      "unknown_intents": []
+    },
+    {
+      "symbol": "STOCK_SYNTHETIC",
+      "quantity": 100,
+      "score_low": 0,
+      "score_high": null,
+      "holding_seconds": 600,
+      "fee_multiplier": "1.5",
+      "exit_slippage_ticks": 2,
+      "status": "INSUFFICIENT_INDEPENDENT_DATA",
+      "intents": 1,
+      "independent_days": 1,
+      "coverage": {
+        "COMPLETE": 1
+      },
+      "session_rejected": 0,
+      "all_intents_mean": null,
+      "lower": null,
+      "upper": null,
+      "known_only_mean": "-760.00",
+      "unknown_intents": []
+    },
+    {
+      "symbol": "STOCK_SYNTHETIC",
+      "quantity": 100,
+      "score_low": 0,
+      "score_high": null,
+      "holding_seconds": 600,
+      "fee_multiplier": "2",
+      "exit_slippage_ticks": 2,
+      "status": "INSUFFICIENT_INDEPENDENT_DATA",
+      "intents": 1,
+      "independent_days": 1,
+      "coverage": {
+        "COMPLETE": 1
+      },
+      "session_rejected": 0,
+      "all_intents_mean": null,
+      "lower": null,
+      "upper": null,
+      "known_only_mean": "-840.0",
+      "unknown_intents": []
+    },
+    {
+      "symbol": "STOCK_SYNTHETIC",
+      "quantity": 100,
+      "score_low": 0,
+      "score_high": null,
+      "holding_seconds": 1800,
+      "fee_multiplier": "1",
+      "exit_slippage_ticks": 1,
+      "status": "INSUFFICIENT_INDEPENDENT_DATA",
+      "intents": 1,
+      "independent_days": 1,
+      "coverage": {
+        "COMPLETE": 1
+      },
+      "session_rejected": 0,
+      "all_intents_mean": null,
+      "lower": null,
+      "upper": null,
+      "known_only_mean": "-680.0",
+      "unknown_intents": []
+    },
+    {
+      "symbol": "STOCK_SYNTHETIC",
+      "quantity": 100,
+      "score_low": 0,
+      "score_high": null,
+      "holding_seconds": 1800,
+      "fee_multiplier": "1.5",
+      "exit_slippage_ticks": 1,
+      "status": "INSUFFICIENT_INDEPENDENT_DATA",
+      "intents": 1,
+      "independent_days": 1,
+      "coverage": {
+        "COMPLETE": 1
+      },
+      "session_rejected": 0,
+      "all_intents_mean": null,
+      "lower": null,
+      "upper": null,
+      "known_only_mean": "-760.00",
+      "unknown_intents": []
+    },
+    {
+      "symbol": "STOCK_SYNTHETIC",
+      "quantity": 100,
+      "score_low": 0,
+      "score_high": null,
+      "holding_seconds": 1800,
+      "fee_multiplier": "2",
+      "exit_slippage_ticks": 1,
+      "status": "INSUFFICIENT_INDEPENDENT_DATA",
+      "intents": 1,
+      "independent_days": 1,
+      "coverage": {
+        "COMPLETE": 1
+      },
+      "session_rejected": 0,
+      "all_intents_mean": null,
+      "lower": null,
+      "upper": null,
+      "known_only_mean": "-840.0",
+      "unknown_intents": []
+    },
+    {
+      "symbol": "STOCK_SYNTHETIC",
+      "quantity": 100,
+      "score_low": 0,
+      "score_high": null,
+      "holding_seconds": 1800,
+      "fee_multiplier": "1",
+      "exit_slippage_ticks": 2,
+      "status": "INSUFFICIENT_INDEPENDENT_DATA",
+      "intents": 1,
+      "independent_days": 1,
+      "coverage": {
+        "COMPLETE": 1
+      },
+      "session_rejected": 0,
+      "all_intents_mean": null,
+      "lower": null,
+      "upper": null,
+      "known_only_mean": "-680.0",
+      "unknown_intents": []
+    },
+    {
+      "symbol": "STOCK_SYNTHETIC",
+      "quantity": 100,
+      "score_low": 0,
+      "score_high": null,
+      "holding_seconds": 1800,
+      "fee_multiplier": "1.5",
+      "exit_slippage_ticks": 2,
+      "status": "INSUFFICIENT_INDEPENDENT_DATA",
+      "intents": 1,
+      "independent_days": 1,
+      "coverage": {
+        "COMPLETE": 1
+      },
+      "session_rejected": 0,
+      "all_intents_mean": null,
+      "lower": null,
+      "upper": null,
+      "known_only_mean": "-760.00",
+      "unknown_intents": []
+    },
+    {
+      "symbol": "STOCK_SYNTHETIC",
+      "quantity": 100,
+      "score_low": 0,
+      "score_high": null,
+      "holding_seconds": 1800,
+      "fee_multiplier": "2",
+      "exit_slippage_ticks": 2,
+      "status": "INSUFFICIENT_INDEPENDENT_DATA",
+      "intents": 1,
+      "independent_days": 1,
+      "coverage": {
+        "COMPLETE": 1
+      },
+      "session_rejected": 0,
+      "all_intents_mean": null,
+      "lower": null,
+      "upper": null,
+      "known_only_mean": "-840.0",
+      "unknown_intents": []
+    },
+    {
+      "symbol": "STOCK_SYNTHETIC",
+      "quantity": 100,
+      "score_low": 0,
+      "score_high": null,
+      "holding_seconds": 3600,
+      "fee_multiplier": "1",
+      "exit_slippage_ticks": 1,
+      "status": "INSUFFICIENT_INDEPENDENT_DATA",
+      "intents": 1,
+      "independent_days": 1,
+      "coverage": {
+        "COMPLETE": 1
+      },
+      "session_rejected": 0,
+      "all_intents_mean": null,
+      "lower": null,
+      "upper": null,
+      "known_only_mean": "-680.0",
+      "unknown_intents": []
+    },
+    {
+      "symbol": "STOCK_SYNTHETIC",
+      "quantity": 100,
+      "score_low": 0,
+      "score_high": null,
+      "holding_seconds": 3600,
+      "fee_multiplier": "1.5",
+      "exit_slippage_ticks": 1,
+      "status": "INSUFFICIENT_INDEPENDENT_DATA",
+      "intents": 1,
+      "independent_days": 1,
+      "coverage": {
+        "COMPLETE": 1
+      },
+      "session_rejected": 0,
+      "all_intents_mean": null,
+      "lower": null,
+      "upper": null,
+      "known_only_mean": "-760.00",
+      "unknown_intents": []
+    },
+    {
+      "symbol": "STOCK_SYNTHETIC",
+      "quantity": 100,
+      "score_low": 0,
+      "score_high": null,
+      "holding_seconds": 3600,
+      "fee_multiplier": "2",
+      "exit_slippage_ticks": 1,
+      "status": "INSUFFICIENT_INDEPENDENT_DATA",
+      "intents": 1,
+      "independent_days": 1,
+      "coverage": {
+        "COMPLETE": 1
+      },
+      "session_rejected": 0,
+      "all_intents_mean": null,
+      "lower": null,
+      "upper": null,
+      "known_only_mean": "-840.0",
+      "unknown_intents": []
+    },
+    {
+      "symbol": "STOCK_SYNTHETIC",
+      "quantity": 100,
+      "score_low": 0,
+      "score_high": null,
+      "holding_seconds": 3600,
+      "fee_multiplier": "1",
+      "exit_slippage_ticks": 2,
+      "status": "INSUFFICIENT_INDEPENDENT_DATA",
+      "intents": 1,
+      "independent_days": 1,
+      "coverage": {
+        "COMPLETE": 1
+      },
+      "session_rejected": 0,
+      "all_intents_mean": null,
+      "lower": null,
+      "upper": null,
+      "known_only_mean": "-680.0",
+      "unknown_intents": []
+    },
+    {
+      "symbol": "STOCK_SYNTHETIC",
+      "quantity": 100,
+      "score_low": 0,
+      "score_high": null,
+      "holding_seconds": 3600,
+      "fee_multiplier": "1.5",
+      "exit_slippage_ticks": 2,
+      "status": "INSUFFICIENT_INDEPENDENT_DATA",
+      "intents": 1,
+      "independent_days": 1,
+      "coverage": {
+        "COMPLETE": 1
+      },
+      "session_rejected": 0,
+      "all_intents_mean": null,
+      "lower": null,
+      "upper": null,
+      "known_only_mean": "-760.00",
+      "unknown_intents": []
+    },
+    {
+      "symbol": "STOCK_SYNTHETIC",
+      "quantity": 100,
+      "score_low": 0,
+      "score_high": null,
+      "holding_seconds": 3600,
+      "fee_multiplier": "2",
+      "exit_slippage_ticks": 2,
+      "status": "INSUFFICIENT_INDEPENDENT_DATA",
+      "intents": 1,
+      "independent_days": 1,
+      "coverage": {
+        "COMPLETE": 1
+      },
+      "session_rejected": 0,
+      "all_intents_mean": null,
+      "lower": null,
+      "upper": null,
+      "known_only_mean": "-840.0",
+      "unknown_intents": []
+    }
+  ],
+  "decisions_sha256": "d9937a3bb7a44d4fc5c99da467505dc32ddfd52267553879bf77077540e6a744",
+  "quotes_sha256": "cfccbec9546035fe72ea248373199699b4d8aac011cc718fdba957b9a6630f08",
+  "note": "Conditional single-intent scenarios; not a portfolio backtest, execution upper bound, or broker fills. Unknown paths invalidate all-intent inference. Negative lower bound alone does not reject a policy. Venue state, universe selection and simulator assumptions require separate validation.",
+  "experiment_id": "e28ec9ffd48f19c18d42ae2a3798da0f03deca34bc0682919eb6c7b2bd491913",
+  "manifest": {
+    "code_sha256": "e4261c0e2bbacd6f73e6caea2610001a6fba526dd4bb3d218d7bb3b458c5cf48",
+    "inputs": {
+      "F:\\ibkr-jp-microalpha\\audit\\2026-10-29\\joint-round4\\demo\\events.jsonl": "8107c73eb8dc24e9fbdce42fc0537ff6ab87a38d356f29f46369371ae8d4663a",
+      "F:\\ibkr-jp-microalpha\\audit\\2026-10-29\\joint-round4\\decisions.jsonl": "a7aad34b37d3548432a792f9fd14eec21a674235ab86288ee6da5f2a466d46e5",
+      "F:\\ibkr-jp-microalpha\\examples\\research.json": "d2f85df768933ebb3c6b9fe2346caa251147386a3ec9316cffad22b8446f81f4",
+      "F:\\ibkr-jp-microalpha\\audit\\2026-10-29\\joint-round4\\screen-plan.json": "8f550bc77b30993d5aa7aefe0308c0b07a5eebfaf07bf729ceb6624154092785"
+    },
+    "live_readiness": "NOT_VERIFIED"
+  }
+}

@@ -142,6 +142,7 @@ class FeatureConfig:
     trade_source: str = "TBT"
     tick_category: str = "TOPIX500"
     beta: float = 1.0
+    require_symbol_beta: bool = False
     historical_quote_max_age_seconds: float = 2
     max_quote_gap_seconds: float = 2
     max_trade_quote_age_seconds: float = 1
@@ -162,6 +163,8 @@ class FeatureConfig:
                 not isinstance(name, str) or not name for name in self.required_features):
             raise ValueError("feature version and named required features are required")
         _require_number(self.beta, "beta")
+        if type(self.require_symbol_beta) is not bool:
+            raise ValueError('require_symbol_beta must be a boolean')
         for name in ("historical_quote_max_age_seconds", "max_quote_gap_seconds",
                      "max_trade_quote_age_seconds", "max_trade_health_age_seconds",
                      "rvol_min_denominator"):
@@ -289,10 +292,41 @@ class FeatureEngine:
                                            if name.startswith("rvol_") and name[5:].isdigit()}))
         self._bench_key = None
         self._bench_returns: dict[int, float] = {}
+        self._betas = {}
 
     # ------------------------------------------------------------------ state
     def _get(self, symbol):
-        return self._series.setdefault(symbol, _Series())
+        state = self._series.get(symbol)
+        if state is None:
+            state = self._series[symbol] = _Series()
+        return state
+
+    def tick_category_at(self, symbol, at):
+        resolver = getattr(self,'instrument_category_resolver',None)
+        if resolver is not None:
+            return resolver(symbol,at)
+        provider = getattr(self, 'instrument_rule_provider', None)
+        rule = provider.resolve_rule(symbol, at) if provider is not None else None
+        return rule.tick_category if rule is not None else self.config.tick_category
+
+    def add_beta(self, estimate):
+        from .beta import BetaEstimate
+        if not isinstance(estimate, BetaEstimate):
+            raise ValueError('BetaEstimate required')
+        values=self._betas.setdefault(estimate.symbol,[])
+        if any(old.known_at==estimate.known_at and old!=estimate for old in values):
+            raise ValueError('conflicting beta publication')
+        if estimate not in values:
+            values.append(estimate)
+
+    def beta_at(self, symbol, at):
+        if symbol==self.benchmark_symbol:
+            return 1.0
+        estimate=max((value for value in self._betas.get(symbol,()) if value.known_at<=at),
+                     key=lambda value:value.known_at,default=None)
+        if estimate is not None:
+            return estimate.beta if at<estimate.valid_until else None
+        return None if self.config.require_symbol_beta else self.config.beta
 
     def reset(self, symbol: str, reason="DATA_RESET", *, reset_daily=False, new_day=False):
         state = self._get(symbol)
@@ -451,7 +485,7 @@ class FeatureEngine:
         if state is None:
             return False
         state.seen[identity] = (payload, quote.at)
-        quality = validate_quote(quote, quote.at, self.ticks, self.config.tick_category,
+        quality = validate_quote(quote, quote.at, self.ticks, self.tick_category_at(quote.symbol, quote.at),
                                  self.config.quality, schedule=self.schedule)
         reason = "QUOTE_SOURCE_CHANGED" if quote.source != self.config.quote_source else quality.reason
         if reason:
@@ -489,7 +523,7 @@ class FeatureEngine:
                 trade.volume_kind != self.config.vwap_kind or
                 (trade.exchange_at is not None and trade.exchange_at > trade.at) or
                 self.schedule.session(trade.at) not in CONTINUOUS_SESSIONS or
-                not self.ticks.is_legal(trade.price, trade.at, self.config.tick_category)):
+                not self.ticks.is_legal(trade.price, trade.at, self.tick_category_at(trade.symbol, trade.at))):
             self.reset(trade.symbol, "INVALID_TRADE_STREAM")
             state.day_stream_complete = False
             return False
@@ -497,7 +531,7 @@ class FeatureEngine:
         direction = "UNKNOWN"
         quote = state.quotes[-1] if state.quotes else None
         if quote is not None:
-            result = validate_quote(quote, trade.at, self.ticks, self.config.tick_category,
+            result = validate_quote(quote, trade.at, self.ticks, self.tick_category_at(trade.symbol, trade.at),
                                     self.config.quality, schedule=self.schedule)
             # Receive time, rather than retrospectively known exchange time,
             # determines which quote can participate in classification.
@@ -617,11 +651,11 @@ class FeatureEngine:
 
     # --------------------------------------------------------------- features
     def _current_valid(self, state, quote, at) -> bool:
-        if validate_quote(quote, at, self.ticks, self.config.tick_category,
+        if validate_quote(quote, at, self.ticks, self.tick_category_at(quote.symbol, at),
                           self.config.quality, schedule=self.schedule):
             return True
         return self._quote_covered(state, quote.at, at) and bool(validate_quote(
-            quote, at, self.ticks, self.config.tick_category, self.config.quality,
+            quote, at, self.ticks, self.tick_category_at(quote.symbol, at), self.config.quality,
             purpose="valuation", schedule=self.schedule))
 
     def _return(self, state, at, window, *, current_valid=None):
@@ -640,7 +674,7 @@ class FeatureEngine:
         if (cutoff - history.at).total_seconds() > self.config.historical_quote_max_age_seconds and not covered:
             return None
         if not validate_quote(history, history.at if covered else cutoff, self.ticks,
-                              self.config.tick_category, self._historical_quality, schedule=self.schedule):
+                              self.tick_category_at(history.symbol, history.at), self._historical_quality, schedule=self.schedule):
             return None
         return 10000 * log(state.quotes.values[-1] / state.quotes.values[index])
 
@@ -692,6 +726,9 @@ class FeatureEngine:
 
     def snapshot(self, symbol: str, at: datetime) -> FeatureSnapshot:
         aware(at)
+        beta=self.beta_at(symbol,at)
+        if beta is None:
+            return FeatureSnapshot(symbol,at,{},False,self.config.version,'BETA_UNAVAILABLE')
         state = self._series.get(symbol)
         values = {}
         if state is None or not state.quotes:
@@ -702,7 +739,7 @@ class FeatureEngine:
         if self._segment(at) != state.segment:
             return FeatureSnapshot(symbol, at, values, False, self.config.version, "SESSION_CHANGED")
         if not self._current_valid(state, quote, at):
-            reason = validate_quote(quote, at, self.ticks, self.config.tick_category,
+            reason = validate_quote(quote, at, self.ticks, self.tick_category_at(symbol, at),
                                     self.config.quality, schedule=self.schedule).reason or "QUOTE_INVALID"
             return FeatureSnapshot(symbol, at, values, False, self.config.version, reason)
         mid = quote.mid
@@ -721,7 +758,7 @@ class FeatureEngine:
             if reference is not None:
                 values[f"r_mkt_{window}"] = reference
             if result is not None and reference is not None:
-                values[f"rs_{window}"] = result - self.config.beta * reference
+                values[f"rs_{window}"] = result - beta * reference
         if "r_30" in values and "r_120" in values:
             values["accel"] = values["r_30"] / 30 - values["r_120"] / 120
         volatility = self._realized_volatility(state, at, VOLATILITY_WINDOW_SECONDS)

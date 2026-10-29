@@ -59,6 +59,8 @@ def build_calibration_rows(samples: Iterable[ReplayIntentLabel], edges: Sequence
     for label in samples:
         if not isinstance(label, ReplayIntentLabel):
             raise ValueError('formal calibration requires factory-issued ReplayIntentLabel, not quote baselines')
+        if label.label_source not in ('VERIFIED_REPLAY','ARTIFICIAL'):
+            raise ValueError('simulated or unverified replay labels are research only, not deployment calibration')
         if (label.policy_id, label.version, label.holding_seconds, label.quantity) != (
                 policy_id, version, holding_seconds, quantity):
             raise ValueError('replay label policy, version, holding or quantity mismatch')
@@ -100,6 +102,8 @@ def build_calibration_rows(samples: Iterable[ReplayIntentLabel], edges: Sequence
                         trained_until=max(label.completed_at for label in labels).isoformat(),
                         independent_days=[day.isoformat() for day in sorted(by_day)],
                         max_chase_ticks=max_chase_ticks,
+                        execution_source=labels[0].execution_source,
+                        bootstrap=dict(method='IID_DAY_BLOCK_PERCENTILE',alpha=alpha,draws=draws,seed=seed),
                         complete_policy=True, includes_partial=True, fees_final=True)
         if labels[0].label_source == 'ARTIFICIAL':
             evidence['source'] = 'ARTIFICIAL_FIXTURE'
@@ -109,7 +113,9 @@ def build_calibration_rows(samples: Iterable[ReplayIntentLabel], edges: Sequence
             sample_days=len(by_day), sample_count=count,
             mean_net_amount=mean.quantize(Decimal("0.01")), lower_net_amount=min(lower, mean).quantize(Decimal("0.01")),
             max_chase_ticks=max_chase_ticks, label_source=labels[0].label_source,
-            provenance=evidence))
+            provenance=evidence, value_basis='REPLAY_POLICY_NET',
+            entry_cost_basis=dict(version='ACTUAL_FILLED_PATHS_V1',
+                paths=[path for label in labels for path in label.entry_cost_basis['paths']])))
     return rows
 
 
@@ -134,4 +140,5 @@ def calibration_table_event(rows: Sequence[CalibrationRow], *, version: str, kno
          "sample_days": r.sample_days, "sample_count": r.sample_count,
          "mean_net_amount": str(r.mean_net_amount), "lower_net_amount": str(r.lower_net_amount),
          "max_chase_ticks": r.max_chase_ticks, "label_source": r.label_source,
-         "provenance": r.provenance} for r in rows]}
+         "provenance": r.provenance, "value_basis":r.value_basis,
+         "entry_cost_basis":r.entry_cost_basis} for r in rows]}

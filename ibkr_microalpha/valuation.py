@@ -80,7 +80,7 @@ class RiskValuation:
     def _reserve_per_share(self, symbol, price, at) -> Decimal:
         """Gap reserve plus frozen exit slippage, JPY/share at ``price``."""
         e = self.e
-        category = e.instruments[symbol].tick_category if symbol in e.instruments else 'TOPIX500'
+        category = e.instrument_at(symbol, at).tick_category if symbol in e.instruments else 'TOPIX500'
         try:
             tick = e.ticks.tick_size(price, at, category)
         except ValueError:

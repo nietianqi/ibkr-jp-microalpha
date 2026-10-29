@@ -1,0 +1,7 @@
+{"callback": "marketDataType", "received_at": "2026-10-29T09:00:00+09:00", "request_id": 1, "data": {"market_data_type": 1}}
+{"callback": "tickGeneric", "received_at": "2026-10-29T09:00:00+09:00", "request_id": 1, "data": {"tick_type": 49, "value": 0}}
+{"callback": "marketStatus", "received_at": "2026-10-29T09:00:00+09:00", "request_id": 1, "data": {"status": "CONTINUOUS", "source": "UNIT_ONLY", "known_at": "2026-10-29T09:00:00+09:00", "valid_until": "2026-10-29T10:00:00+09:00"}}
+{"callback": "tickPrice", "received_at": "2026-10-29T09:00:00+09:00", "request_id": 1, "data": {"tick_type": 1, "price": "1000"}}
+{"callback": "tickSize", "received_at": "2026-10-29T09:00:00+09:00", "request_id": 1, "data": {"tick_type": 0, "size": 100}}
+{"callback": "tickPrice", "received_at": "2026-10-29T09:00:00+09:00", "request_id": 1, "data": {"tick_type": 2, "price": "1001"}}
+{"callback": "tickSize", "received_at": "2026-10-29T09:00:00+09:00", "request_id": 1, "data": {"tick_type": 3, "size": 100}}

@@ -917,18 +917,28 @@ class ExecutionBook:
         with self._mutex:
             self.reconciling = True
             try:
+                if type(complete) is not bool or type(ownership_confirmed) is not bool:
+                    raise ExecutionError("snapshot confirmations must be explicit booleans")
+                if next_order_id is not None and (type(next_order_id) is not int or next_order_id < 1):
+                    raise ExecutionError("broker next order ID must be a positive integer")
                 open_orders = [dict(row) for row in open_orders]
                 executions = [dict(row) for row in executions]
-                self.broker_positions = {}
+                for row in open_orders + executions:
+                    if type(row.get("order_id")) is not int or row["order_id"] < 1:
+                        raise ExecutionError("broker order ID must be a positive integer")
+                broker_positions = {}
                 for symbol, qty in positions.items():
+                    if not isinstance(symbol, str) or not symbol.strip() or isinstance(qty, bool):
+                        raise ExecutionError("broker positions require symbols and integral shares")
                     numeric = Decimal(str(qty))
                     if not numeric.is_finite() or numeric != numeric.to_integral_value():
                         raise ExecutionError("broker position must contain integral shares")
-                    self.broker_positions[symbol] = int(numeric)
+                    broker_positions[symbol] = int(numeric)
             except (ValueError, TypeError, ArithmeticError, AttributeError):
                 self._lock("ledger: invalid broker snapshot fields", at)
                 self._query(at)
                 return False
+            self.broker_positions = broker_positions
             self._record("RECONCILE", at, positions=self.broker_positions,
                          open_orders=open_orders, executions=executions,
                          complete=complete, ownership_confirmed=ownership_confirmed,

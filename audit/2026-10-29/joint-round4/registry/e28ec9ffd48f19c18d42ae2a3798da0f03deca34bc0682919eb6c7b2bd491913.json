@@ -1,0 +1,88 @@
+{
+  "code_sha256": "e4261c0e2bbacd6f73e6caea2610001a6fba526dd4bb3d218d7bb3b458c5cf48",
+  "dataset_id": "SYNTHETIC_JOINT_ROUND4_DEMO",
+  "input_sha256": "d6e70071af3c37f10f77b8e94ff6a19a4bb6fc1136a8f7d3b8fb1a1bc31d53ad",
+  "split": {
+    "mode": "CONDITIONAL_HOLDING_SCREEN"
+  },
+  "statistics": {
+    "alpha": 0.05,
+    "block_days": 5,
+    "draws": 2000,
+    "fee_multipliers": [
+      1,
+      1.5,
+      2
+    ],
+    "holding_periods": [
+      120,
+      600,
+      1800,
+      3600
+    ],
+    "min_days": 20,
+    "min_samples": 30,
+    "score_edges": [
+      0
+    ],
+    "seed": 7,
+    "slippage_ticks": [
+      1,
+      2
+    ]
+  },
+  "variants": {
+    "policy": {
+      "ack_latency_seconds": 1,
+      "cancel_latency_seconds": 1,
+      "entry_limit_ticks": 1,
+      "entry_ttl_seconds": 2,
+      "exit_slippage_ticks": 1,
+      "exit_ttl_seconds": 3,
+      "holding_seconds": 120,
+      "max_exit_children": 3,
+      "max_quote_gap_seconds": 2,
+      "min_stop_ticks": 5,
+      "participation_rate": "0.25",
+      "passive_entry": false,
+      "quality": {
+        "max_age_seconds": 2,
+        "max_field_skew_seconds": 0.5,
+        "require_field_times": true,
+        "require_quote_heartbeat": false,
+        "valuation_max_age_seconds": 30
+      },
+      "stop_bps": "15",
+      "stop_volatility_multiple": 0,
+      "submit_latency_seconds": 1,
+      "tick_category": "TOPIX500",
+      "version": "conservative-quote-v1"
+    },
+    "scan": {
+      "alpha": 0.05,
+      "block_days": 5,
+      "draws": 2000,
+      "fee_multipliers": [
+        1,
+        1.5,
+        2
+      ],
+      "holding_periods": [
+        120,
+        600,
+        1800,
+        3600
+      ],
+      "min_days": 20,
+      "min_samples": 30,
+      "score_edges": [
+        0
+      ],
+      "seed": 7,
+      "slippage_ticks": [
+        1,
+        2
+      ]
+    }
+  }
+}

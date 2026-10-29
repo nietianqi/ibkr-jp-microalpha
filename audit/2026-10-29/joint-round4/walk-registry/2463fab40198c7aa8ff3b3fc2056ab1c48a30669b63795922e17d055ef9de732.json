@@ -1,0 +1,39 @@
+{
+  "code_sha256": "5541e576df1448ea1f598ddd5827a51ed6a9406aa557e0d60aa97e10d0cc0c3a",
+  "dataset_id": "SYNTHETIC_JOINT_ROUND4_FOLDS",
+  "epsilon": {
+    "x": 0.1
+  },
+  "input_sha256": "37056d2127ac246e53689d5eec260deec6448586e23d48d10fa76e57780c76d1",
+  "split": {
+    "embargo": 1,
+    "holdout": 3,
+    "test": 2,
+    "train": 4,
+    "validate": 2
+  },
+  "statistics": {
+    "alpha": 0.05,
+    "block_days": 1,
+    "draws": 400,
+    "method": "CIRCULAR_DAY_BLOCK_PERCENTILE",
+    "multiple_testing": "BONFERRONI",
+    "seed": 7
+  },
+  "variants": [
+    {
+      "score_threshold": -100.0,
+      "variant_id": "a",
+      "weights": {
+        "x": 1.0
+      }
+    },
+    {
+      "score_threshold": -100.0,
+      "variant_id": "b",
+      "weights": {
+        "x": 1.0
+      }
+    }
+  ]
+}

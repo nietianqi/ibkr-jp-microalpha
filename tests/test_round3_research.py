@@ -37,7 +37,7 @@ def provenance(days=20):
                 max_chase_ticks=1,
                 trained_until=(NOW - timedelta(days=1)).isoformat(),
                 independent_days=[(NOW.date() - timedelta(days=i+2)).isoformat() for i in range(days)],
-                complete_policy=True, includes_partial=True, fees_final=True)
+                complete_policy=True, includes_partial=True, fees_final=True, execution_source='BROKER_REPORTS')
 
 
 _RECORDED_DEMO = None
@@ -60,13 +60,24 @@ def recorded_intent(*, start=NOW, filled=100, final_fees=True, profile='research
     document['profile'] = profile
     if profile != 'demo':
         citation = dict(source='unit-recording', trained_until=(NOW-timedelta(days=50)).isoformat(),
-                        code_hash='a'*64)
+                        available_at=(NOW-timedelta(days=49)).isoformat(), code_hash='a'*64)
         document['provenance'] = dict(scalers={**citation, 'clip_rates':{k:0.01 for k in document['scalers']}},
-                                      thresholds=citation, economics=citation)
+                                      thresholds=dict(citation), economics=dict(citation))
+        from ibkr_microalpha.provenance import parameter_content_hash
+        for group, entry in document['provenance'].items():
+            entry['content_sha256'] = parameter_content_hash(document, group)
     runner = Replay(build_engine(document))
     shift = start.date() - NOW.date()
     events = deepcopy(_RECORDED_DEMO)
     for event in events:
+        # Exercise the broker-report input contract using an explicitly synthetic
+        # stub. A separate test below keeps the original simulator identity and
+        # verifies it cannot be promoted to broker evidence.
+        if profile != 'demo':
+            event = json.loads(json.dumps(event).replace('simulation-fill', 'unit-broker-exec'))
+        if event['type'] in ('fill','commission','status','reconcile') and profile != 'demo':
+            event['execution_source'] = 'BROKER_REPORTS'
+            event['source_record_id'] = 'UNIT_ONLY:'+event['event_id']
         event['received_at'] = (datetime.fromisoformat(event['received_at']) + shift).isoformat()
         event['event_id'] = event['event_id'].replace('artificial:', 'unit-recording:')
         data = event['data']
@@ -84,6 +95,8 @@ def recorded_intent(*, start=NOW, filled=100, final_fees=True, profile='research
             evidence.update(policy_hash=policy_fingerprint(document),
                             fee_version=runner.engine.commissions.version, max_chase_ticks=row['max_chase_ticks'])
             row['provenance'] = evidence
+            row['value_basis'] = 'REPLAY_POLICY_NET'
+            row['entry_cost_basis'] = {'version':'ACTUAL_FILLED_PATHS_V1','paths':[{'children':[]}]}
         if event['type'] == 'fill':
             if not filled:
                 # The original successful SUBMIT and Submitted callback have
@@ -91,6 +104,7 @@ def recorded_intent(*, start=NOW, filled=100, final_fees=True, profile='research
                 when = datetime.fromisoformat(event['received_at']) + timedelta(seconds=3)
                 runner.dispatch(dict(event_id='unit-unfilled-cancel', received_at=when.isoformat(),
                     sequence=event['sequence']+1, type='status',
+                    execution_source='BROKER_REPORTS',source_record_id='UNIT_ONLY:unfilled',
                     data=dict(order_id=data['order_id'], ib_status='Cancelled', filled=0, remaining=0)))
                 break
             data['qty'] = filled
@@ -111,7 +125,8 @@ def recorded_intent(*, start=NOW, filled=100, final_fees=True, profile='research
         runner.dispatch(event)
     final_at = runner.last_key[0] + timedelta(seconds=1)
     runner.dispatch(dict(event_id='unit-final-reconciliation', received_at=final_at.isoformat(),
-                         sequence=100000, type='reconcile', data=dict(positions={}, open_orders=[],
+                         sequence=100000, type='reconcile', execution_source='BROKER_REPORTS',
+                         source_record_id='UNIT_ONLY:final', data=dict(positions={}, open_orders=[],
                              executions=[], complete=True, ownership_confirmed=True)))
     runner.finish()
     return runner
@@ -151,7 +166,8 @@ class Round3ResearchTests(unittest.TestCase):
 
     def test_formal_provenance_and_frozen_day_gate(self):
         row = CalibrationRow('p', 'v', 2, 100, 0, None, 20, 100, D(100), D(50), 1,
-                             label_source='VERIFIED_REPLAY', provenance=provenance())
+                             label_source='VERIFIED_REPLAY', provenance=provenance(),value_basis='REPLAY_POLICY_NET',
+                             entry_cost_basis={'version':'ACTUAL_FILLED_PATHS_V1','paths':[{'children':[]}]})
         args = dict(policy_id='p', version='v', quantity=100, min_samples=30,
                     safety_margin=D(0), min_independent_days=20, policy_hash='a'*64,
                     fee_version=FEES.version, as_of=NOW)

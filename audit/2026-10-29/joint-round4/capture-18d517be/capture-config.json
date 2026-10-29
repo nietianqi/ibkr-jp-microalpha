@@ -1,0 +1,27 @@
+{
+  "instruments": [
+    {
+      "request_id": 1,
+      "symbol": "TEST",
+      "contract_id": 123,
+      "exchange": "TSEJ",
+      "currency": "JPY",
+      "known_at": "2026-10-28T09:00:00+09:00",
+      "primary_exchange": "TSEJ",
+      "sec_type": "STK",
+      "local_symbol": "",
+      "benchmark": true,
+      "contract_verified": false,
+      "valid_until": null,
+      "quote_size_multiplier": 1,
+      "tick8_volume_multiplier": 1,
+      "rtvolume_multiplier": 1
+    }
+  ],
+  "session_id": "SYNTHETIC_JOINT_ROUND4",
+  "volume_mode": "tick8",
+  "quote_source": "L1",
+  "trade_source": "SAMPLED",
+  "max_field_age_seconds": 2,
+  "max_field_skew_seconds": 0.5
+}

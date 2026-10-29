@@ -20,8 +20,10 @@ def prediction(policy="aggr", lower="40", *, calibrated=True, quantity=100, n=50
                     trained_until=(NOW-timedelta(days=1)).isoformat(),
                     independent_days=[(NOW.date()-timedelta(days=i+2)).isoformat() for i in range(days)],
                     complete_policy=True, includes_partial=True, fees_final=True)
+    evidence['execution_source'] = 'BROKER_REPORTS'  # explicit unit-report contract, not real data
     return Prediction(policy, "cal-v1", quantity, n, D("100"), D(lower), True, calibrated, 120,
-                      days, 'VERIFIED_REPLAY', evidence)
+                      days, 'VERIFIED_REPLAY', evidence, value_basis='REPLAY_POLICY_NET',
+                      entry_cost_basis={'version':'ACTUAL_FILLED_PATHS_V1','paths':[{'children':[]}]})
 
 
 def path(*, fills=(), fees="0", residual=0, bid=None, exit_cost="0", policy="pass"):

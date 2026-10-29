@@ -1,0 +1,1 @@
+{"event_id": "capture:SYNTHETIC_JOINT_ROUND4:1", "received_at": "2026-10-29T09:00:00+09:00", "sequence": 1, "type": "quote", "data": {"symbol": "TEST", "bid": "1000", "ask": "1001", "bid_size": 100, "ask_size": 100, "bid_at": "2026-10-29T09:00:00+09:00", "ask_at": "2026-10-29T09:00:00+09:00", "market_data_type": 1, "market_status": "CONTINUOUS", "source": "L1"}}

@@ -1,0 +1,24 @@
+{
+  "session_id": "REPLACE_WITH_UNIQUE_CAPTURE_ID",
+  "volume_mode": "tick8",
+  "quote_source": "L1",
+  "trade_source": "SAMPLED",
+  "max_field_age_seconds": 2,
+  "max_field_skew_seconds": 0.5,
+  "instruments": [
+    {
+      "request_id": 1,
+      "symbol": "REPLACE_WITH_VERIFIED_SYMBOL",
+      "contract_id": 1,
+      "exchange": "TSEJ",
+      "primary_exchange": "TSEJ",
+      "currency": "JPY",
+      "known_at": "2026-10-28T08:00:00+09:00",
+      "benchmark": false,
+      "contract_verified": false,
+      "quote_size_multiplier": null,
+      "tick8_volume_multiplier": null,
+      "rtvolume_multiplier": null
+    }
+  ]
+}

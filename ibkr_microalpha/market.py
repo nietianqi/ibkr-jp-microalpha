@@ -327,7 +327,7 @@ class TickTable:
 
     def move_ticks(self, price: Decimal, count: int, at: datetime | date,
                    category="TOPIX500") -> Decimal:
-        if not isinstance(count, int) or not self.is_legal(price, at, category):
+        if type(count) is not int or not self.is_legal(price, at, category):
             raise ValueError("tick movement requires a legal starting price and integer count")
         for _ in range(abs(count)):
             if count > 0:
@@ -339,6 +339,37 @@ class TickTable:
                 if lower <= 0:
                     raise ValueError("price must be positive")
                 price = self.round_price(lower, "down", at, category)
+        return price
+
+    def minimum_price(self, at: datetime | date, category="TOPIX500") -> Decimal:
+        """Lowest positive tick in a verified table, never an inferred zero price."""
+        if category not in self._tables:
+            raise ValueError("unknown security tick category")
+        minimum = Decimal(self._tables[category][0][1])
+        self.tick_size(minimum, at, category)  # also verifies the effective date
+        return minimum
+
+    def sell_limit_price(self, bid: Decimal, slippage_ticks: int, at: datetime | date,
+                         category="TOPIX500", *, lower=None, upper=None) -> Decimal:
+        """Legal sell limit bounded by verified positive ticks and optional daily limits.
+
+        A limit at the lower band remains a working order, not a fill guarantee.
+        Quotes already outside the supplied band are rejected rather than repaired.
+        """
+        if type(slippage_ticks) is not int or slippage_ticks < 0:
+            raise ValueError("sell slippage must be a nonnegative integer")
+        minimum = self.minimum_price(at, category)
+        floor = minimum if lower is None else lower
+        if (not self.is_legal(bid, at, category) or not self.is_legal(floor, at, category)
+                or floor < minimum or bid < floor
+                or (upper is not None and (not self.is_legal(upper, at, category)
+                                           or upper < floor or bid > upper))):
+            raise ValueError("sell quote and bounds must be legal positive prices inside the band")
+        price = bid
+        for _ in range(slippage_ticks):
+            if price <= floor:
+                break
+            price = max(floor, self.move_ticks(price, -1, at, category))
         return price
 
 

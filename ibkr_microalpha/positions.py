@@ -31,11 +31,22 @@ class PositionManager:
         self.had_exposure: set[str] = set()
         self._low_score_since: dict[str, tuple[datetime, datetime]] = {}
         self._alarmed = set()
+        self._exit_block_alarms = set()
 
     def exit_reasons(self) -> dict[str, str]:
         return {symbol: state.reason for symbol, state in self.exits.items()}
 
     # ---------------------------------------------------------------- exits
+    def _blocked_exit(self, symbol, at, reason):
+        self.e._note(at, 'EXIT_BLOCKED', symbol, reason)
+        key = (symbol, reason)
+        if key not in self._exit_block_alarms:
+            self._exit_block_alarms.add(key)
+            alarm = {'at':at.isoformat(), 'symbol':symbol,
+                     'alarm':'RESIDUAL_RISK_EXIT_BLOCKED', 'reason':reason}
+            self.e.alarms.append(alarm)
+            self.e._record(at, 'ALARM', **{k:v for k,v in alarm.items() if k != 'at'})
+
     def request_exit(self, symbol, at, reason, emergency):
         e = self.e
         e._invalidate(symbol, at, reason)
@@ -55,7 +66,13 @@ class PositionManager:
             return
         quote = e.valuation_quote(symbol, at)
         if quote is None:
-            e._note(at, 'EXIT_BLOCKED', symbol, 'no_reliable_exit_quote')
+            reason='no_reliable_exit_quote'
+            controls=getattr(e,'market_controls',None)
+            raw=e.quotes.get(symbol)
+            if controls is not None and raw is not None:
+                reason=controls.quote_gate(symbol,at,raw.bid,raw.ask,ticks=e.ticks,
+                    tick_category=e.instrument_at(symbol,at).tick_category) or reason
+            self._blocked_exit(symbol, at, reason)
             return
         if not escalated and any(o.side == Side.BUY for o in active):
             return  # Ordinary exit waits for buy cancellation and fill reconciliation.
@@ -71,11 +88,22 @@ class PositionManager:
                     e.book.cancel(order.order_id, at)
             return
         category = e.instruments[symbol].tick_category
+        controls = getattr(e, 'market_controls', None)
         try:
-            limit = e.ticks.move_ticks(quote.bid, -e.config.exit_slippage_ticks, at, category)
+            if controls is None:
+                limit = e.ticks.sell_limit_price(quote.bid, e.config.exit_slippage_ticks, at, category)
+            else:
+                rule = controls.resolve_rule(symbol, at)
+                if rule is not None:
+                    category = rule.tick_category
+                limit, blocked = controls.exit_price(symbol,at,quote.bid,e.config.exit_slippage_ticks,
+                                                      ticks=e.ticks,tick_category=category)
+                if blocked:
+                    self._blocked_exit(symbol, at, blocked)
+                    return
         except ValueError as error:
             # A price rule failure must not stop the risk loop for other symbols (EXE-03).
-            e._note(at, 'EXIT_BLOCKED', symbol, f'exit price rule: {error}')
+            self._blocked_exit(symbol, at, f'exit price rule: {error}')
             e.risk.lock('exit_price_rule_invalid')
             return
         # A late bust can reopen an older intent after a newer same-symbol entry.
@@ -90,6 +118,7 @@ class PositionManager:
                 e._note(at, 'EXIT_BLOCKED', symbol, str(error))
                 return
             e._clear_note('EXIT_BLOCKED', symbol)
+            self._exit_block_alarms = {key for key in self._exit_block_alarms if key[0] != symbol}
             e.intents.link_exit(symbol, order.order_id, intent_id=intent_id)
             e.execution_quality.on_submit(order, quote, at)
             e._record(at, 'EXIT_REQUEST', symbol=symbol, order_id=order.order_id, reason=reason,
@@ -133,6 +162,7 @@ class PositionManager:
         self.had_exposure.discard(symbol)
         e.decay_trackers.pop(symbol, None)
         self._low_score_since.pop(symbol, None)
+        self._exit_block_alarms = {key for key in self._exit_block_alarms if key[0] != symbol}
         e._clear_note('EXIT_BLOCKED', symbol)
         e.risk.unblock(f'position_quote_invalid:{symbol}')
         e._record(at, 'COOLDOWN', symbol=symbol, until=e.cooldown_until[symbol].isoformat(), reason=reason)

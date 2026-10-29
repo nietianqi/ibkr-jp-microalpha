@@ -1,0 +1,56 @@
+{
+  "callbacks": 7,
+  "events": 1,
+  "failed": false,
+  "execution_enabled": false,
+  "requires_resubscribe": false,
+  "metadata": [
+    {
+      "request_id": 1,
+      "symbol": "TEST",
+      "contract_id": 123,
+      "exchange": "TSEJ",
+      "currency": "JPY",
+      "known_at": "2026-10-28T09:00:00+09:00",
+      "primary_exchange": "TSEJ",
+      "sec_type": "STK",
+      "local_symbol": "",
+      "benchmark": true,
+      "contract_verified": false,
+      "valid_until": null,
+      "quote_size_multiplier": 1,
+      "tick8_volume_multiplier": 1,
+      "rtvolume_multiplier": 1
+    }
+  ],
+  "latency": {
+    "processing": {
+      "status": "MEASURED",
+      "samples": 7,
+      "max_ns": 138100,
+      "mean_ns": 60285.71428571428
+    },
+    "queue": {
+      "status": "UNKNOWN"
+    },
+    "decision": {
+      "status": "UNKNOWN"
+    },
+    "send": {
+      "status": "UNKNOWN"
+    },
+    "ack": {
+      "status": "UNKNOWN"
+    }
+  },
+  "note": "Farm/reference activity is not a per-symbol heartbeat. UNKNOWN venue state blocks strategy entries.",
+  "manifest": {
+    "code_sha256": "5541e576df1448ea1f598ddd5827a51ed6a9406aa557e0d60aa97e10d0cc0c3a",
+    "inputs": {
+      "F:\\ibkr-jp-microalpha\\audit\\2026-10-29\\joint-round4\\capture-config.json": "9ef0686be5f3dae0e04cc055e332bb8dfba2dc6c7264aed00aba09000728dd94",
+      "F:\\ibkr-jp-microalpha\\audit\\2026-10-29\\joint-round4\\callbacks.jsonl": "bd94f12a86995e50ede847b9db1c7552abed3cd5f21a406410438b10b94d08a9"
+    },
+    "live_readiness": "NOT_VERIFIED"
+  },
+  "session_id": "SYNTHETIC_JOINT_ROUND4"
+}

@@ -141,6 +141,8 @@ class ReplayIntentLabel:
     max_chase_ticks: int | None
     reference_entry_price: Decimal
     entry_max_price: Decimal
+    execution_source: str
+    entry_cost_basis: dict
     _verification_token: object = field(default=None, repr=False, compare=False)
 
     def __post_init__(self):
@@ -172,6 +174,7 @@ def replay_intent_labels(runner, *, verified_manifest: Mapping,
     events = runner.raw_lines if source_events is None else source_events
     rebuilt = Replay(build_engine(runner.engine.frozen_config))
     caps = {}
+    execution_sources, source_records = set(), []
 
     def capture_entry_contracts():
         e = rebuilt.engine
@@ -199,7 +202,20 @@ def replay_intent_labels(runner, *, verified_manifest: Mapping,
                 caps[order.order_id] = ('ABSOLUTE_FORECAST', None, candidate.reference_ask, cap)
 
     for event in events:
-        rebuilt.dispatch(json.loads(event) if isinstance(event, str) else dict(event))
+        event = json.loads(event) if isinstance(event, str) else dict(event)
+        declared = event.get('execution_source')
+        text = json.dumps(event,sort_keys=True).upper()
+        if 'SIMULATION-FILL' in text or declared == 'SIMULATED':
+            execution_sources.add('SIMULATED')
+        elif declared == 'ARTIFICIAL' or 'ARTIFICIAL_FIXTURE' in text:
+            execution_sources.add('ARTIFICIAL')
+        if event.get('type') in ('fill','commission','status','reconcile'):
+            execution_sources.add(declared or 'UNVERIFIED')
+            if declared == 'BROKER_REPORTS':
+                if not isinstance(event.get('source_record_id'), str) or not event['source_record_id']:
+                    raise ValueError('broker reports require traceable source_record_id')
+                source_records.append(event['source_record_id'])
+        rebuilt.dispatch(event)
         capture_entry_contracts()
     rebuilt.finish()
     capture_entry_contracts()
@@ -212,7 +228,14 @@ def replay_intent_labels(runner, *, verified_manifest: Mapping,
     submissions = {record['payload']['order']['order_id']: record['payload']['order']
                    for record in book.journal if record['kind'] == 'SUBMIT'}
     labels = []
-    source = 'ARTIFICIAL' if e.frozen_config['profile'] == 'demo' else 'VERIFIED_REPLAY'
+    if e.frozen_config['profile'] == 'demo' or 'ARTIFICIAL' in execution_sources:
+        source, execution_source = 'ARTIFICIAL', 'ARTIFICIAL'
+    elif 'SIMULATED' in execution_sources:
+        source, execution_source = 'SIMULATED', 'SIMULATED'
+    elif execution_sources == {'BROKER_REPORTS'} and source_records:
+        source, execution_source = 'VERIFIED_REPLAY', 'BROKER_REPORTS'
+    else:
+        source, execution_source = 'UNVERIFIED', 'UNVERIFIED'
     for row in rows:
         intent = e.intents.intents[row['intent_id']]
         if (intent.created_at is None or intent.target_quantity <= 0 or not intent.entry_orders
@@ -234,6 +257,12 @@ def replay_intent_labels(runner, *, verified_manifest: Mapping,
         fees = Decimal(row['actual_fees'])
         net = Decimal(row['sell_amount']) - Decimal(row['buy_amount']) - fees
         cap_mode, chase_ticks, reference, cap = caps[intent.entry_orders[0]]
+        components = []
+        for order_id in intent.entry_orders:
+            order = book.orders[order_id]
+            if order.filled_quantity:
+                components.append(dict(quantity=order.filled_quantity, reference_price=str(reference),
+                                       actual_notional=str(order.filled_notional)))
         labels.append(ReplayIntentLabel(
             intent_id=intent.intent_id, day=intent.created_at.astimezone(JST).date(),
             score=float(entry['entry_score']), net_amount=net, policy_id=e.config.policy_id,
@@ -244,5 +273,7 @@ def replay_intent_labels(runner, *, verified_manifest: Mapping,
             bought=row['bought'], sold=row['sold'], actual_fees=fees, label_source=source,
             entry_cap_mode=cap_mode, max_chase_ticks=chase_ticks,
             reference_entry_price=reference, entry_max_price=cap,
+            execution_source=execution_source,
+            entry_cost_basis=dict(version='ACTUAL_FILLED_PATHS_V1',paths=[dict(children=components)]),
             _verification_token=_VERIFIED))
     return tuple(labels)

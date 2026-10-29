@@ -1,0 +1,41 @@
+{
+  "dataset_id": "SYNTHETIC_JOINT_ROUND4_DEMO",
+  "simulation": {
+    "version": "conservative-quote-v1",
+    "submit_latency_seconds": 1,
+    "ack_latency_seconds": 1,
+    "cancel_latency_seconds": 1,
+    "entry_ttl_seconds": 2,
+    "exit_ttl_seconds": 3,
+    "participation_rate": "0.25",
+    "stop_bps": "15",
+    "stop_volatility_multiple": 0,
+    "max_quote_gap_seconds": 2
+  },
+  "scan": {
+    "holding_periods": [
+      120,
+      600,
+      1800,
+      3600
+    ],
+    "score_edges": [
+      0
+    ],
+    "min_days": 20,
+    "min_samples": 30,
+    "alpha": 0.05,
+    "draws": 2000,
+    "seed": 7,
+    "block_days": 5,
+    "fee_multipliers": [
+      1,
+      1.5,
+      2
+    ],
+    "slippage_ticks": [
+      1,
+      2
+    ]
+  }
+}

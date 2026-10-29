@@ -202,6 +202,54 @@ class Replay:
     def _parse(self, kind, data, at, identity):
         """Return a closure applying the event; parsing never mutates the engine."""
         e = self.engine
+        if kind == 'beta_estimate':
+            from .beta import BetaEstimate
+            for field in ('trained_until','known_at','valid_until'):
+                data[field]=timestamp(data[field])
+            if data['known_at']>at:
+                raise ValueError('future beta estimate')
+            estimate=BetaEstimate(**data)
+            def apply_beta():
+                e._clock(at)
+                e.features.add_beta(estimate)
+                e._mark_dirty(estimate.symbol)
+            return apply_beta
+        if kind in ('price_band', 'instrument_rule', 'symbol_status', 'symbol_window'):
+            from .market_controls import PriceBand, InstrumentRule, SymbolStatus, RestrictedWindow
+            if e.market_controls is None:
+                raise ValueError('market fact events require explicitly enabled market_controls')
+            for field in ('known_at', 'effective_from', 'effective_until', 'valid_until', 'start', 'end'):
+                if data.get(field) is not None:
+                    data[field] = timestamp(data[field])
+            if data['known_at'] > at:
+                raise ValueError('market fact cannot be received before known_at')
+            if kind == 'price_band':
+                data['day'] = date.fromisoformat(data['day'])
+                _decimal_fields(data, 'base', 'lower', 'upper')
+                record = PriceBand(**data)
+                category = e.instrument_at(record.symbol, at).tick_category
+                apply_fact = lambda: e.market_controls.add_price_band(record, e.ticks, tick_category=category)
+            elif kind == 'instrument_rule':
+                record = InstrumentRule(**data)
+                apply_fact = lambda: e.market_controls.add_instrument_rule(record, e.ticks)
+            elif kind == 'symbol_status':
+                record = SymbolStatus(**data)
+                apply_fact = lambda: e.market_controls.add_status(record)
+            else:
+                record = RestrictedWindow(**data)
+                apply_fact = lambda: e.market_controls.add_window(record)
+
+            def apply():
+                e._clock(at)
+                apply_fact()
+                e._mark_dirty(record.symbol)
+                e._record(at, 'MARKET_FACT', symbol=record.symbol, fact=kind, source=record.source, version=record.version)
+                # Recheck queued entries immediately; filled positions remain
+                # subject to independent risk exits and sell coverage checks.
+                for order in e.book.active_orders(record.symbol):
+                    if order.side.value == 'BUY' and e.entry_still_valid(order, at):
+                        e.book.cancel(order.order_id, at)
+            return apply
         if kind == 'calendar':
             known_at = timestamp(data.pop('known_at'))
             if known_at > at:
@@ -420,6 +468,8 @@ class Replay:
         try:
             if self.last_key is not None and at > self.last_key[0]:
                 e.flush(self.last_key[0])
+            if e.parameter_guard is not None:
+                e.parameter_guard.validate_as_of(at)
             apply()
             if kind not in ('quote', 'trade', 'cumulative_volume', 'feature_snapshot', 'market_snapshot',
                             'requests', 'stream_health', 'quote_stream_health', 'data_reset',

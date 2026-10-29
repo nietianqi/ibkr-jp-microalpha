@@ -110,7 +110,11 @@ class ExecutionRiskFixes(unittest.TestCase):
         engine = test.engine
         quote = Quote(SYMBOL, at(14), D("0.1"), D("0.2"), 100, 100, "tiny", bid_at=at(14), ask_at=at(14))
         engine.quotes[SYMBOL] = quote
-        engine._request_exit(SYMBOL, at(14), "STOP_LOSS", True)  # must not raise
+        from unittest.mock import patch
+        # A valid minimum tick now has an executable floor. Inject an actual
+        # unavailable price-rule failure to retain the exception-isolation test.
+        with patch.object(engine.ticks, 'sell_limit_price', side_effect=ValueError('price rules unavailable')):
+            engine._request_exit(SYMBOL, at(14), "STOP_LOSS", True)
         self.assertIn("exit_price_rule_invalid", engine.risk.lock_reasons)
         self.assertTrue(any(r["kind"] == "EXIT_BLOCKED" for r in engine.audit))
         self.assertEqual(test.sells(), [])
@@ -419,9 +423,13 @@ class ReplayConfigFixes(unittest.TestCase):
         document["profile"] = "research"
         with self.assertRaisesRegex(ValueError, "provenance"):
             build_engine(document)
-        entry = {"source": "walk-forward 2026-08", "trained_until": "2026-09-30T15:30:00+09:00", "code_hash": "abc"}
+        from ibkr_microalpha.provenance import parameter_content_hash
+        entry = {"source": "walk-forward 2026-08", "trained_until": "2026-09-30T15:30:00+09:00",
+                 "available_at": "2026-10-01T08:00:00+09:00", "code_hash": "a"*64}
         document["provenance"] = {"scalers": {**entry, "clip_rates": {k: 0.01 for k in document["scalers"]}},
-                                  "thresholds": entry, "economics": entry}
+                                  "thresholds": dict(entry), "economics": dict(entry)}
+        for group in document['provenance']:
+            document['provenance'][group]['content_sha256'] = parameter_content_hash(document, group)
         build_engine(document)
         document["provenance"]["scalers"]["clip_rates"]["rs_60"] = 0.4
         with self.assertRaisesRegex(ValueError, "clips"):

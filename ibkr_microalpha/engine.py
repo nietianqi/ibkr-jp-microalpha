@@ -12,7 +12,7 @@ Responsibilities are split (review FLOW-03):
 * ``valuation.RiskValuation``    valuation, fee and stress reserves.
 """
 from collections import Counter, defaultdict, deque
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from decimal import Decimal
 from math import isfinite
@@ -35,12 +35,15 @@ class Instrument:
     tick_category: str
     contract_verified: bool
     permission_verified: bool
+    venue: str = 'TSEJ'
 
     def __post_init__(self):
         if not self.sector or self.tick_category not in ('TOPIX500', 'OTHER'):
             raise ValueError('instrument requires verified sector and tick category')
         if type(self.contract_verified) is not bool or type(self.permission_verified) is not bool:
             raise ValueError('instrument verification flags must be booleans')
+        if not isinstance(self.venue, str) or not self.venue:
+            raise ValueError('instrument venue is required')
 
 
 @dataclass(frozen=True)
@@ -76,11 +79,12 @@ class EngineConfig:
     max_soft_block_seconds: float
     budget_buffer_seconds: float
     min_independent_days: int = 2
+    scale_stop_to_holding: bool = False
 
     def __post_init__(self):
         if not all((self.policy_id, self.model_version, self.score_version)):
             raise ValueError('all policy versions must be frozen')
-        if self.holding_seconds not in (120, 300, 600, 1200):
+        if self.holding_seconds not in (120, 300, 600, 1200, 1800, 3600):
             raise ValueError('holding period must be a specified research variant')
         if self.economics_source not in ('calibration', 'forecast'):
             raise ValueError('economics_source must be calibration or forecast')
@@ -97,6 +101,8 @@ class EngineConfig:
                 raise ValueError(f'{field} must be a positive integer')
         if type(self.min_independent_days) is not int or self.min_independent_days < 2:
             raise ValueError('min_independent_days must be an integer >= 2')
+        if type(self.scale_stop_to_holding) is not bool:
+            raise ValueError('scale_stop_to_holding must be a boolean')
         for field in ('entry_limit_ticks', 'exit_slippage_ticks'):
             if type(getattr(self, field)) is not int or getattr(self, field) < 0:
                 raise ValueError(f'{field} must be a nonnegative integer')
@@ -189,6 +195,10 @@ class StrategyEngine:
         self.valuation = RiskValuation(self)
         self.positions = PositionManager(self)
         self.entries = EntryPipeline(self)
+        self.parameter_guard = None
+        self.market_controls = None
+        self.upper_stop_multiple = Decimal('1')
+        self.recovery_started_at = None
 
     # ------------------------------------------------------------- recording
     def _record(self, at, kind, **data):
@@ -216,6 +226,8 @@ class StrategyEngine:
 
     def _clock(self, at):
         aware(at)
+        if self.parameter_guard is not None:
+            self.parameter_guard.validate_as_of(at)
         if self._last_at is not None and at < self._last_at:
             raise ValueError('replay must use causal receive time and stable sequence order')
         self._last_at = at
@@ -233,14 +245,35 @@ class StrategyEngine:
         """Quote usable for entry decisions (fresh, synchronized, legal)."""
         return self._quote(symbol, at, 'entry')
 
+    def instrument_at(self, symbol, at):
+        instrument = self.instruments[symbol]
+        if self.market_controls is not None:
+            rule = self.market_controls.resolve_rule(symbol, at)
+            if rule is not None:
+                return replace(instrument, tick_category=rule.tick_category, venue=rule.venue)
+        return instrument
+
+    def market_entry_gate(self, symbol, at, price, stop_distance, quantity):
+        if self.market_controls is None:
+            return None
+        instrument = self.instrument_at(symbol, at)
+        if instrument.venue not in ('TSE', 'TSEJ'):
+            return 'instrument_venue_unsupported'
+        return self.market_controls.entry_gate(symbol, at, price, stop_distance,
+            ticks=self.ticks, tick_category=instrument.tick_category,
+            upper_stop_multiple=self.upper_stop_multiple, quantity=quantity)
+
     def valuation_quote(self, symbol, at):
         """Quote usable for valuation, stops and exit pricing (healthy stream)."""
         return self._quote(symbol, at, 'valuation')
 
     def _quote(self, symbol, at, purpose):
         quote = self.quotes.get(symbol)
-        instrument = self.instruments.get(symbol)
+        instrument = self.instrument_at(symbol, at) if symbol in self.instruments else None
         if quote is None or instrument is None or quote.source != self.features.config.quote_source:
+            return None
+        if self.market_controls is not None and self.market_controls.quote_gate(symbol,at,quote.bid,quote.ask,
+                ticks=self.ticks,tick_category=instrument.tick_category):
             return None
         healthy = self.book.connected
         if purpose == 'valuation' and self.quality.require_quote_heartbeat:
@@ -251,6 +284,11 @@ class StrategyEngine:
 
     def _sync_risk(self, at):
         self.valuation.sync(at)
+        if (self.recovery_started_at is not None and self.book.connected and self.book.reconciled
+                and self.account_snapshot is not None and self.account_snapshot.received_at>self.recovery_started_at
+                and self.valuation._anchor is self.account_snapshot and self.risk.account_verified):
+            self.risk.unblock('recovery_pending_reconciliation')
+            self.recovery_started_at=None
 
     def _fee_reserves(self):
         return self.valuation.fee_reserves()
@@ -305,7 +343,7 @@ class StrategyEngine:
     def on_quote(self, quote):
         self._clock(quote.at)
         if not self.features.on_quote(quote):
-            raw = validate_quote(quote, quote.at, self.ticks, self.features.config.tick_category,
+            raw = validate_quote(quote, quote.at, self.ticks, self.features.tick_category_at(quote.symbol,quote.at),
                                  self.quality, stream_healthy=self.book.connected, schedule=self.schedule)
             if not raw.allowed or quote.source != self.features.config.quote_source:
                 self.quotes[quote.symbol] = quote
@@ -456,7 +494,7 @@ class StrategyEngine:
         self.book.check_timeouts(at, submit_timeout_seconds=self.config.order_timeout_seconds,
                                  cancel_timeout_seconds=self.config.order_timeout_seconds)
         self._refresh_market(at)
-        self.valuation.sync(at)
+        self._sync_risk(at)
         if self.has_exposure():
             # A persistent SOFT block only matters while risk is controlled.
             for reason in self.risk.escalate(at, self.config.max_soft_block_seconds):

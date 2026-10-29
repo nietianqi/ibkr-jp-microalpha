@@ -10,9 +10,10 @@ queued entry is sent (``still_valid``, review EXE-02).
 from dataclasses import dataclass
 from datetime import timedelta
 from decimal import Decimal
+from math import sqrt
 
 from .domain import Confirmation, MarketRegime, Regime, Side
-from .economics import Prediction, adjust_prediction_for_price, policy_fingerprint, prediction_gate
+from .economics import EconomicGate, Prediction, adjust_prediction_for_price, policy_fingerprint, prediction_gate
 from .execution import ExecutionError
 
 BPS = Decimal(10000)
@@ -61,6 +62,9 @@ class EntryPipeline:
             volatility = snapshot.values.get('volatility_bps')
             if volatility is None or volatility < 0:
                 return None
+            if c.scale_stop_to_holding:
+                from .features import VOLATILITY_WINDOW_SECONDS
+                volatility *= sqrt(c.holding_seconds / VOLATILITY_WINDOW_SECONDS)
             distance = max(distance, c.stop_volatility_multiple * Decimal(str(volatility)) / BPS * price)
         return distance if distance < price else None
 
@@ -118,8 +122,11 @@ class EntryPipeline:
 
     def _gate(self, prediction, reference, limit, quantity, at):
         c = self.e.config
-        adjusted = adjust_prediction_for_price(prediction, reference_price=reference, limit_price=limit,
-                                               commissions=self.e.commissions)
+        try:
+            adjusted = adjust_prediction_for_price(prediction, reference_price=reference, limit_price=limit,
+                                                   commissions=self.e.commissions)
+        except ValueError:
+            return prediction, EconomicGate(False,'price_cost_basis_unavailable')
         margin = c.net_safety_margin_bps * limit * quantity / BPS
         gate = prediction_gate(adjusted, policy_id=c.policy_id, version=c.model_version, quantity=quantity,
                                min_samples=c.min_samples, safety_margin=margin,
@@ -143,7 +150,7 @@ class EntryPipeline:
             return 'symbol_disabled_after_stops'
         if at < e.cooldown_until.get(symbol, at):
             return 'cooldown'
-        instrument = e.instruments[symbol]
+        instrument = e.instrument_at(symbol, at)
         if not instrument.contract_verified or not instrument.permission_verified:
             return 'contract_or_permission_unknown'
         if quote is None:
@@ -163,7 +170,7 @@ class EntryPipeline:
         """Return (EntryPlan, '') with a held risk reservation, or (None, reason)."""
         e, c = self.e, self.e.config
         symbol = candidate.symbol
-        instrument = e.instruments[symbol]
+        instrument = e.instrument_at(symbol, at)
         category = instrument.tick_category
         quantities, reason = self._calibrated_quantities(symbol, at)
         if reason:
@@ -189,6 +196,10 @@ class EntryPipeline:
             stop = self.stop_distance(snapshot, quote, at, instrument, price=limit)
             if stop is None:
                 reason = 'stop_distance_unavailable'
+                continue
+            market_reason = e.market_entry_gate(symbol, at, limit, stop, quantity)
+            if market_reason:
+                reason = market_reason
                 continue
             allocation = e.risk.allocate(
                 key, symbol, instrument.sector, limit, stop, self.exit_slippage(quote, at, instrument),
@@ -364,6 +375,10 @@ class EntryPipeline:
                                      market_status=quote.market_status)
         if not gate.allowed:
             return gate.reason
+        market_reason = e.market_entry_gate(order.symbol, at, order.limit_price,
+            order.stop_distance if order.stop_distance is not None else order.limit_price, order.quantity)
+        if market_reason:
+            return market_reason
         amount = order.limit_price * order.possible_remaining
         entry_fee = max(Decimal(0), e.commissions.commission(order.filled_notional + amount)
                         - max(e.commissions.commission(order.filled_notional), e.book.order_fees(order.order_id)))

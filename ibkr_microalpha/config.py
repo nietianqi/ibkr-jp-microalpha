@@ -12,10 +12,11 @@ from .engine import EngineConfig, Instrument, StrategyEngine
 from .features import FeatureConfig, FeatureEngine
 from .market import JapanCalendar, QuoteQuality, SessionSchedule
 from .risk import PortfolioRisk, RiskConfig
+from .provenance import FrozenParameterGuard
 
 REQUIRED_GROUPS = {'mode', 'profile', 'benchmark_symbol', 'engine', 'risk', 'commissions', 'instruments',
                    'features', 'regime', 'alpha', 'confirmation', 'market_regime', 'scalers', 'quality'}
-OPTIONAL_GROUPS = {'decay', 'subscriptions', 'session', 'score_weights', 'provenance'}
+OPTIONAL_GROUPS = {'decay', 'subscriptions', 'session', 'score_weights', 'provenance', 'market_controls'}
 PROFILES = ('demo', 'research', 'shadow')
 PROVENANCE_KEYS = ('scalers', 'thresholds', 'economics')
 MAX_SCALER_CLIP_RATE = 0.02
@@ -57,6 +58,7 @@ def _construct(cls, data, decimal_fields=(), tuple_fields=()):
 
 def _check_provenance(document):
     """Non-demo profiles must show where every frozen parameter came from (STR-05)."""
+    FrozenParameterGuard(document)
     provenance = document.get('provenance')
     if not isinstance(provenance, dict):
         raise ValueError(f'profile {document["profile"]!r} requires provenance for frozen parameters')
@@ -200,4 +202,22 @@ def build_engine(document):
         subscription_scheduler=scheduler, subscription_requirements=requirements,
         plan_interval_seconds=plan_interval)
     engine.frozen_config = deepcopy(document)
+    engine.parameter_guard = FrozenParameterGuard(document)
+    engine.features.instrument_category_resolver = lambda symbol,at: (
+        engine.instrument_at(symbol,at).tick_category if symbol in engine.instruments else feature_config.tick_category)
+    if 'market_controls' in document:
+        from .market_controls import MarketControls
+        settings = dict(document['market_controls'])
+        expected = {'require_price_band', 'require_status', 'require_instrument_rule', 'upper_stop_multiple'}
+        if set(settings) != expected:
+            raise ValueError('market_controls must explicitly freeze all requirements and upper_stop_multiple')
+        multiple = settings.pop('upper_stop_multiple')
+        if isinstance(multiple, bool) or not isinstance(multiple, (str, int, float)):
+            raise ValueError('upper_stop_multiple must be a positive decimal')
+        multiple = Decimal(str(multiple))
+        if not multiple.is_finite() or multiple <= 0:
+            raise ValueError('upper_stop_multiple must be a positive decimal')
+        engine.market_controls = MarketControls(**settings)
+        engine.upper_stop_multiple = multiple
+        engine.features.instrument_rule_provider = engine.market_controls
     return engine

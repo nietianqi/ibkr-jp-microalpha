@@ -1,0 +1,176 @@
+{
+  "experiment_id": "80ce3771e9030fe9d0df4b721f49b45bf6ebd3ff5386995f2cac841dbef5f3a2",
+  "preregistered_plan": {
+    "dataset_id": "SYNTHETIC_JOINT_ROUND4_FOLDS",
+    "input_sha256": "37056d2127ac246e53689d5eec260deec6448586e23d48d10fa76e57780c76d1",
+    "code_sha256": "e4261c0e2bbacd6f73e6caea2610001a6fba526dd4bb3d218d7bb3b458c5cf48",
+    "variants": [
+      {
+        "variant_id": "a",
+        "weights": {
+          "x": 1.0
+        },
+        "score_threshold": -100.0
+      },
+      {
+        "variant_id": "b",
+        "weights": {
+          "x": 1.0
+        },
+        "score_threshold": -100.0
+      }
+    ],
+    "epsilon": {
+      "x": 0.1
+    },
+    "split": {
+      "train": 4,
+      "validate": 2,
+      "test": 2,
+      "holdout": 3,
+      "embargo": 1
+    },
+    "statistics": {
+      "alpha": 0.05,
+      "draws": 400,
+      "seed": 7,
+      "block_days": 1,
+      "multiple_testing": "BONFERRONI",
+      "method": "CIRCULAR_DAY_BLOCK_PERCENTILE"
+    }
+  },
+  "folds": [
+    {
+      "index": 0,
+      "split": {
+        "train": [
+          "2026-10-02",
+          "2026-10-03",
+          "2026-10-04",
+          "2026-10-05"
+        ],
+        "validate": [
+          "2026-10-07",
+          "2026-10-08"
+        ],
+        "test": [
+          "2026-10-10",
+          "2026-10-11"
+        ]
+      },
+      "fitted_scalers": {
+        "x": {
+          "median": 0.5,
+          "mad": 0.5,
+          "epsilon": 0.1
+        }
+      },
+      "clip_rates": {
+        "x": 0.0
+      },
+      "training_sha256": "cad50da2ed7c788ae3fbb4ad34782be07420f181af7c81b44de0f1df590688c5",
+      "validation": {
+        "a": {
+          "days": 2,
+          "mean_daily_net": "10",
+          "lower": "10",
+          "upper": "10",
+          "status": "RESEARCH_ONLY",
+          "selected_policy": "a"
+        },
+        "b": {
+          "days": 2,
+          "mean_daily_net": "-10",
+          "lower": "-10",
+          "upper": "-10",
+          "status": "RESEARCH_ONLY",
+          "selected_policy": "b"
+        }
+      },
+      "selected_policy": "a",
+      "outer_test": {
+        "days": 2,
+        "mean_daily_net": "10",
+        "lower": "10",
+        "upper": "10",
+        "status": "RESEARCH_ONLY",
+        "selected_policy": "a"
+      }
+    },
+    {
+      "index": 1,
+      "split": {
+        "train": [
+          "2026-10-04",
+          "2026-10-05",
+          "2026-10-06",
+          "2026-10-07"
+        ],
+        "validate": [
+          "2026-10-09",
+          "2026-10-10"
+        ],
+        "test": [
+          "2026-10-12",
+          "2026-10-13"
+        ]
+      },
+      "fitted_scalers": {
+        "x": {
+          "median": 1.5,
+          "mad": 0.5,
+          "epsilon": 0.1
+        }
+      },
+      "clip_rates": {
+        "x": 0.0
+      },
+      "training_sha256": "1a57463bdd951ddee365f06287be6fb990bd5cb8d02a0f2915386d1385f2c7c5",
+      "validation": {
+        "a": {
+          "days": 2,
+          "mean_daily_net": "10",
+          "lower": "10",
+          "upper": "10",
+          "status": "RESEARCH_ONLY",
+          "selected_policy": "a"
+        },
+        "b": {
+          "days": 2,
+          "mean_daily_net": "-10",
+          "lower": "-10",
+          "upper": "-10",
+          "status": "RESEARCH_ONLY",
+          "selected_policy": "b"
+        }
+      },
+      "selected_policy": "a",
+      "outer_test": {
+        "days": 2,
+        "mean_daily_net": "10",
+        "lower": "10",
+        "upper": "10",
+        "status": "RESEARCH_ONLY",
+        "selected_policy": "a"
+      }
+    }
+  ],
+  "final_holdout": {
+    "status": "SEALED_NOT_READ",
+    "days": [
+      "2026-10-15",
+      "2026-10-16",
+      "2026-10-17"
+    ]
+  },
+  "deployable": false,
+  "note": "Offline conditional research only. All tried variants are registered. No deflated-Sharpe/SPA claim; simultaneous intervals are Bonferroni day-block estimates. Raw data truth, dependent regimes and portfolio/execution validity require separate evidence.",
+  "manifest": {
+    "code_sha256": "e4261c0e2bbacd6f73e6caea2610001a6fba526dd4bb3d218d7bb3b458c5cf48",
+    "inputs": {
+      "F:\\ibkr-jp-microalpha\\audit\\2026-10-29\\joint-round4\\observations.jsonl": "c495bd58f31636f85b5ecd2ebb416dc2242272ac53c11e3ac91a30c649b59d48",
+      "F:\\ibkr-jp-microalpha\\audit\\2026-10-29\\joint-round4\\walk-forward-plan.json": "134b685e6edf4dfd90c794eabf69857068f5f86da81d7920290c7d332fb39bc7"
+    },
+    "live_readiness": "NOT_VERIFIED"
+  }
+}

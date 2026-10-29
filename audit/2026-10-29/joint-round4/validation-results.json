@@ -1,0 +1,62 @@
+{
+  "client_date_jst": "2026-10-29",
+  "python": "3.14.0 (tags/v3.14.0:ebf955d, Oct  7 2025, 10:15:03) [MSC v.1944 64 bit (AMD64)]",
+  "tests_run": 324,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "new_round4_tests": 68,
+  "tests_by_module": {
+    "test_coordinator_edges": 6,
+    "test_economics": 13,
+    "test_engine": 17,
+    "test_execution": 34,
+    "test_market": 19,
+    "test_replay": 11,
+    "test_reporting": 14,
+    "test_review_fixes": 41,
+    "test_risk": 13,
+    "test_round3_entry_risk": 14,
+    "test_round3_execution": 14,
+    "test_round3_replay": 20,
+    "test_round3_research": 13,
+    "test_round4_commands": 3,
+    "test_round4_execution": 19,
+    "test_round4_integration": 9,
+    "test_round4_pipeline": 7,
+    "test_round4_recording": 19,
+    "test_round4_research": 11,
+    "test_signals": 20,
+    "test_subscriptions": 7
+  },
+  "successful": true,
+  "broker_connection_performed": false,
+  "live_readiness": "NOT_VERIFIED",
+  "sdk_integration": "NOT_VERIFIED",
+  "data": "SYNTHETIC_UNIT_FIXTURES_ONLY",
+  "compileall": "PASSED",
+  "configs": "PASSED",
+  "demo": {
+    "events": 3797,
+    "intents": 1,
+    "active_orders": 0,
+    "business_replay_identical": true,
+    "net": "-1190.0"
+  },
+  "holding_screen": {
+    "cells": 24,
+    "status_counts": {
+      "INSUFFICIENT_INDEPENDENT_DATA": 24
+    },
+    "deployable": false
+  },
+  "capture": {
+    "callbacks": 7,
+    "events": 1,
+    "output": "audit\\2026-10-29\\joint-round4\\capture-18d517be"
+  },
+  "walk_forward": {
+    "folds": 2,
+    "holdout": "SEALED_NOT_READ"
+  }
+}
