@@ -156,6 +156,7 @@ class FeatureConfig:
     volatility_grid_seconds: float = 1
     baseline_bucket_seconds: int = 0
     vwap_kind: str = "TICK"
+    sampled_subscription_coverage: bool = False
     quality: QuoteQuality = field(default_factory=QuoteQuality)
 
     def __post_init__(self):
@@ -165,6 +166,10 @@ class FeatureConfig:
         _require_number(self.beta, "beta")
         if type(self.require_symbol_beta) is not bool:
             raise ValueError('require_symbol_beta must be a boolean')
+        if type(self.sampled_subscription_coverage) is not bool:
+            raise ValueError('sampled_subscription_coverage must be a boolean')
+        if self.sampled_subscription_coverage and self.vwap_kind != 'SAMPLED':
+            raise ValueError('subscription coverage is only valid for a sampled cumulative-volume feed')
         for name in ("historical_quote_max_age_seconds", "max_quote_gap_seconds",
                      "max_trade_quote_age_seconds", "max_trade_health_age_seconds",
                      "rvol_min_denominator"):
@@ -350,6 +355,21 @@ class FeatureEngine:
             state.quote_healthy_since = None
             state.seen.clear()
 
+    def reset_volume(self, symbol, reason='VOLUME_RESET', *, reset_daily=True):
+        """Invalidate sampled volume/VWAP evidence without discarding quote history."""
+        state = self._get(symbol)
+        state.trades.clear()
+        state.vwap_points.clear()
+        state.trade_start = state.trade_health_at = None
+        state.trade_healthy = False
+        state.day_stream_complete = False
+        state.last_daily_trade_health_at = None
+        state.invalid_reason = reason
+        state.revision += 1
+        if reset_daily:
+            state.cumulative_value = Decimal(0)
+            state.cumulative_size = 0
+
     def _segment(self, at):
         return (at.astimezone(JST).date(), self.schedule.session(at))
 
@@ -452,8 +472,11 @@ class FeatureEngine:
             # open; later attachment needs an explicitly trusted cumulative seed.
             state.day_stream_complete = at.astimezone(JST).time() <= self.schedule.morning_open
         state.last_daily_trade_health_at = at
+        covered = (self.config.sampled_subscription_coverage and state.trade_health_at is not None
+                   and self._quote_covered(state, state.trade_health_at, at))
         if state.trade_start is None or (state.trade_health_at is not None and
-                (at - state.trade_health_at).total_seconds() > self.config.max_trade_health_age_seconds):
+                (at - state.trade_health_at).total_seconds() > self.config.max_trade_health_age_seconds
+                and not covered):
             if state.trade_health_at is not None:
                 state.day_stream_complete = False
             state.trades.clear()
@@ -574,7 +597,7 @@ class FeatureEngine:
             return False
         self._cumulative[key] = (at, total, event_id)
         if previous is None or at.astimezone(JST).date() != previous[0].astimezone(JST).date() or total < previous[1]:
-            self.reset(symbol, "CUMULATIVE_VOLUME_BASELINE", reset_daily=True)
+            self.reset_volume(symbol, "CUMULATIVE_VOLUME_BASELINE", reset_daily=True)
             self.set_trade_stream_health(symbol, at, True, source)
             return False
         self.set_trade_stream_health(symbol, at, True, source)
@@ -780,7 +803,9 @@ class FeatureEngine:
                         or self._quote_covered(state, past_at, cutoff)):
                     values[f"{vwap_prefix}_slope_{window}"] = 10000 * log(current_vwap / state.vwap_points.values[index])
         healthy = (state.trade_start is not None and state.trade_healthy and state.trade_health_at is not None
-                   and (at - state.trade_health_at).total_seconds() <= self.config.max_trade_health_age_seconds)
+                   and ((at - state.trade_health_at).total_seconds() <= self.config.max_trade_health_age_seconds
+                        or (self.config.sampled_subscription_coverage
+                            and self._quote_covered(state, state.trade_start, at))))
         end = at.timestamp()
         for window in TRADE_WINDOWS:
             cutoff = at - timedelta(seconds=window)

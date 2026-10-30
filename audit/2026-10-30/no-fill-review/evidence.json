@@ -1,0 +1,684 @@
+{
+  "created_at": "2026-10-30T05:26:59.842064+00:00",
+  "scope": "Local evidence replay only; no live process/config/order changes",
+  "limitation": "Files were read sequentially while session was running; each complete prefix has its own hash. Current on-disk config was used because startup did not persist a frozen config.",
+  "source_prefixes": {
+    "raw-input.jsonl": {
+      "path": "runs\\live\\20261030\\raw-input.jsonl",
+      "bytes": 1315033,
+      "sha256": "a21e36d4a93c439b637716029c9fc6f9c8902ba2eac09b4c2bce4770a74c75ca",
+      "excluded_trailing_bytes": 0
+    },
+    "capture-events.jsonl": {
+      "path": "runs\\live\\20261030\\capture-events.jsonl",
+      "bytes": 5262946,
+      "sha256": "3b73cebc2449d9b5597a4810bb83eec472d29b8410a691695d20c232e7fc7e00",
+      "excluded_trailing_bytes": 0
+    },
+    "callbacks.jsonl": {
+      "path": "runs\\live\\20261030\\callbacks.jsonl",
+      "bytes": 25911941,
+      "sha256": "607f03ecde2eba4a4441b69b33e43922afc4956080c770e7a3f9a981b984d083",
+      "excluded_trailing_bytes": 0
+    }
+  },
+  "config_sha256": "987d291bfc091cfced78995a7ee875d19a5afde499c484fbb068a6def8719171",
+  "summaries": {
+    "raw-input.jsonl": {
+      "counts": {
+        "calendar": 1,
+        "reconcile": 1,
+        "calibration_table": 1,
+        "same_time_profile": 462,
+        "requests": 4220,
+        "quote": 1139,
+        "cumulative_volume": 384,
+        "quote_stream_health": 3,
+        "data_reset": 3
+      },
+      "by_symbol": {
+        "1879": {
+          "same_time_profile": 66,
+          "quote": 98,
+          "cumulative_volume": 39,
+          "quote_stream_health": 1,
+          "data_reset": 1
+        },
+        "6436": {
+          "same_time_profile": 66,
+          "cumulative_volume": 46,
+          "quote": 221
+        },
+        "1719": {
+          "same_time_profile": 66,
+          "quote": 144,
+          "cumulative_volume": 32,
+          "quote_stream_health": 2,
+          "data_reset": 2
+        },
+        "8057": {
+          "same_time_profile": 66,
+          "cumulative_volume": 71,
+          "quote": 98
+        },
+        "8708": {
+          "same_time_profile": 66,
+          "quote": 85,
+          "cumulative_volume": 33
+        },
+        "7261": {
+          "same_time_profile": 66,
+          "quote": 210,
+          "cumulative_volume": 41
+        },
+        "1306": {
+          "same_time_profile": 66,
+          "cumulative_volume": 122,
+          "quote": 283
+        }
+      },
+      "first_at": {
+        "calendar": "2026-10-30T04:16:18.463932+00:00",
+        "reconcile": "2026-10-30T04:16:18.762591+00:00",
+        "calibration_table": "2026-10-30T04:16:18.762591+00:00",
+        "same_time_profile": "2026-10-30T04:16:18.762591+00:00",
+        "requests": "2026-10-30T04:16:18.783550+00:00",
+        "quote": "2026-10-30T04:16:19.580287+00:00",
+        "cumulative_volume": "2026-10-30T04:16:19.663079+00:00",
+        "quote_stream_health": "2026-10-30T04:16:37.188994+00:00",
+        "data_reset": "2026-10-30T04:16:37.188994+00:00"
+      },
+      "last_at": {
+        "calendar": "2026-10-30T04:16:18.463932+00:00",
+        "reconcile": "2026-10-30T04:16:18.762591+00:00",
+        "calibration_table": "2026-10-30T04:16:18.762591+00:00",
+        "same_time_profile": "2026-10-30T04:16:18.783550+00:00",
+        "requests": "2026-10-30T05:26:37.824902+00:00",
+        "quote": "2026-10-30T05:26:26.345365+00:00",
+        "cumulative_volume": "2026-10-30T05:26:38.059467+00:00",
+        "quote_stream_health": "2026-10-30T04:27:39.233326+00:00",
+        "data_reset": "2026-10-30T04:27:39.233326+00:00"
+      },
+      "positive_quote_health": 0
+    },
+    "capture-events.jsonl": {
+      "counts": {
+        "quote": 11441,
+        "cumulative_volume": 2912,
+        "quote_stream_health": 3,
+        "data_reset": 3
+      },
+      "by_symbol": {
+        "1879": {
+          "quote": 98,
+          "cumulative_volume": 39,
+          "quote_stream_health": 1,
+          "data_reset": 1
+        },
+        "6723": {
+          "cumulative_volume": 2527,
+          "quote": 10302
+        },
+        "6436": {
+          "cumulative_volume": 46,
+          "quote": 221
+        },
+        "8057": {
+          "cumulative_volume": 71,
+          "quote": 98
+        },
+        "7261": {
+          "quote": 210,
+          "cumulative_volume": 41
+        },
+        "8708": {
+          "quote": 85,
+          "cumulative_volume": 34
+        },
+        "1719": {
+          "quote": 144,
+          "cumulative_volume": 32,
+          "quote_stream_health": 2,
+          "data_reset": 2
+        },
+        "1306": {
+          "cumulative_volume": 122,
+          "quote": 283
+        }
+      },
+      "first_at": {
+        "quote": "2026-10-30T04:16:19.580287+00:00",
+        "cumulative_volume": "2026-10-30T04:16:19.662078+00:00",
+        "quote_stream_health": "2026-10-30T04:16:37.188994+00:00",
+        "data_reset": "2026-10-30T04:16:37.188994+00:00"
+      },
+      "last_at": {
+        "quote": "2026-10-30T05:26:56.385571+00:00",
+        "cumulative_volume": "2026-10-30T05:26:56.286014+00:00",
+        "quote_stream_health": "2026-10-30T04:27:39.233326+00:00",
+        "data_reset": "2026-10-30T04:27:39.233326+00:00"
+      },
+      "positive_quote_health": 0
+    },
+    "callbacks.jsonl": {
+      "counts": {
+        "tickGeneric": 33917,
+        "marketStatus": 33916,
+        "marketDataType": 8,
+        "tickPrice": 12650,
+        "tickSize": 52360,
+        "tickString": 3635
+      },
+      "by_symbol": {},
+      "first_at": {
+        "tickGeneric": "2026-10-30T04:16:18.783550+00:00",
+        "marketStatus": "2026-10-30T04:16:18.783550+00:00",
+        "marketDataType": "2026-10-30T04:16:19.487519+00:00",
+        "tickPrice": "2026-10-30T04:16:19.570318+00:00",
+        "tickSize": "2026-10-30T04:16:19.575317+00:00",
+        "tickString": "2026-10-30T04:16:19.577307+00:00"
+      },
+      "last_at": {
+        "tickGeneric": "2026-10-30T05:26:57.814257+00:00",
+        "marketStatus": "2026-10-30T05:26:57.814257+00:00",
+        "marketDataType": "2026-10-30T04:16:19.660059+00:00",
+        "tickPrice": "2026-10-30T05:26:57.186694+00:00",
+        "tickSize": "2026-10-30T05:26:57.688271+00:00",
+        "tickString": "2026-10-30T05:26:56.286014+00:00"
+      },
+      "positive_quote_health": 0
+    }
+  },
+  "configured_symbols": [
+    "1719",
+    "1879",
+    "6436",
+    "7261",
+    "8057",
+    "8708"
+  ],
+  "captured_but_excluded_symbols": [
+    "6723"
+  ],
+  "replay": {
+    "report": {
+      "events_processed": 6214,
+      "mode": "offline_replay",
+      "profile": "demo",
+      "funnel": {},
+      "rejections": {
+        "entries_blocked": 683
+      },
+      "layer_funnel": {
+        "environment_long_time_share": 0.0,
+        "candidates": 0,
+        "economics_rejected_candidates": 0,
+        "risk_rejected_candidates": 0,
+        "confirmed": 0,
+        "intents": 0,
+        "intents_with_fills": 0,
+        "net_profitable_intents": 0,
+        "rejection_reasons": {
+          "entries_blocked": 683
+        },
+        "rejection_seconds": {
+          "entries_blocked": 362
+        }
+      },
+      "intents": [],
+      "execution_quality": {
+        "fills": [],
+        "total_price_cost_vs_arrival": "0",
+        "post_fill_drift": {
+          "BUY": {
+            "5s": {
+              "samples": 0,
+              "mean_signed_bps": null,
+              "unavailable": 0
+            },
+            "30s": {
+              "samples": 0,
+              "mean_signed_bps": null,
+              "unavailable": 0
+            },
+            "120s": {
+              "samples": 0,
+              "mean_signed_bps": null,
+              "unavailable": 0
+            }
+          },
+          "SELL": {
+            "5s": {
+              "samples": 0,
+              "mean_signed_bps": null,
+              "unavailable": 0
+            },
+            "30s": {
+              "samples": 0,
+              "mean_signed_bps": null,
+              "unavailable": 0
+            },
+            "120s": {
+              "samples": 0,
+              "mean_signed_bps": null,
+              "unavailable": 0
+            }
+          }
+        },
+        "drift_sign": "positive is favourable to the filled side",
+        "missed_opportunity_rate": "NOT_COMPUTED: requires frozen realized-signal labels"
+      },
+      "alarms": [],
+      "disabled_symbols": {},
+      "enhanced_ready_candidate_ratio": null,
+      "positions": {},
+      "active_orders": 0,
+      "daily_net_pnl_estimate": "0",
+      "unreported_fee_reserve": "0",
+      "cash_source": "modeled",
+      "risk_locks": [],
+      "soft_blocks": [
+        "market_data_unavailable"
+      ],
+      "requests_sent": {},
+      "routine_requests_sent": 0,
+      "entry_intents_today": 0,
+      "broker_reconciled": true,
+      "live_readiness": "NOT_VERIFIED",
+      "manifest": {
+        "code_sha256": "54f72694392e37dfb42d19d3d7908e99ba2769cc61b45d4d72523dc97918ab99",
+        "config_sha256": "4c31af600ba129db03c0c97d470c55c3e50d40c2a4079879d4ca95c8f39023b5",
+        "input_sha256": "2e6e3d6aab83e5a17f67c284722311c5e485eb3acd628ad7dd646cc52520ba47",
+        "events": 6214
+      },
+      "metrics": {
+        "processing_seconds": 0.3949,
+        "events_per_second": 15735.8,
+        "by_event_type": {
+          "calendar": {
+            "events": 1,
+            "p50_ms": 0.1413,
+            "p99_ms": 0.1413,
+            "max_ms": 0.1413
+          },
+          "calibration_table": {
+            "events": 1,
+            "p50_ms": 0.1999,
+            "p99_ms": 0.1999,
+            "max_ms": 0.1999
+          },
+          "cumulative_volume": {
+            "events": 384,
+            "p50_ms": 0.083,
+            "p99_ms": 0.3044,
+            "max_ms": 0.3653
+          },
+          "data_reset": {
+            "events": 3,
+            "p50_ms": 0.064,
+            "p99_ms": 0.0664,
+            "max_ms": 0.0664
+          },
+          "quote": {
+            "events": 1139,
+            "p50_ms": 0.0761,
+            "p99_ms": 0.2792,
+            "max_ms": 0.683
+          },
+          "quote_stream_health": {
+            "events": 3,
+            "p50_ms": 0.0761,
+            "p99_ms": 0.0799,
+            "max_ms": 0.0799
+          },
+          "reconcile": {
+            "events": 1,
+            "p50_ms": 0.2713,
+            "p99_ms": 0.2713,
+            "max_ms": 0.2713
+          },
+          "requests": {
+            "events": 4220,
+            "p50_ms": 0.032,
+            "p99_ms": 0.2153,
+            "max_ms": 0.5473
+          },
+          "same_time_profile": {
+            "events": 462,
+            "p50_ms": 0.0381,
+            "p99_ms": 0.0587,
+            "max_ms": 0.8466
+          }
+        },
+        "retained": {
+          "event_digests": 6214,
+          "audit_records_in_memory": 7,
+          "journal_records": 4,
+          "timing_bins": 1728
+        },
+        "queue_lag": "NOT_APPLICABLE: offline replay has no live receive clock",
+        "note": "Local dispatch wall-clock timing including evidence writes; excludes input reading, final batch/flush and save; not broker or exchange latency. Percentiles are approximate (192 logarithmic bins per event type; overflow uses maximum). Digests retain one frozen trading day and still grow with unique events."
+      },
+      "interpretation": "Replay safety evidence only; no profitability or broker execution claim."
+    },
+    "resets": {
+      "1879": {
+        "DAY_WARMUP": 1,
+        "SESSION_WARMUP": 1,
+        "CUMULATIVE_VOLUME_BASELINE": 2,
+        "QUOTE_STREAM_UNHEALTHY": 1,
+        "VOLUME_RESET": 1,
+        "QUOTE_COVERAGE_GAP": 15
+      },
+      "6436": {
+        "CUMULATIVE_VOLUME_BASELINE": 1,
+        "DAY_WARMUP": 1,
+        "SESSION_WARMUP": 1,
+        "QUOTE_COVERAGE_GAP": 48,
+        "INVALID_PRICES": 3
+      },
+      "8057": {
+        "CUMULATIVE_VOLUME_BASELINE": 1,
+        "DAY_WARMUP": 1,
+        "SESSION_WARMUP": 1,
+        "QUOTE_COVERAGE_GAP": 22
+      },
+      "7261": {
+        "DAY_WARMUP": 1,
+        "SESSION_WARMUP": 1,
+        "CUMULATIVE_VOLUME_BASELINE": 1,
+        "QUOTE_COVERAGE_GAP": 54,
+        "INVALID_PRICES": 2
+      },
+      "8708": {
+        "DAY_WARMUP": 1,
+        "SESSION_WARMUP": 1,
+        "CUMULATIVE_VOLUME_BASELINE": 1,
+        "QUOTE_COVERAGE_GAP": 19
+      },
+      "1719": {
+        "DAY_WARMUP": 1,
+        "SESSION_WARMUP": 1,
+        "CUMULATIVE_VOLUME_BASELINE": 3,
+        "QUOTE_STREAM_UNHEALTHY": 2,
+        "VOLUME_RESET": 2,
+        "QUOTE_COVERAGE_GAP": 33
+      },
+      "1306": {
+        "CUMULATIVE_VOLUME_BASELINE": 1,
+        "DAY_WARMUP": 1,
+        "SESSION_WARMUP": 1,
+        "QUOTE_COVERAGE_GAP": 91
+      }
+    },
+    "snapshot_reasons": {
+      "1879": {
+        "MISSING:r_300,rs_300,rs_30,rs_60,rvol_30,vwap_proxy_slope_60,vwap_proxy_slope_120,vwap_proxy_deviation_bps,volatility_bps": 3,
+        "QUOTE_WARMUP": 5,
+        "MISSING:r_300,rs_300,rs_30,rs_60,rvol_30,vwap_proxy_slope_60,vwap_proxy_slope_120,volatility_bps": 62,
+        "STALE_QUOTE": 25
+      },
+      "6436": {
+        "QUOTE_WARMUP": 1,
+        "MISSING:r_300,rs_300,rs_30,rs_60,rvol_30,vwap_proxy_slope_60,vwap_proxy_slope_120,vwap_proxy_deviation_bps,volatility_bps": 10,
+        "STALE_QUOTE": 15,
+        "MISSING:r_300,rs_300,rs_30,rs_60,rvol_30,vwap_proxy_slope_60,vwap_proxy_slope_120,volatility_bps": 128
+      },
+      "8057": {
+        "QUOTE_WARMUP": 1,
+        "MISSING:r_300,rs_300,rs_30,rs_60,rvol_30,vwap_proxy_slope_60,vwap_proxy_slope_120,vwap_proxy_deviation_bps,volatility_bps": 1,
+        "MISSING:r_300,rs_300,rs_30,rs_60,rvol_30,vwap_proxy_slope_60,vwap_proxy_slope_120,volatility_bps": 65,
+        "STALE_QUOTE": 43
+      },
+      "7261": {
+        "MISSING:r_300,rs_300,rs_30,rs_60,rvol_30,vwap_proxy_slope_60,vwap_proxy_slope_120,vwap_proxy_deviation_bps,volatility_bps": 4,
+        "QUOTE_WARMUP": 1,
+        "STALE_QUOTE": 18,
+        "MISSING:r_300,rs_300,rs_30,rs_60,rvol_30,vwap_proxy_slope_60,vwap_proxy_slope_120,volatility_bps": 120
+      },
+      "8708": {
+        "MISSING:r_300,rs_300,rs_30,rs_60,rvol_30,vwap_proxy_slope_60,vwap_proxy_slope_120,vwap_proxy_deviation_bps,volatility_bps": 3,
+        "QUOTE_WARMUP": 2,
+        "MISSING:r_300,rs_300,rs_30,rs_60,rvol_30,vwap_proxy_slope_60,vwap_proxy_slope_120,volatility_bps": 54,
+        "STALE_QUOTE": 13
+      },
+      "1719": {
+        "MISSING:r_300,rs_300,rs_30,rs_60,rvol_30,vwap_proxy_slope_60,vwap_proxy_slope_120,vwap_proxy_deviation_bps,volatility_bps": 3,
+        "QUOTE_WARMUP": 8,
+        "STALE_QUOTE": 16,
+        "MISSING:r_300,rs_300,rs_30,rs_60,rvol_30,vwap_proxy_slope_60,vwap_proxy_slope_120,volatility_bps": 82
+      }
+    },
+    "max_retained_quote_span_seconds": {
+      "1879": 0.601102,
+      "7261": 0.70159,
+      "8708": 0.701131,
+      "6436": 1.103149,
+      "8057": 1.502856,
+      "1719": 1.002146,
+      "1306": 1.10168
+    },
+    "market_snapshot_reasons": {
+      "MISSING:rv_mkt,breadth": 576,
+      "MISSING:rv_mkt,spread_bps,breadth": 353
+    },
+    "request_ticks": 4220,
+    "soft_blocks_at_request_ticks": {
+      "market_data_unavailable": 4220
+    },
+    "audit": [
+      {
+        "at": "2026-10-30T04:16:18.762591+00:00",
+        "kind": "CALIBRATION",
+        "version": "ARTIFICIAL-calibration-v1",
+        "rows": 1
+      },
+      {
+        "at": "2026-10-30T04:16:19.580287+00:00",
+        "kind": "NO_TRADE",
+        "symbol": "1879",
+        "reason": "entries_blocked"
+      },
+      {
+        "at": "2026-10-30T04:16:19.663079+00:00",
+        "kind": "NO_TRADE",
+        "symbol": "6436",
+        "reason": "entries_blocked"
+      },
+      {
+        "at": "2026-10-30T04:16:19.665078+00:00",
+        "kind": "NO_TRADE",
+        "symbol": "8057",
+        "reason": "entries_blocked"
+      },
+      {
+        "at": "2026-10-30T04:16:19.666081+00:00",
+        "kind": "NO_TRADE",
+        "symbol": "7261",
+        "reason": "entries_blocked"
+      },
+      {
+        "at": "2026-10-30T04:16:19.667080+00:00",
+        "kind": "NO_TRADE",
+        "symbol": "8708",
+        "reason": "entries_blocked"
+      },
+      {
+        "at": "2026-10-30T04:16:19.669622+00:00",
+        "kind": "NO_TRADE",
+        "symbol": "1719",
+        "reason": "entries_blocked"
+      }
+    ],
+    "latest_snapshots": {
+      "1879": {
+        "symbol": "1879",
+        "at": "2026-10-30T05:26:24.039517+00:00",
+        "values": {},
+        "valid": false,
+        "version": "l1-proxy-v1",
+        "reason": "STALE_QUOTE"
+      },
+      "6436": {
+        "symbol": "6436",
+        "at": "2026-10-30T05:26:26.345365+00:00",
+        "values": {
+          "mid": 3554.0,
+          "spread": 2.0,
+          "spread_bps": 5.627462014631401,
+          "obi": 0.0,
+          "micro_bias": 0.0,
+          "microprice": 3554.0,
+          "vwap_proxy": 3552.8943396226414,
+          "vwap_proxy_deviation_bps": 3.111999039847395
+        },
+        "valid": false,
+        "version": "l1-proxy-v1",
+        "reason": "MISSING:r_300,rs_300,rs_30,rs_60,rvol_30,vwap_proxy_slope_60,vwap_proxy_slope_120,volatility_bps"
+      },
+      "8057": {
+        "symbol": "8057",
+        "at": "2026-10-30T05:24:19.750302+00:00",
+        "values": {},
+        "valid": false,
+        "version": "l1-proxy-v1",
+        "reason": "STALE_QUOTE"
+      },
+      "7261": {
+        "symbol": "7261",
+        "at": "2026-10-30T05:24:55.506807+00:00",
+        "values": {
+          "mid": 1077.75,
+          "spread": 0.5,
+          "spread_bps": 4.6392948271862675,
+          "obi": -0.9259259259259259,
+          "micro_bias": -0.46296296296296297,
+          "microprice": 1077.5185185185185,
+          "vwap_proxy": 1078.448409191339,
+          "vwap_proxy_deviation_bps": -6.476055649825883
+        },
+        "valid": false,
+        "version": "l1-proxy-v1",
+        "reason": "MISSING:r_300,rs_300,rs_30,rs_60,rvol_30,vwap_proxy_slope_60,vwap_proxy_slope_120,volatility_bps"
+      },
+      "8708": {
+        "symbol": "8708",
+        "at": "2026-10-30T05:25:59.402393+00:00",
+        "values": {
+          "mid": 1496.0,
+          "spread": 2.0,
+          "spread_bps": 13.368983957219251,
+          "obi": 0.8,
+          "micro_bias": 0.4,
+          "microprice": 1496.8,
+          "vwap_proxy": 1497.12927756654,
+          "vwap_proxy_deviation_bps": -7.542952926386366
+        },
+        "valid": false,
+        "version": "l1-proxy-v1",
+        "reason": "MISSING:r_300,rs_300,rs_30,rs_60,rvol_30,vwap_proxy_slope_60,vwap_proxy_slope_120,volatility_bps"
+      },
+      "1719": {
+        "symbol": "1719",
+        "at": "2026-10-30T05:23:09.350748+00:00",
+        "values": {
+          "mid": 1743.25,
+          "spread": 0.5,
+          "spread_bps": 2.86820593718629,
+          "obi": 0.7777777777777778,
+          "micro_bias": 0.3888888888888889,
+          "microprice": 1743.4444444444443,
+          "vwap_proxy": 1746.6464646464647,
+          "vwap_proxy_deviation_bps": -19.44563319029829
+        },
+        "valid": false,
+        "version": "l1-proxy-v1",
+        "reason": "MISSING:r_300,rs_300,rs_30,rs_60,rvol_30,vwap_proxy_slope_60,vwap_proxy_slope_120,volatility_bps"
+      }
+    },
+    "latest_market_snapshot": {
+      "symbol": "MARKET",
+      "at": "2026-10-30T05:26:38.059467+00:00",
+      "values": {},
+      "valid": false,
+      "version": "market-l1-proxy-v1",
+      "reason": "MISSING:rv_mkt,spread_bps,breadth"
+    }
+  },
+  "capture_diagnostics": {
+    "quote_attempts_by_symbol": {
+      "1879": {
+        "MISSING_FIELDS": 17,
+        "EMITTED": 98,
+        "FIELD_SKEW": 56,
+        "FIELD_AGE": 717
+      },
+      "7261": {
+        "MISSING_FIELDS": 1,
+        "EMITTED": 210,
+        "FIELD_SKEW": 187,
+        "FIELD_AGE": 2411
+      },
+      "6723": {
+        "MISSING_FIELDS": 1,
+        "EMITTED": 10304,
+        "FIELD_SKEW": 9054,
+        "FIELD_AGE": 5187,
+        "PRICE_OR_SIZE": 8
+      },
+      "8708": {
+        "MISSING_FIELDS": 1,
+        "EMITTED": 85,
+        "FIELD_AGE": 495,
+        "FIELD_SKEW": 27
+      },
+      "6436": {
+        "MISSING_FIELDS": 1,
+        "EMITTED": 221,
+        "FIELD_AGE": 995,
+        "FIELD_SKEW": 105,
+        "PRICE_OR_SIZE": 1
+      },
+      "8057": {
+        "MISSING_FIELDS": 1,
+        "EMITTED": 98,
+        "FIELD_AGE": 583,
+        "FIELD_SKEW": 44
+      },
+      "1719": {
+        "MISSING_FIELDS": 118,
+        "EMITTED": 144,
+        "FIELD_SKEW": 107,
+        "FIELD_AGE": 2533
+      },
+      "1306": {
+        "MISSING_FIELDS": 1,
+        "EMITTED": 283,
+        "FIELD_SKEW": 387,
+        "FIELD_AGE": 5841
+      }
+    },
+    "callbacks": 136486,
+    "normalized_events": 14362
+  },
+  "execution_snapshot_bug": {
+    "reproduced": true,
+    "adapter_execution": {
+      "exec_id": "review-only-execution",
+      "order_id": 1000,
+      "qty": 100,
+      "price": "1000",
+      "side": "BOT",
+      "symbol": "1879"
+    },
+    "exception": "KeyError('at')",
+    "connects": 0,
+    "broker_requests": 0
+  },
+  "validation": {
+    "command": "python -m unittest discover -q",
+    "tests": 331,
+    "result": "OK",
+    "note": "Existing suite run separately; ResourceWarning for an unclosed test input."
+  }
+}

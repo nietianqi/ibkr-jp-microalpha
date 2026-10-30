@@ -1,0 +1,282 @@
+{
+  "checked_at_jst": "2026-10-29T13:35:16.912365+09:00",
+  "scope": "Local actual captures only; demo/audit fixtures excluded from real history",
+  "actual_observed_dates": [
+    "2026-10-29"
+  ],
+  "actual_capture_span_minutes_sum": 33.45,
+  "capture_profiles": [
+    {
+      "source": "runs\\capture-jp7\\events.jsonl",
+      "snapshot_bytes": 1535864,
+      "snapshot_sha256": "0a6cf877b07758fc1de4a8f89a2ad990d58a0a6aa6c031c55c43525fdd09647e",
+      "complete_rows": 4377,
+      "excluded_incomplete_tail": false,
+      "types": {
+        "quote_stream_health": 17,
+        "data_reset": 17,
+        "quote": 3233,
+        "cumulative_volume": 1110
+      },
+      "duplicate_event_ids": 0,
+      "out_of_order_received_at": 0,
+      "first_jst": "2026-10-29T13:00:12.970389+09:00",
+      "last_jst": "2026-10-29T13:15:12.066923+09:00",
+      "span_minutes": 14.98,
+      "observed_dates_jst": [
+        "2026-10-29"
+      ],
+      "quote_market_status": {
+        "UNKNOWN": 3233
+      },
+      "quote_data_type": {
+        "1": 3233
+      },
+      "error_codes": {},
+      "calibration_tables": [],
+      "symbols": {
+        "1306": {
+          "quotes": 97,
+          "distinct_quote_timestamps": 34,
+          "first_jst": "2026-10-29T13:00:14.349051+09:00",
+          "last_jst": "2026-10-29T13:15:07.761731+09:00"
+        },
+        "1719": {
+          "quotes": 53,
+          "distinct_quote_timestamps": 18,
+          "first_jst": "2026-10-29T13:00:13.346229+09:00",
+          "last_jst": "2026-10-29T13:12:32.612144+09:00"
+        },
+        "1879": {
+          "quotes": 32,
+          "distinct_quote_timestamps": 14,
+          "first_jst": "2026-10-29T13:00:13.146842+09:00",
+          "last_jst": "2026-10-29T13:13:09.368579+09:00"
+        },
+        "6436": {
+          "quotes": 65,
+          "distinct_quote_timestamps": 25,
+          "first_jst": "2026-10-29T13:00:13.246271+09:00",
+          "last_jst": "2026-10-29T13:11:40.819759+09:00"
+        },
+        "6723": {
+          "quotes": 2855,
+          "distinct_quote_timestamps": 1072,
+          "first_jst": "2026-10-29T13:00:14.148618+09:00",
+          "last_jst": "2026-10-29T13:15:12.066923+09:00"
+        },
+        "7261": {
+          "quotes": 83,
+          "distinct_quote_timestamps": 30,
+          "first_jst": "2026-10-29T13:00:13.948196+09:00",
+          "last_jst": "2026-10-29T13:12:49.940423+09:00"
+        },
+        "8057": {
+          "quotes": 35,
+          "distinct_quote_timestamps": 16,
+          "first_jst": "2026-10-29T13:00:13.548358+09:00",
+          "last_jst": "2026-10-29T13:08:18.988897+09:00"
+        },
+        "8708": {
+          "quotes": 13,
+          "distinct_quote_timestamps": 4,
+          "first_jst": "2026-10-29T13:00:13.747724+09:00",
+          "last_jst": "2026-10-29T13:08:52.842025+09:00"
+        }
+      }
+    },
+    {
+      "source": "runs\\capture-jp7\\raw-callbacks.jsonl",
+      "snapshot_bytes": 2350946,
+      "snapshot_sha256": "d4401790b8b9abe611ab2b2e23ab245fb03cfdb90bf22d9c521441612a2a0c6f",
+      "complete_rows": 17128,
+      "excluded_incomplete_tail": false,
+      "types": {
+        "error": 5,
+        "marketDataType": 8,
+        "tickSize": 12838,
+        "tickPrice": 3412,
+        "tickString": 865
+      },
+      "duplicate_event_ids": 0,
+      "out_of_order_received_at": 0,
+      "first_jst": "2026-10-29T13:00:12.970389+09:00",
+      "last_jst": "2026-10-29T13:15:12.968382+09:00",
+      "span_minutes": 15.0,
+      "observed_dates_jst": [
+        "2026-10-29"
+      ],
+      "quote_market_status": {},
+      "quote_data_type": {},
+      "error_codes": {
+        "2104": 2,
+        "2106": 2,
+        "2158": 1
+      },
+      "calibration_tables": [],
+      "symbols": {}
+    },
+    {
+      "source": "runs\\capture-jp7-pm\\events.jsonl",
+      "snapshot_bytes": 1540886,
+      "snapshot_sha256": "bedaff3a2eec4f85e1d170d5995caaeb7391b007c7dd5e90627bd17c29f24221",
+      "complete_rows": 4396,
+      "excluded_incomplete_tail": false,
+      "types": {
+        "quote_stream_health": 16,
+        "data_reset": 16,
+        "cumulative_volume": 1216,
+        "quote": 3148
+      },
+      "duplicate_event_ids": 0,
+      "out_of_order_received_at": 0,
+      "first_jst": "2026-10-29T13:16:41.822481+09:00",
+      "last_jst": "2026-10-29T13:35:10.257810+09:00",
+      "span_minutes": 18.47,
+      "observed_dates_jst": [
+        "2026-10-29"
+      ],
+      "quote_market_status": {
+        "UNKNOWN": 3148
+      },
+      "quote_data_type": {
+        "1": 3148
+      },
+      "error_codes": {},
+      "calibration_tables": [],
+      "symbols": {
+        "1306": {
+          "quotes": 78,
+          "distinct_quote_timestamps": 26,
+          "first_jst": "2026-10-29T13:16:43.201502+09:00",
+          "last_jst": "2026-10-29T13:34:35.602506+09:00"
+        },
+        "1719": {
+          "quotes": 32,
+          "distinct_quote_timestamps": 11,
+          "first_jst": "2026-10-29T13:16:42.268785+09:00",
+          "last_jst": "2026-10-29T13:32:34.898676+09:00"
+        },
+        "1879": {
+          "quotes": 33,
+          "distinct_quote_timestamps": 11,
+          "first_jst": "2026-10-29T13:16:42.097896+09:00",
+          "last_jst": "2026-10-29T13:34:58.240431+09:00"
+        },
+        "6436": {
+          "quotes": 43,
+          "distinct_quote_timestamps": 17,
+          "first_jst": "2026-10-29T13:16:42.169127+09:00",
+          "last_jst": "2026-10-29T13:34:05.852675+09:00"
+        },
+        "6723": {
+          "quotes": 2803,
+          "distinct_quote_timestamps": 1025,
+          "first_jst": "2026-10-29T13:16:43.001173+09:00",
+          "last_jst": "2026-10-29T13:35:10.257810+09:00"
+        },
+        "7261": {
+          "quotes": 69,
+          "distinct_quote_timestamps": 24,
+          "first_jst": "2026-10-29T13:16:42.799776+09:00",
+          "last_jst": "2026-10-29T13:33:42.413837+09:00"
+        },
+        "8057": {
+          "quotes": 51,
+          "distinct_quote_timestamps": 22,
+          "first_jst": "2026-10-29T13:16:42.398603+09:00",
+          "last_jst": "2026-10-29T13:34:32.396499+09:00"
+        },
+        "8708": {
+          "quotes": 39,
+          "distinct_quote_timestamps": 14,
+          "first_jst": "2026-10-29T13:16:42.599551+09:00",
+          "last_jst": "2026-10-29T13:34:11.260329+09:00"
+        }
+      }
+    },
+    {
+      "source": "runs\\capture-jp7-pm\\raw-callbacks.jsonl",
+      "snapshot_bytes": 2636594,
+      "snapshot_sha256": "ce55ee68d29f348e3a43fdc5059e338bc94b33c80968aac7430d821c4f1fb0ab",
+      "complete_rows": 19199,
+      "excluded_incomplete_tail": false,
+      "types": {
+        "error": 5,
+        "marketDataType": 8,
+        "tickPrice": 3633,
+        "tickString": 1106,
+        "tickSize": 14447
+      },
+      "duplicate_event_ids": 0,
+      "out_of_order_received_at": 0,
+      "first_jst": "2026-10-29T13:16:41.822481+09:00",
+      "last_jst": "2026-10-29T13:35:15.865395+09:00",
+      "span_minutes": 18.57,
+      "observed_dates_jst": [
+        "2026-10-29"
+      ],
+      "quote_market_status": {},
+      "quote_data_type": {},
+      "error_codes": {
+        "2104": 2,
+        "2106": 2,
+        "2158": 1
+      },
+      "calibration_tables": [],
+      "symbols": {}
+    }
+  ],
+  "paper_config": {
+    "mode": "replay",
+    "profile": "demo",
+    "min_samples": 30,
+    "min_independent_days": 20,
+    "rvol_min_days": 17,
+    "model_version": "synthetic-v1",
+    "fee_version": "illustrative-fixed-v1"
+  },
+  "paper_input_types": {
+    "calendar": 1,
+    "reconcile": 1,
+    "calibration_table": 1,
+    "same_time_profile": 528,
+    "quote_stream_health": 3615,
+    "data_reset": 17,
+    "requests": 901,
+    "quote": 3185,
+    "cumulative_volume": 1110,
+    "stream_health": 3598,
+    "account_snapshot": 30
+  },
+  "paper_calibration_tables": [
+    {
+      "version": "ARTIFICIAL-calibration-v1",
+      "known_at": "2026-10-29T08:55:00+09:00",
+      "rows": [
+        {
+          "policy_id": "l1-proxy-h120-v1",
+          "version": "synthetic-v1",
+          "holding_seconds": 120,
+          "quantity": 100,
+          "score_low": 0.5,
+          "score_high": null,
+          "sample_days": 40,
+          "sample_count": 100,
+          "mean_net_amount": "1000",
+          "lower_net_amount": "800",
+          "max_chase_ticks": 10,
+          "label_source": "ARTIFICIAL",
+          "provenance": {
+            "source": "ARTIFICIAL_FIXTURE"
+          }
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Partial intraday sessions; row counts are not independent samples",
+    "Normalized quotes are filtered emissions, not full exchange event coverage",
+    "No claim of positive net expectancy or live execution readiness"
+  ]
+}

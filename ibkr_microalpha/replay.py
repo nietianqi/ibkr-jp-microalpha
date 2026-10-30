@@ -270,7 +270,7 @@ class Replay:
             return lambda: e.calendar.scheduled_windows.append(record)
         if kind == 'quote':
             _decimal_fields(data, 'bid', 'ask')
-            for field in ('bid_at', 'ask_at', 'exchange_at'):
+            for field in ('bid_at', 'ask_at', 'exchange_at', 'bid_observed_at', 'ask_observed_at'):
                 if data.get(field):
                     data[field] = timestamp(data[field])
             quote = Quote(at=at, event_id=identity, **data)
@@ -321,9 +321,15 @@ class Replay:
             return lambda: e.features.set_daily_vwap(at=at, **data)
         if kind == 'data_reset':
             symbol, reason = data['symbol'], data.get('reason', 'DATA_RESET')
+            scope = data.get('scope', 'all')
+            if scope not in ('all', 'volume'):
+                raise ValueError('data_reset scope must be all or volume')
 
             def apply():
-                e.features.reset(symbol, reason)
+                if scope == 'volume':
+                    e.features.reset_volume(symbol, reason)
+                else:
+                    e.features.reset(symbol, reason)
                 e._invalidate(symbol, at, reason)
                 if e.subscriptions is not None:
                     e.subscriptions.scheduler.reset(symbol, at)
@@ -378,6 +384,15 @@ class Replay:
                 data['covered_order_ids'] = tuple(data['covered_order_ids'])
             snapshot = AccountSnapshot(received_at=at, **data)
             return lambda: e.set_account(snapshot, at)
+        if kind == 'account_refresh':
+            active = _bool(data, 'active')
+            def apply_refresh():
+                e._clock(at)
+                if active:
+                    e.risk.block('account_refresh_in_progress', at)
+                else:
+                    e.risk.unblock('account_refresh_in_progress')
+            return apply_refresh
         if kind == 'exchange_status':
             normal = _bool(data, 'normal')
             reason = data.get('reason', '')

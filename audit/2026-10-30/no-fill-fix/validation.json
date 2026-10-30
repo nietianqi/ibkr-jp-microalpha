@@ -1,0 +1,19 @@
+{
+  "code_sha256": "5101a4db6b7b67f6876ceea7449dca3483b9800f00ccb227af9270c955ccd4be",
+  "full_suite": {
+    "command": "python -m unittest discover -q",
+    "tests": 356,
+    "result": "OK",
+    "seconds": 22.626
+  },
+  "final_focused": {
+    "command": "python -m unittest tests.test_session_hardening tests.test_paper tests.test_round4_integration -q",
+    "tests": 41,
+    "result": "OK",
+    "seconds": 4.405
+  },
+  "diff_check": "OK",
+  "new_regression_tests": 25,
+  "broker_connections_during_validation": 0,
+  "deployment": "Not restarted; prior session ended flat at 15:20"
+}

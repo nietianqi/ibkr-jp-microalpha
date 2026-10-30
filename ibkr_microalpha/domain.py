@@ -74,10 +74,15 @@ class Quote:
     bid_at: datetime | None = None
     ask_at: datetime | None = None
     exchange_at: datetime | None = None  # UNKNOWN when the source supplies none.
+    # Incremental feeds can observe an unchanged price through a size update.
+    # Keep that evidence separate from the last price callback's timestamp.
+    bid_observed_at: datetime | None = None
+    ask_observed_at: datetime | None = None
 
     def __post_init__(self):
         aware(self.at)
-        for at in (self.bid_at, self.ask_at, self.exchange_at):
+        for at in (self.bid_at, self.ask_at, self.exchange_at,
+                   self.bid_observed_at, self.ask_observed_at):
             if at is not None:
                 aware(at)
         finite_decimal(self.bid, "bid")

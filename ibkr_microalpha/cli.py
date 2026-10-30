@@ -96,6 +96,18 @@ def main(argv=None):
     live_capture.add_argument('--port',type=int,default=7497)
     live_capture.add_argument('--client-id',type=int,default=71)
     live_capture.add_argument('--duration',type=float,default=60)
+    paper=sub.add_parser('paper-trade',help='IBKR paper routing; guarded live opt-in requires verified parameters, JPY funds and external venue facts')
+    paper.add_argument('--config',required=True)
+    paper.add_argument('--capture-config',required=True)
+    paper.add_argument('--preamble',required=True,help='prior input whose calibration table and same-time profiles are reused')
+    paper.add_argument('--output',required=True)
+    paper.add_argument('--host',default='127.0.0.1')
+    paper.add_argument('--port',type=int,default=4002)
+    paper.add_argument('--client-id',type=int,default=81)
+    paper.add_argument('--until',default='15:20',help='JST time to stop entries and flatten')
+    paper.add_argument('--live-account',help='REAL-MONEY opt-in: the one live account (e.g. U123) allowed to receive orders')
+    paper.add_argument('--status-file',help='live only: atomically updated external calendar and per-symbol status JSON')
+    paper.add_argument('--execution-timezone',help='explicit TWS login timezone for broker execution times without a zone, e.g. Asia/Tokyo')
     scan=sub.add_parser('scan-holdings',help='preregistered conditional simulated research')
     scan.add_argument('events')
     scan.add_argument('--decisions',required=True)
@@ -114,9 +126,12 @@ def main(argv=None):
         if args.command in ('capture-callbacks','capture-ibkr','scan-holdings','walk-forward'):
             from .research.commands import run_command
             return run_command(args)
+        if args.command == 'paper-trade':
+            from .paper import paper_command
+            return 0 if paper_command(args) else 4
         build_engine(load_config(args.config))
         if args.command == 'validate-config':
-            print('Configuration valid. Mode: offline replay; live trading unavailable.')
+            print('Configuration valid for offline replay. Broker routing has separate startup checks.')
             return 0
         if args.command == 'demo':
             from .demo import create_demo

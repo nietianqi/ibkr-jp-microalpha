@@ -1,0 +1,43 @@
+{
+  "code_sha256": "5101a4db6b7b67f6876ceea7449dca3483b9800f00ccb227af9270c955ccd4be",
+  "source": "runs\\live\\20261030\\callbacks.jsonl",
+  "callbacks": 234971,
+  "events": 114845,
+  "valid_snapshots": {},
+  "ready_300_second_returns": {
+    "6723": 20694
+  },
+  "market_snapshot_reasons": {
+    "MISSING:rv_mkt,breadth": 1502,
+    "MISSING:rv_mkt": 13974,
+    "VALID": 20268
+  },
+  "max_quote_spans_seconds": {
+    "1879": 16.323018,
+    "7261": 124.194573,
+    "6723": 619.564347,
+    "8708": 7.212159,
+    "6436": 21.930515,
+    "1719": 110.474122,
+    "8057": 26.943581
+  },
+  "missing_preamble_profiles": [
+    [
+      "6723",
+      "volume",
+      30
+    ]
+  ],
+  "latest_feature_reasons": {
+    "1879": "MISSING:r_300,rs_300,rs_30,rs_60,rvol_30,vwap_proxy_slope_60,vwap_proxy_slope_120,volatility_bps",
+    "6723": "MISSING:rvol_30",
+    "6436": "STALE_QUOTE",
+    "8057": "STALE_QUOTE",
+    "7261": "MISSING:r_300,rs_300,vwap_proxy_slope_120",
+    "8708": "STALE_QUOTE",
+    "1719": "MISSING:r_300,rs_300,rs_30,rs_60,rvol_30,vwap_proxy_slope_60,vwap_proxy_slope_120,volatility_bps"
+  },
+  "broker_connects": 0,
+  "broker_requests": 0,
+  "note": "Saved callback reconstruction with paper status assertions and demo calibration. No requests dispatched to any broker; this checks coverage, not profits or live readiness."
+}

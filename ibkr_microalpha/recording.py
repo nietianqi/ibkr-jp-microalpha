@@ -90,6 +90,7 @@ class CaptureConfig:
     trade_source: str = 'SAMPLED'
     max_field_age_seconds: float = 2
     max_field_skew_seconds: float = .5
+    quote_mode: str = 'strict'
 
     def __post_init__(self):
         if not isinstance(self.instruments,tuple) or not self.instruments or any(
@@ -99,6 +100,8 @@ class CaptureConfig:
             raise CaptureError('duplicate request identities')
         if self.volume_mode not in ('tick8','rtvolume','none'):
             raise CaptureError('freeze exactly one cumulative volume source')
+        if self.quote_mode not in ('strict', 'incremental'):
+            raise CaptureError('quote_mode must be strict or incremental')
         if not self.quote_source or not self.trade_source:
             raise CaptureError('explicit quote and volume source required')
         for value in (self.max_field_age_seconds,self.max_field_skew_seconds):
@@ -138,7 +141,7 @@ class CallbackRecorder:
             raise CaptureError('raw and normalized evidence need separate sinks')
         self.session_id = config.session_id or uuid.uuid4().hex
         self.metadata = {m.request_id:m for m in config.instruments}
-        self.states = {key:dict(fields={},data_type=None,halt=None,status=None,total=None,last_price=None,last_price_at=None)
+        self.states = {key:dict(fields={},observed={},data_type=None,halt=None,status=None,total=None,last_price=None,last_price_at=None)
                        for key in self.metadata}
         self.failed = False
         self.callbacks = self.sequence = 0
@@ -156,6 +159,7 @@ class CallbackRecorder:
     def _reset(self, request, at, reason, output):
         state,m = self.states[request],self.metadata[request]
         state['fields'].clear()
+        state['observed'].clear()
         if reason.startswith('IBKR_') or reason=='NON_REALTIME_DATA':
             state['last_price']=state['last_price_at']=state['total']=None
         self._event(at,'quote_stream_health',dict(symbol=m.symbol,healthy=False,source=self.config.quote_source),output)
@@ -168,24 +172,33 @@ class CallbackRecorder:
             return
         if any(key not in fields for key in ('bid','ask','bid_size','ask_size')):
             return
-        times = [stamp for _,stamp in fields.values()]
+        incremental = self.config.quote_mode == 'incremental'
+        if incremental:
+            if any(key not in state['observed'] for key in ('bid', 'ask')):
+                return
+            times = [state['observed']['bid'], state['observed']['ask']]
+        else:
+            times = [stamp for _,stamp in fields.values()]
         if any(not 0 <= (at-stamp).total_seconds() <= self.config.max_field_age_seconds for stamp in times):
             return
         if (max(times)-min(times)).total_seconds() > self.config.max_field_skew_seconds:
             return
         bid,ask = fields['bid'][0],fields['ask'][0]
-        if not 0 < bid <= ask or min(fields['bid_size'][0],fields['ask_size'][0]) <= 0:
+        if not 0 < bid < ask or min(fields['bid_size'][0],fields['ask_size'][0]) <= 0:
             return
         status = 'UNKNOWN'
         known = state['status']
-        if state['halt'] == 0 and known is not None and known[1] <= at < known[2]:
+        if state['halt'] not in (1, 2) and known is not None and known[1] <= at < known[2]:
             status = known[0]
         elif state['halt'] in (1,2):
             status = 'HALT'
-        self._event(at,'quote',dict(symbol=m.symbol,bid=str(bid),ask=str(ask),
+        data = dict(symbol=m.symbol,bid=str(bid),ask=str(ask),
             bid_size=fields['bid_size'][0],ask_size=fields['ask_size'][0],
             bid_at=fields['bid'][1].isoformat(),ask_at=fields['ask'][1].isoformat(),
-            market_data_type=1,market_status=status,source=self.config.quote_source),output)
+            market_data_type=1,market_status=status,source=self.config.quote_source)
+        if incremental:
+            data.update(bid_observed_at=times[0].isoformat(), ask_observed_at=times[1].isoformat())
+        self._event(at, 'quote', data, output)
 
     def _volume(self, request, at, raw_total, price, multiplier, output):
         state,m = self.states[request],self.metadata[request]
@@ -199,7 +212,9 @@ class CallbackRecorder:
         if total == state['total']:
             return
         if state['total'] is not None and total < state['total']:
-            self._reset(request,at,'VOLUME_RESET',output)
+            # A cumulative-counter correction invalidates volume windows, not
+            # independently observed bid/ask history.
+            self._event(at, 'data_reset', dict(symbol=m.symbol, reason='VOLUME_RESET', scope='volume'), output)
         state['total'] = total
         self._event(at,'cumulative_volume',dict(symbol=m.symbol,total=total,last_price=str(price),
                                                 source=self.config.trade_source),output)
@@ -253,6 +268,9 @@ class CallbackRecorder:
                 if known > at or expiry <= known:
                     raise CaptureError('invalid venue status availability')
                 state['status'] = (status,known,expiry)
+                if status != 'CONTINUOUS':
+                    self._event(at, 'quote_stream_health', dict(symbol=m.symbol, healthy=False,
+                                                               source=self.config.quote_source), output)
             elif kind == 'tickGeneric' and tick == 49:
                 halt = _decimal(data['value'])
                 if halt not in (-1,0,1,2):
@@ -271,6 +289,7 @@ class CallbackRecorder:
                     field = 'bid' if tick == 1 else 'ask'
                     state['fields'][field] = (price,at)
                     state['fields'].pop(field+'_size',None)
+                    state['observed'].pop(field, None)
             elif kind == 'tickSize' and tick in (0,3):
                 multiplier = m.quote_size_multiplier
                 if multiplier is None:
@@ -281,9 +300,24 @@ class CallbackRecorder:
                 else:
                     field = 'bid_size' if tick == 0 else 'ask_size'
                     state['fields'][field] = (int(size),at)
+                    side = 'bid' if tick == 0 else 'ask'
+                    if size > 0 and side in state['fields']:
+                        state['observed'][side] = at
+                        known = state['status']
+                        if (self.config.quote_mode == 'incremental' and state['data_type'] == 1
+                                and state['halt'] not in (1, 2) and known is not None
+                                and known[0] == 'CONTINUOUS' and known[1] <= at < known[2]
+                                and all(k in state['fields'] for k in ('bid', 'ask', 'bid_size', 'ask_size'))
+                                and 0 < state['fields']['bid'][0] < state['fields']['ask'][0]
+                                and min(state['fields']['bid_size'][0], state['fields']['ask_size'][0]) > 0):
+                            self._event(at, 'quote_stream_health', dict(symbol=m.symbol, healthy=True,
+                                                                      source=self.config.quote_source), output)
+                    elif size == 0:
+                        self._reset(request, at, 'EMPTY_QUOTE_SIDE', output)
                     self._quote(request,at,output)
             elif kind == 'tickSize' and tick == 8 and self.config.volume_mode == 'tick8':
-                if state['last_price_at'] is not None and (at-state['last_price_at']).total_seconds()<=self.config.max_field_age_seconds:
+                if state['last_price_at'] is not None and (self.config.quote_mode == 'incremental'
+                        or (at-state['last_price_at']).total_seconds()<=self.config.max_field_age_seconds):
                     self._volume(request,at,data['size'],state['last_price'],m.tick8_volume_multiplier,output)
             elif kind == 'tickString' and tick == 48 and self.config.volume_mode == 'rtvolume':
                 fields = data['value'].split(';')

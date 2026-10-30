@@ -427,6 +427,12 @@ def validate_quote(quote: Quote, now: datetime, ticks: "TickTable | None" = None
     ask_at = quote.ask_at or quote.at
     if bid_at > quote.at or ask_at > quote.at:
         return Gate(False, "FUTURE_FIELD")
+    observed = (quote.bid_observed_at, quote.ask_observed_at)
+    if any(value is not None for value in observed):
+        if (any(value is None for value in observed) or quote.bid_at is None or quote.ask_at is None
+                or not bid_at <= observed[0] <= quote.at or not ask_at <= observed[1] <= quote.at):
+            return Gate(False, "INVALID_OBSERVATION_TIME")
+        bid_at, ask_at = observed
     limit = quality.max_age_seconds if purpose == "entry" else quality.valuation_max_age_seconds
     if max((now - quote.at).total_seconds(), (now - bid_at).total_seconds(),
            (now - ask_at).total_seconds()) > limit:

@@ -115,7 +115,7 @@ python -m ibkr_microalpha scan-holdings runs/capture/events.jsonl --decisions de
 python -m ibkr_microalpha walk-forward observations.jsonl --plan examples/walk-forward.json --registry runs/experiments --output runs/walk-forward.json
 ```
 
-`callbacks.jsonl` 每行字段为 `callback,received_at,request_id,data`；tickPrice/tickSize 使用 `data.tick_type` 和 `price/size`。bid/ask 保留各自本地接收时间，未知交易所时间不补造。只固定选用 tick8 或 RTVolume 一种累计量，并显式配置单位。farm恢复、halt=0及参考合约活动都不证明该股处于连续交易或有逐股heartbeat，缺权威状态的报价保留 UNKNOWN。模板 `contract_verified=false`，可选 `capture-ibkr --capture-config ... --output ...` 会在合约未确认时拒绝连接；本轮没有连接测试，也没有下单接口。
+`callbacks.jsonl` 每行字段为 `callback,received_at,request_id,data`；tickPrice/tickSize 使用 `data.tick_type` 和 `price/size`。bid/ask 保留各自本地接收时间，未知交易所时间不补造。只固定选用 tick8 或 RTVolume 一种累计量，并显式配置单位。farm恢复、halt=0及参考合约活动都不证明该股处于连续交易或有逐股heartbeat，缺权威状态的报价保留 UNKNOWN。模板 `contract_verified=false`，可选 `capture-ibkr --capture-config ... --output ...` 会在合约未确认时拒绝连接；该采集命令不提供下单接口。
 
 `decisions.jsonl` 每行包括 `decision_id,symbol,at,score,quantity`，可提供决策前已知 `volatility_bps,volatility_window_seconds`。决策和网格必须预先冻结；不能看完结果再挑决策。版本化撮合器明确标记 SIMULATED，包含提交/确认/撤单延迟、部分成交、盘口消耗和覆盖未知；扫描是条件单意图实验，尚非完整策略/组合回测。任何未知路径使 all-intents 统计为空；负下界只表示未证实正优势，上界为负才支持该模型下负期望。比较多时自动用Bonferroni，并报告bootstrap尾部解析度不足。模拟结果不能部署。
 
@@ -127,6 +127,28 @@ python -m ibkr_microalpha walk-forward observations.jsonl --plan examples/walk-f
 
 完整策略恢复使用 `recovery.restore_from_events(document, events, expected_manifest=...)`，重建风险锁和计数后断连、丢弃旧命令与报价，等待新的完整对账/资金屏障。execution快照本身仍不能恢复全策略；传输WAL、跨日管理、独立watchdog及全账户混合持仓管理尚待生产阶段实现。
 
+## 券商路由与增量行情
+
+```powershell
+python -m ibkr_microalpha paper-trade --config examples/jp7-q100-max200.json --capture-config examples/capture-jp7.json --preamble runs/paper-hist/20261028/events.jsonl --output runs/paper-live/20261102 --port 4002 --until 15:20
+```
+
+`paper.py` 把行情回调与券商回报（orderStatus/execDetails/commissionReport）放入单一队列，由消费线程经 `Replay.dispatch` 处理；订单只来自 `requests` 事件后的 `last_commands`，输出目录的 `raw-input.jsonl` 可用 `replay` 复现。默认仅接受 4002/7497 和 DU 模拟账户。启动前检查采集/策略/基准名单完全一致及合约验证标记；启动对账发现持仓、挂单或该 client 的旧成交即拒绝，已有交易需先恢复原账本。订单号从 1000 起。`--until` 到点触发 kill switch 平仓。
+
+`examples/capture-jp7.json` 采用 `quote_mode:incremental`，两份 jp7 配置均包含 6723。`bid_at/ask_at` 保存原始价格回调时间，`bid_observed_at/ask_observed_at` 保存同侧有效数量回调对当前价格的观察时间，统一报价校验核对两套时间的顺序。只有该股票真实、有效的盘口回调才能更新订阅覆盖；定时器、模拟状态及基准活动不能充当其他股票的心跳。真正断流、延迟行情、停牌仍会失效，默认 strict 模式保留原有规则。`features.sampled_subscription_coverage:true` 仅用于同一订阅的累计量代理，不能用于独立逐笔成交源。累计量向下修正只重建量/VWAP窗口，保留独立报价历史；瞬时锁盘口不输出为有效报价。
+
+本地旧 preamble 没有 6723 的 20 日成交量基准；模拟模式会明确报告缺口并阻止缺特征的候选，实盘启动检查会拒绝缺基准的输入，不补造历史。
+
+模拟盘专用假设：IBKR 默认行情不提供东证逐股停牌/状态，连续竞价时段内会写入标注为 `PAPER_SCHEDULE_ASSERTION` 的 halt=0 与短时 CONTINUOUS 状态；该假设不得用于实盘。资金使用配置中的 `initial_cash` 建模，不读取账户资金快照。校准表与同时段曲线从 `--preamble` 指定的往日输入复用（示例为 ARTIFICIAL 校准，仅用于链路验证）。
+
+显式 `--live-account U... --port 4001`（或 7496）启用实盘检查：要求可验证的 research/shadow 参数、正式 BROKER_REPORTS 校准、真实费用、`require_account_snapshot:true`、完整历史基准，以及 `--status-file` 指定的外部日历和逐股状态。演示配置 `jp7-live-small.json` 仍如实标注 demo，**不能作为实盘配置启动**。日损失阈值仅是触发条件，不保证最大实际亏损。
+
+状态文件由外部权威数据源原子替换，结构为 `day,is_open,source,known_at,valid_until,symbols[]`；每个 symbol 行包含 `symbol,status,source,known_at,valid_until`，须覆盖全部交易股票和基准，时间为带时区 ISO 格式。允许 CONTINUOUS/UNKNOWN/HALT/SPECIAL_QUOTE。缺失、过期或人工/演示来源不授权交易；实盘不会合成 halt=0 或连续交易状态。此仓库没有内置真实状态服务和正式校准数据。
+
+实盘资金先完整对账，再查询目标账户的 JPY AvailableFunds/NetLiquidation；查询中观察到订单或持仓变化则重做屏障，其他账户/币种不能覆盖余额。资金刷新期间阻止新买入，定期刷新并在超时后报告失败。资金刷新事件及资金屏障均写入 replay 输入。成交同时记录接收时间、原始券商时间和可解析的执行时间；无时区的旧 SDK 时间仅在提供 `--execution-timezone` 时解释，缺少时区时明确保留 UNKNOWN。
+
+启动即保存 `frozen-config.json`、`capture-config.json` 和 `session-manifest.json`；每秒 flush、每 30 秒输出真实阻断原因、特征缺口与窗口跨度并更新 `status.json`。异常保存 `failure.json`、账本与 `cleanup.json`，仅尝试撤销本会话已经发送的活动订单，源码不调用全局撤单；清理回报尚未确认或持仓残留时需要核查账户。
+
 ## 验证边界
 
-评审问题台账与实施状态见 `CLAUDE_CODEX_协作文档.md`，T01–T30 对照见 `IMPLEMENTATION_STATUS.md`。最新验收324项测试通过，其中68项新增；完整命令为 `python audit/2026-10-29/joint-round4/validate.py`。已提供可选只读行情采集源码，真实SDK/通道尚未现场验证。真实数据、状态源、费用与样本外优势证据仍缺失；策略交易执行保持离线，无实盘下单入口。
+评审问题台账与实施状态见 `CLAUDE_CODEX_协作文档.md`，T01–T30 对照见 `IMPLEMENTATION_STATUS.md`。第4轮验收命令为 `python audit/2026-10-29/joint-round4/validate.py`，当前全量测试使用 `python -m unittest discover -q`。10月30日诊断与修复验证位于 `audit/2026-10-30/`。已实现受保护的券商路由入口；代码和离线回调重建不代表实盘可部署，也不证明收益优势。正式状态源、真实费用和独立校准证据须另外提供，不能将演示或单日历史改名后部署。
